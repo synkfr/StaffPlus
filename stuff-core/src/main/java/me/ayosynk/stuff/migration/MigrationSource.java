@@ -1,7 +1,6 @@
 package me.ayosynk.stuff.migration;
 
-import me.ayosynk.stuff.StuffPlugin;
-import org.bukkit.command.CommandSender;
+import me.ayosynk.stuff.StuffPlatform;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -21,6 +20,7 @@ public interface MigrationSource {
     /**
      * Executes the migration process fully asynchronously.
      * Returns a CompletableFuture containing the number of successfully imported punishments.
+     * The 'sendMessage' callback allows platform-specific message delivery.
      */
-    CompletableFuture<Integer> migrate(StuffPlugin plugin, CommandSender sender, String[] args);
+    CompletableFuture<Integer> migrate(StuffPlatform platform, java.util.function.Consumer<String> sendMessage, String[] args);
 }
