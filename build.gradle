@@ -25,6 +25,9 @@ dependencies {
 
     // bStats (Shaded)
     implementation 'org.bstats:bstats-bukkit:3.0.2'
+
+    // H2 Database (Shaded for LiteBans Bungee/Velocity MVStore migration support)
+    implementation 'com.h2database:h2:2.2.224'
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -43,6 +46,7 @@ shadowJar {
     relocate 'eu.okaeri', 'me.ayosynk.stuff.libs.okaeri'
     relocate 'com.zaxxer.hikari', 'me.ayosynk.stuff.libs.hikari'
     relocate 'org.bstats', 'me.ayosynk.stuff.libs.bstats'
+    relocate 'org.h2', 'me.ayosynk.stuff.libs.h2'
     
     // Exclude SLF4J because Bukkit/Paper already provides it
     exclude 'org/slf4j/**'

@@ -85,7 +85,12 @@ public class MigrationManager {
         }
 
         // 3. LiteBans
-        scanResults.put("litebans", checkConfig("LiteBans", "litebans.db"));
+        File localH2 = new File("litebans.mv.db");
+        if (localH2.exists()) {
+            scanResults.put("litebans", "✔ LiteBans: Found local H2 Database file in server root (litebans.mv.db)!");
+        } else {
+            scanResults.put("litebans", checkConfig("LiteBans", "litebans.db"));
+        }
 
         // 4. AdvancedBan
         scanResults.put("advancedban", checkConfig("AdvancedBan", "AdvancedBan.db"));
@@ -346,6 +351,18 @@ public class MigrationManager {
                         password = args[3];
                         if (args.length >= 5) {
                             tablePrefix = args[4];
+                        }
+                    }
+
+                    if (jdbcUrl == null) {
+                        File h2File = new File("litebans.mv.db");
+                        if (h2File.exists()) {
+                            try {
+                                Class.forName("me.ayosynk.stuff.libs.h2.Driver");
+                            } catch (ClassNotFoundException e) {
+                                Class.forName("org.h2.Driver");
+                            }
+                            jdbcUrl = "jdbc:h2:./litebans;mode=MySQL";
                         }
                     }
 
