@@ -1,0 +1,47 @@
+name: Build and Package Stuff+
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    branches:
+      - master
+      - main
+
+jobs:
+  build:
+    name: Build Shaded JAR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant Execute Permission to Gradlew
+        run: chmod +x gradlew || true
+
+      - name: Build with Gradle
+        run: ./gradlew build
+
+      - name: Upload Shaded JAR Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StuffPlus-Plugin
+          path: build/libs/*.jar
+          if-no-files-found: error
+          retention-days: 7
