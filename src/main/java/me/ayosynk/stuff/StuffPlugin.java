@@ -183,6 +183,13 @@ public final class StuffPlugin extends JavaPlugin {
 
         me.ayosynk.stuff.commands.FlyCommand flyCommand = new me.ayosynk.stuff.commands.FlyCommand(this);
         registerDynamic(commandMap, "fly", "Toggle player fly mode.", "/fly [player]", Collections.singletonList("flight"), flyCommand, flyCommand);
+
+        me.ayosynk.stuff.commands.HistoryCommand historyCommand = new me.ayosynk.stuff.commands.HistoryCommand(this);
+        registerDynamic(commandMap, "history", "View punishment history for players.", "/history <player>", Arrays.asList("punishhistory", "historylog"), historyCommand, historyCommand);
+        registerDynamic(commandMap, "staffhistory", "View punishments issued by staff members.", "/staffhistory <staff>", Collections.emptyList(), historyCommand, historyCommand);
+
+        me.ayosynk.stuff.commands.StaffRollbackCommand rollbackCommand = new me.ayosynk.stuff.commands.StaffRollbackCommand(this);
+        registerDynamic(commandMap, "staffrollback", "Rollback all punishments issued by staff.", "/staffrollback <staff> [confirm]", Arrays.asList("rollbackstaff", "rollback"), rollbackCommand, rollbackCommand);
     }
 
     private void registerDynamic(org.bukkit.command.CommandMap commandMap, String name, String description, String usage, List<String> aliases, org.bukkit.command.CommandExecutor executor, org.bukkit.command.TabCompleter tabCompleter) {
