@@ -28,6 +28,12 @@ By utilizing regional entity schedulers, thread-safe packet delivery pipelines, 
 * **Warning Profiles**: Track individual warning logs via `/warns <player> [list/clear]`.
 * **Dynamic Time Parsing**: Sophisticated time parser supporting complex units (e.g. `1d`, `12h`, `45m`) and infinite duration mappings (`perm`).
 * **Relational Storage**: Backed by a high-performance database manager supporting both local SQLite databases and remote MySQL servers, managed via a shaded, thread-safe HikariCP connection pool.
+* **Linked Account Alt-Detection**: On player login, automatically scans, logs, and broadcasts alternate accounts sharing the IP address, color-coding active (green) and banned (red) profiles.
+* **Dynamic Command & History Parity**: Multi-threaded `/history <player>`, `/staffhistory <staff>`, and `/staffrollback <staff>` commands supported by dynamic database-backed name tab completions.
+* **Warning Escalation Ladder**: Scale punishments dynamically (e.g. tempmutes scaling to permanent bans) based on active warning levels. Command dispatches execute safely on Folia's global scheduler.
+* **Non-Blocking Discord Webhook Logs**: Real-time embeds logging all mute, ban, and warning dispatches using modern non-blocking Java 21 `HttpClient` interfaces with zero impact on region ticks.
+* **Administrative Overwrite Hierarchy Protection**: Custom staff weight ranks (`stuff.hierarchy.weight.<number>`) blocking junior staff from overriding, deactivating, or removing punishments placed by senior administrators or the Console (`Integer.MAX_VALUE`).
+* **IP-Ban Exemption Bypass**: Whitelist specific accounts (`/stuffallow`) to connect and bypass active IP-bans without lifting the IP ban itself for other accounts sharing the IP.
 
 ### Punishment Importer & Migration
 * **7 Supported Platforms**: Seamlessly import mutes, bans, warnings, and IP bans from:

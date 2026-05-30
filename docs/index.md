@@ -38,4 +38,19 @@ features:
   - icon: ⚡
     title: Handy Staff Commands
     details: Super fast shortcuts to toggle flight (/fly) or change your gamemode (/gmc, /gms, /gmsp, /gma).
+  - icon: ⚖️
+    title: Warning Escalation Ladder
+    details: Automate moderation actions (mutes, bans) dynamically as players accumulate active warning thresholds.
+  - icon: 👑
+    title: Overwrite Hierarchy Protection
+    details: Restrict junior staff from bypassing or revoking punishments placed by senior admins or the Console.
+  - icon: 💬
+    title: Discord Webhook Logs
+    details: Native, thread-safe asynchronous logging to Discord channels using modern HttpClient integrations.
+  - icon: 🎟️
+    title: IP Exemption Allowlist
+    details: Exempt specific accounts to bypass IP-bans while keeping the primary IP ban fully active for others.
+  - icon: 🔄
+    title: Multi-Source Importer
+    details: Zero-config auto-scanning and H2/SQLite/SQL batch imports from Vanilla and 6 popular plugins.
 ---
