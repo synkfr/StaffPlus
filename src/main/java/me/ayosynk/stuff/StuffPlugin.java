@@ -33,6 +33,7 @@ public final class StuffPlugin extends JavaPlugin {
     private PluginConfig pluginConfig;
     private MessageConfig messageConfig;
     private DatabaseManager databaseManager;
+    private me.ayosynk.stuff.migration.MigrationManager migrationManager;
 
     // Cache of all players ever seen (for tab completion)
     private final Set<String> registeredNames = ConcurrentHashMap.newKeySet();
@@ -94,6 +95,10 @@ public final class StuffPlugin extends JavaPlugin {
             registeredNames.addAll(names);
             getLogger().info("Cached " + names.size() + " offline player names for tab completion.");
         });
+
+        // Initialize Migration System
+        this.migrationManager = new me.ayosynk.stuff.migration.MigrationManager(this);
+        this.migrationManager.init();
 
         // Register Listeners
         registerListeners();
@@ -192,6 +197,9 @@ public final class StuffPlugin extends JavaPlugin {
         registerDynamic(commandMap, "staffrollback", "Rollback all punishments issued by staff.", "/staffrollback <staff> [confirm]", Arrays.asList("rollbackstaff", "rollback"), rollbackCommand, rollbackCommand);
 
         registerDynamic(commandMap, "stuffallow", "Exempt a player from IP bans.", "/stuffallow <player> [remove]", Arrays.asList("allowip", "allow"), punishCommand, punishCommand);
+
+        me.ayosynk.stuff.commands.ImportCommand importCommand = new me.ayosynk.stuff.commands.ImportCommand(this, this.migrationManager);
+        registerDynamic(commandMap, "stuffimport", "Import punishments from other plugins.", "/stuffimport <source> [params...]", Arrays.asList("migrate", "stuffmigrate"), importCommand, importCommand);
     }
 
     private void registerDynamic(org.bukkit.command.CommandMap commandMap, String name, String description, String usage, List<String> aliases, org.bukkit.command.CommandExecutor executor, org.bukkit.command.TabCompleter tabCompleter) {
@@ -217,6 +225,7 @@ public final class StuffPlugin extends JavaPlugin {
     public PluginConfig getPluginConfig() { return pluginConfig; }
     public MessageConfig getMessageConfig() { return messageConfig; }
     public DatabaseManager getDatabaseManager() { return databaseManager; }
+    public me.ayosynk.stuff.migration.MigrationManager getMigrationManager() { return migrationManager; }
 
     // Cache operations
     public Set<String> getRegisteredNames() { return registeredNames; }

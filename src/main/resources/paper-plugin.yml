@@ -31,3 +31,4 @@ permissions:
       stuff.gms: true
       stuff.gmsp: true
       stuff.gma: true
+      stuff.import: true
