@@ -388,6 +388,102 @@ public class DatabaseManager {
         }
     }
 
+    /**
+     * Retrieves all punishments (active and inactive) associated with a target player UUID.
+     */
+    public CompletableFuture<List<Punishment>> getHistory(UUID target) {
+        CompletableFuture<List<Punishment>> future = new CompletableFuture<>();
+        SchedulerUtils.runAsync(plugin, () -> {
+            List<Punishment> history = new ArrayList<>();
+            String query = "SELECT * FROM stuff_punishments WHERE uuid = ? ORDER BY start_time DESC";
+            try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+                ps.setString(1, target.toString());
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        history.add(mapPunishment(rs));
+                    }
+                }
+                future.complete(history);
+            } catch (SQLException e) {
+                plugin.getLogger().severe("Error fetching history for UUID " + target + ": " + e.getMessage());
+                future.completeExceptionally(e);
+            }
+        });
+        return future;
+    }
+
+    /**
+     * Retrieves all punishments issued by a staff player UUID.
+     */
+    public CompletableFuture<List<Punishment>> getStaffHistory(UUID staff) {
+        CompletableFuture<List<Punishment>> future = new CompletableFuture<>();
+        SchedulerUtils.runAsync(plugin, () -> {
+            List<Punishment> history = new ArrayList<>();
+            String query = "SELECT * FROM stuff_punishments WHERE punisher_uuid = ? ORDER BY start_time DESC";
+            try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+                ps.setString(1, staff.toString());
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        history.add(mapPunishment(rs));
+                    }
+                }
+                future.complete(history);
+            } catch (SQLException e) {
+                plugin.getLogger().severe("Error fetching staff history for UUID " + staff + ": " + e.getMessage());
+                future.completeExceptionally(e);
+            }
+        });
+        return future;
+    }
+
+    /**
+     * Deactivates all active punishments issued by a specific staff member.
+     * Returns the count of rolled-back punishments.
+     */
+    public CompletableFuture<Integer> rollbackStaff(UUID staff) {
+        CompletableFuture<Integer> future = new CompletableFuture<>();
+        SchedulerUtils.runAsync(plugin, () -> {
+            String query = "UPDATE stuff_punishments SET active = 0 WHERE punisher_uuid = ? AND active = 1";
+            try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+                ps.setString(1, staff.toString());
+                int rows = ps.executeUpdate();
+                future.complete(rows);
+            } catch (SQLException e) {
+                plugin.getLogger().severe("Error rolling back punishments for staff UUID " + staff + ": " + e.getMessage());
+                future.completeExceptionally(e);
+            }
+        });
+        return future;
+    }
+
+    /**
+     * Finds other registered player records that have logged in with the same IP address.
+     */
+    public CompletableFuture<List<PlayerRecord>> getAltsByIp(String ip) {
+        CompletableFuture<List<PlayerRecord>> future = new CompletableFuture<>();
+        SchedulerUtils.runAsync(plugin, () -> {
+            List<PlayerRecord> alts = new ArrayList<>();
+            String query = "SELECT uuid, username, ip_address FROM stuff_players WHERE ip_address = ?";
+            try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+                ps.setString(1, ip);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        alts.add(new PlayerRecord(
+                                UUID.fromString(rs.getString("uuid")),
+                                rs.getString("username"),
+                                rs.getString("ip_address")
+                        ));
+                    }
+                }
+                future.complete(alts);
+            } catch (SQLException e) {
+                plugin.getLogger().severe("Error searching alts for IP " + ip + ": " + e.getMessage());
+                future.completeExceptionally(e);
+            }
+        });
+        return future;
+    }
+
     public CompletableFuture<PlayerRecord> getPlayerRecord(UUID uuid) {
         CompletableFuture<PlayerRecord> future = new CompletableFuture<>();
         SchedulerUtils.runAsync(plugin, () -> {
