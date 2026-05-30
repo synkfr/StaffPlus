@@ -152,6 +152,21 @@ build/libs/Stuff-1.0.0.jar
 
 ---
 
+## Continuous Integration & Dev Builds
+
+`Stuff+` implements a fully automated CI/CD pipeline via GitHub Actions to compile, validate, and distribute artifacts:
+
+### 1. Rolling Development Builds (Pre-Releases)
+* **Frequency**: Built automatically on every `push` to the `master` or `main` branches.
+* **Release Target**: Published under the rolling **[dev-latest](https://github.com/synkfr/StuffPlus/releases/tag/dev-latest)** pre-release tag on GitHub.
+* **Rolling Policy**: The pipeline automatically overwrites the previous `dev-latest` tag on every build, maintaining a clean releases page. Administrators can always access the absolute latest development features and hotfixes at this stable release target.
+
+### 2. Stable Production Releases
+* **Frequency**: Generated whenever a semantic Git version tag matching `v*` (e.g., `v1.0.0`) is pushed to the repository.
+* **Release Target**: Published as a dedicated production release containing formal release notes and the production-ready shaded JAR asset.
+
+---
+
 ## Folia Best Practices & Technical Notes
 
 For developers looking at the source code of Stuff+, here is a summary of region-threading safety rules integrated into this repository:
