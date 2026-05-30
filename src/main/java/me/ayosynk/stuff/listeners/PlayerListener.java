@@ -29,6 +29,10 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.UUID;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.concurrent.CompletableFuture;
+import me.ayosynk.stuff.database.DatabaseManager;
 
 public class PlayerListener implements Listener {
 
@@ -41,6 +45,8 @@ public class PlayerListener implements Listener {
     /**
      * Enforce active bans and IP-bans asynchronously during pre-login.
      */
+    private static final java.text.SimpleDateFormat DATE_FORMAT = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPreLogin(AsyncPlayerPreLoginEvent event) {
         UUID uuid = event.getUniqueId();
@@ -51,9 +57,21 @@ public class PlayerListener implements Listener {
             Punishment ipBan = plugin.getDatabaseManager().getActivePunishment(uuid, ip, Punishment.Type.IP_BAN).join();
             if (ipBan != null) {
                 String timeStr = ipBan.getEndTime() != null ? DurationUtils.formatDuration(ipBan.getEndTime().getTime() - System.currentTimeMillis()) : "Permanent";
+                
+                String staffName = "Console";
+                if (ipBan.getPunisherUuid() != null) {
+                    String queryName = plugin.getDatabaseManager().getPlayerNameByUuid(ipBan.getPunisherUuid()).join();
+                    if (queryName != null) {
+                        staffName = queryName;
+                    }
+                }
+                String dateStr = DATE_FORMAT.format(ipBan.getStartTime());
+
                 event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, MiniMessageUtils.parse(plugin.getMessageConfig().getBanKickMessage()
                         .replace("{reason}", "IP Ban: " + ipBan.getReason())
-                        .replace("{time}", timeStr)));
+                        .replace("{time}", timeStr)
+                        .replace("{staff}", staffName)
+                        .replace("{date}", dateStr)));
                 return;
             }
         } catch (Exception e) {
@@ -65,9 +83,21 @@ public class PlayerListener implements Listener {
             Punishment ban = plugin.getDatabaseManager().getActivePunishment(uuid, ip, Punishment.Type.BAN).join();
             if (ban != null) {
                 String timeStr = ban.getEndTime() != null ? DurationUtils.formatDuration(ban.getEndTime().getTime() - System.currentTimeMillis()) : "Permanent";
+                
+                String staffName = "Console";
+                if (ban.getPunisherUuid() != null) {
+                    String queryName = plugin.getDatabaseManager().getPlayerNameByUuid(ban.getPunisherUuid()).join();
+                    if (queryName != null) {
+                        staffName = queryName;
+                    }
+                }
+                String dateStr = DATE_FORMAT.format(ban.getStartTime());
+
                 event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, MiniMessageUtils.parse(plugin.getMessageConfig().getBanKickMessage()
                         .replace("{reason}", ban.getReason())
-                        .replace("{time}", timeStr)));
+                        .replace("{time}", timeStr)
+                        .replace("{staff}", staffName)
+                        .replace("{date}", dateStr)));
             }
         } catch (Exception e) {
             plugin.getLogger().severe("Error checking ban for " + uuid + ": " + e.getMessage());
@@ -91,7 +121,58 @@ public class PlayerListener implements Listener {
 
         // 1. Cache name and save/update record in Database
         plugin.cacheName(name);
-        plugin.getDatabaseManager().savePlayer(uuid, name, ip);
+        plugin.getDatabaseManager().savePlayer(uuid, name, ip).thenRun(() -> {
+            // Asynchronously scan for alt accounts registered on this IP
+            plugin.getDatabaseManager().getAltsByIp(ip).thenAccept(alts -> {
+                if (alts.size() > 1) {
+                    List<String> altNames = new ArrayList<>();
+                    List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+                    for (DatabaseManager.PlayerRecord alt : alts) {
+                        if (alt.uuid.equals(uuid)) continue; // Skip joining player
+
+                        CompletableFuture<Void> future = plugin.getDatabaseManager()
+                                .getActivePunishment(alt.uuid, alt.ip, Punishment.Type.BAN)
+                                .thenAccept(ban -> {
+                                    if (ban != null) {
+                                        altNames.add("<color:#E20000>" + alt.name + " (Banned)</color>");
+                                    } else {
+                                        altNames.add("<color:#00E262>" + alt.name + "</color>");
+                                    }
+                                });
+                        futures.add(future);
+                    }
+
+                    CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(() -> {
+                        if (!altNames.isEmpty()) {
+                            String altListStr = String.join("<color:#A0A0A0>, </color>", altNames);
+                            String alertMsg = "<color:#E2B700>[Alt Alert]</color> <color:#00E262>" + name + "</color> has registered accounts on this IP: " + altListStr;
+
+                            // Broadcast to online staff members
+                            for (Player staff : Bukkit.getOnlinePlayers()) {
+                                if (staff.hasPermission("stuff.admin")) {
+                                    staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + alertMsg));
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Asynchronously query and display unread warnings on join
+            plugin.getDatabaseManager().getWarnings(uuid).thenAccept(warns -> {
+                if (!warns.isEmpty()) {
+                    player.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + "<color:#E2B700>Welcome back! You have active warnings:</color>"));
+                    for (Punishment w : warns) {
+                        String dateStr = DATE_FORMAT.format(w.getStartTime());
+                        plugin.getDatabaseManager().getPlayerNameByUuid(w.getPunisherUuid()).thenAccept(staffName -> {
+                            String punisher = staffName != null ? staffName : "Console";
+                            player.sendMessage(MiniMessageUtils.parse("<color:#A0A0A0>- " + w.getReason() + " by " + punisher + " (" + dateStr + ")</color>"));
+                        });
+                    }
+                }
+            });
+        });
 
         // 2. Handle Vanish hiding
         SchedulerUtils.runEntity(plugin, player, () -> {
