@@ -37,6 +37,17 @@ public class PluginConfig extends OkaeriConfig {
         4, "ban {player} [Warning Ladder] Reached 4 warnings"
     );
 
+    @Comment("Discord Webhook logging settings")
+    private boolean discordWebhookEnabled = false;
+    private String discordWebhookUrl = "";
+    private String discordWebhookUsername = "Stuff+ Moderation";
+    private String discordWebhookAvatarUrl = "https://i.imgur.com/8Qp49X0.png";
+
+    @Comment("Hex color codes for webhook embeds (without the #)")
+    private String discordWebhookColorBan = "FF5555";
+    private String discordWebhookColorMute = "FFAA00";
+    private String discordWebhookColorWarn = "FFFF55";
+
     public String getStorageType() {
         return storageType;
     }
@@ -91,5 +102,33 @@ public class PluginConfig extends OkaeriConfig {
 
     public java.util.Map<Integer, String> getWarningLadderActions() {
         return warningLadderActions;
+    }
+
+    public boolean isDiscordWebhookEnabled() {
+        return discordWebhookEnabled;
+    }
+
+    public String getDiscordWebhookUrl() {
+        return discordWebhookUrl;
+    }
+
+    public String getDiscordWebhookUsername() {
+        return discordWebhookUsername;
+    }
+
+    public String getDiscordWebhookAvatarUrl() {
+        return discordWebhookAvatarUrl;
+    }
+
+    public String getDiscordWebhookColorBan() {
+        return discordWebhookColorBan;
+    }
+
+    public String getDiscordWebhookColorMute() {
+        return discordWebhookColorMute;
+    }
+
+    public String getDiscordWebhookColorWarn() {
+        return discordWebhookColorWarn;
     }
 }

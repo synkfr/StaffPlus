@@ -119,6 +119,17 @@ public class PunishCommand implements CommandExecutor, TabCompleter {
                                         .replace("{reason}", reason)));
                             });
                         }
+
+                        // Trigger Discord Webhook
+                        me.ayosynk.stuff.utils.DiscordWebhookUtils.sendEmbed(
+                                plugin,
+                                "Player Muted",
+                                plugin.getPluginConfig().getDiscordWebhookColorMute(),
+                                target.name,
+                                senderName,
+                                timeStr,
+                                reason
+                        );
                     });
                 });
                 break;
@@ -206,6 +217,17 @@ public class PunishCommand implements CommandExecutor, TabCompleter {
                                         .replace("{time}", timeStr)));
                             });
                         }
+
+                        // Trigger Discord Webhook
+                        me.ayosynk.stuff.utils.DiscordWebhookUtils.sendEmbed(
+                                plugin,
+                                "Player Banned",
+                                plugin.getPluginConfig().getDiscordWebhookColorBan(),
+                                target.name,
+                                senderName,
+                                timeStr,
+                                reason
+                        );
                     });
                 });
                 break;
@@ -304,6 +326,17 @@ public class PunishCommand implements CommandExecutor, TabCompleter {
                                 }
                             }
                         });
+
+                        // Trigger Discord Webhook
+                        me.ayosynk.stuff.utils.DiscordWebhookUtils.sendEmbed(
+                                plugin,
+                                "Player IP-Banned",
+                                plugin.getPluginConfig().getDiscordWebhookColorBan(),
+                                target.name + " (" + target.ip + ")",
+                                senderName,
+                                timeStr,
+                                reason
+                        );
                     });
                 });
                 break;
@@ -371,6 +404,17 @@ public class PunishCommand implements CommandExecutor, TabCompleter {
                                 }
                             });
                         }
+
+                        // Trigger Discord Webhook
+                        me.ayosynk.stuff.utils.DiscordWebhookUtils.sendEmbed(
+                                plugin,
+                                "Player Warned",
+                                plugin.getPluginConfig().getDiscordWebhookColorWarn(),
+                                target.name,
+                                senderName,
+                                "N/A",
+                                reason
+                        );
                     });
                 });
                 break;
