@@ -1,53 +1,55 @@
-# Stuff+ — Modern Moderation & Administrative Utilities
+![Stuff](https://cdn.modrinth.com/data/cached_images/3d527e1c3549243fb7545c033e4c0106849f1849.png)
 
-Stuff+ is a lightweight, high-performance moderation and staff utility plugin built for modern Minecraft servers. It works perfectly out of the box on standard **Spigot** and **Paper** servers, and is fully optimized for multi-threaded **Folia** servers to keep your server running lag-free.
 
-With Stuff+, server administrators and staff get access to advanced moderation actions and monitoring tools without ever having to worry about server stutter, lag spikes, or crashes.
+# Stuff+
 
----
+Stuff+ is an enterprise-grade, high-performance moderation and utility plugin built for modern Minecraft networks. It is designed from the ground up to support Folia's multi-threaded region architecture as well as standard Paper / Spigot (1.20 - 1.21+) servers.
 
-## Key Features
-
-### 1. Built-in Folia & Lag Safety
-* **Lag-Free Actions**: All player checks, database actions, and commands run in the background, keeping your server TPS stable at a constant 20.0.
-* **Safe Teleportation**: Standard teleports are replaced with safe background chunk loading, preventing server freeze frames when staff move around.
-
-### 2. Ultimate Vanish (/vanish)
-* **100% Invisible**: Hides staff completely from players, online counts, player ping lists, and command autocompletions.
-* **Smart Interaction Bypass**: Vanished staff bypass physical pressure plates and tripwire traps.
-* **Silent Containers**: Open chests, barrels, and furnaces silently without playing container audio or chest opening animations.
-* **Full Invisibility HUD**: A clean real-time action bar HUD always shows when your vanish mode is active.
-* **Extra Stealth**: Prevents floor item pickups, hides your join/quit messages, and blocks mobs from targeting or attacking you.
-
-### 3. Full Moderation Suite
-* **All-in-One Commands**: Includes `/ban`, `/tempban`, `/ip-ban`, `/tempip-ban`, `/mute`, `/tempmute`, and `/warn`.
-* **Warning Logs**: Easily track, clear, and review player warning logs via `/warns <player> [list/clear]`.
-* **Smart Time Parsing**: Supports easy-to-understand time inputs (e.g., `1d` for a day, `12h` for twelve hours, `30m` for thirty minutes, or `perm` for permanent).
-* **Automatic Database Backups**: Automatically saves moderation logs. Supports local SQLite databases (works out of the box with zero setup) and MySQL databases.
-
-### 4. Smooth Spectator Follow (/monitor)
-* **Cinematic Camera Follow**: Watch and automatically follow players smoothly in spectator mode.
-* **Jitter-Free Movement**: The camera predicts where the target player is moving and teleports slightly ahead, giving you a smooth, lag-free view.
-* **Safe Boundaries**: Fly around freely! You can orbit the player up to 10 blocks away before being gently pulled back.
-
-### 5. Real-Time Inventory Inspector (/invsee)
-* **54-Slot Interactive Menu**: View and change a target player's inventory slots (0-35), armor, off-hand items, and stats in real-time.
-* **Live Stats HUD**:
-  * **Golden Apple**: Hover to view health, hunger level, and experience level.
-  * **Potion Bottle**: Hover to view all active potion effects and remaining durations.
-  * **Ender Chest**: Click this shortcut item to inspect their Ender Chest directly.
-* **100% Crash-Proof**: Fully redesigned to run safely on multi-threaded servers, preventing world/block reading errors completely.
-
-### 6. Fast Staff Shortcuts
-* **Instant Gamemodes**: Rapidly shift gamemodes using `/gmc` (creative), `/gms` (survival), `/gmsp` (spectator), and `/gma` (adventure).
-* **Flight Toggle**: Quickly toggle flight mode on or off for players using `/fly`.
-
-### 7. Telemetry & Analytics
-* **Anonymous Statistics**: Supports bStats (ID: 31675) to anonymously track server counts and player deployment metrics, helping us improve the plugin. Relocated internally to prevent conflicts.
+By utilizing regional entity schedulers, thread-safe packet delivery pipelines, and robust data isolation, Stuff+ delivers advanced administrative utilities without ever risking main-thread locks or cross-thread race conditions.
 
 ---
 
-## Command & Permission Reference
+## Features
+
+### Folia Safety
+* **Asynchronous Lifecycles**: All commands, database transactions, and packet actions run on Folia-compliant regional or asynchronous schedulers.
+* **Folia Teleportation Safety**: Standard Bukkit teleports are replaced with safe, non-blocking `teleportAsync` futures, completely preventing thread crashes.
+* **Isolated Packet Loops**: Visually toggling features (like Vanish hide/show packets) are scheduled on each recipient's specific regional thread, guaranteeing thread-safety.
+
+### Vanish
+* **Total Invisibility**: Completely removes the player from the online count, player ping lists, tab completions, and visible lists.
+* **Physical Interaction Bypass**: Vanished staff bypass physical pressure plates and tripwire triggers entirely.
+* **Silent Containers**: Allows opening chest, furnace, and barrel interfaces silently without triggering container animations or audio.
+* **Stealth Suppression**: Prevents mob targeting, item pickups, and suppresses join/quit messages entirely while active.
+* **Visual Action Bar Indicator**: Real-time HUD showing vanished status via safe asynchronous repeating tasks.
+
+### Moderation
+* **Comprehensive Actions**: Integrated `/ban`, `/tempban`, `/ip-ban`, `/tempip-ban`, `/mute`, `/tempmute`, and `/warn`.
+* **Warning Profiles**: Track individual warning logs via `/warns <player> [list/clear]`.
+* **Dynamic Time Parsing**: Sophisticated time parser supporting complex units (e.g. `1d`, `12h`, `45m`) and infinite duration mappings (`perm`).
+* **Relational Storage**: Backed by a high-performance database manager supporting both local SQLite databases and remote MySQL servers, managed via a shaded, thread-safe HikariCP connection pool.
+
+### Spectator Follow
+* **Cinematic Camera Tracking**: Teleports staff in spectator mode to follow the target seamlessly.
+* **Velocity-Predicted Follow**: Computes target movements and velocity vectors (`target.getVelocity()`) to position the camera slightly ahead of the target, eliminating stutter and rubber-banding.
+* **Throttled Teleports**: Auto-updates run at a throttled 4-tick (200ms) interval with a 400ms cooldown, giving client-side predicted movements and Paper's async teleportation futures time to fully resolve.
+* **Configurable Boundary Tether**: Allows staff to orbit or move freely within a 10-block radius. Going beyond the boundary gently tethers the camera back into offset.
+
+### Inventory Inspector
+* **54-Slot Live GUI**: View and edit target players' main inventories (0-35), armor slots (helmet, chestplate, leggings, boots), off-hand items, and stats.
+* **Live Stats & Shortcuts**:
+  * **Golden Apple**: Displays health, food levels, and experience dynamically.
+  * **Potion Bottle**: Shows a live list of active potion effects and durations.
+  * **Ender Chest**: Quick-access shortcut item to inspect their Ender Chest directly.
+* **Unparalleled Folia Safety**: Completely avoids asynchronous block-state reads (which crash under Folia when querying `.getOpenInventory().getTopInventory().getHolder()` on block-based inventories in other regions). Instead, it implements a thread-safe custom session registry that cleanly tracks active inspect views and propagates updates regionally.
+
+### Shortcuts
+* **Instant Gamemode Shifts**: Rapid commands including creative (`/gmc`), survival (`/gms`), spectator (`/gmsp`), and adventure (`/gma`).
+* **Flight Mode**: Seamless command flight toggles via `/fly`.
+
+---
+
+## Commands & Permissions
 
 | Command | Description | Usage | Permission Node |
 | :--- | :--- | :--- | :--- |
@@ -71,14 +73,14 @@ With Stuff+, server administrators and staff get access to advanced moderation a
 | `/gmsp` | Switch to spectator mode. | `/gmsp [player]` | `stuff.gmsp` |
 | `/gma` | Switch to adventure mode. | `/gma [player]` | `stuff.gma` |
 
-> **Admin Permission**: The permission node `stuff.admin` grants access to all commands and features of Stuff+ by default.
-> **Vanish Bypass**: Staff with the permission `stuff.vanish.see` can see other vanished players in-game and list them in completions.
+> **Admin Wildcard**: The permission node `stuff.admin` grants access to all capabilities of the plugin by default.
+> **Bypass Node**: Players with the permission `stuff.vanish.see` can see vanished players in-game, in tab lists, and in commands.
 
 ---
 
-## Configuration Files
+## Configuration
 
-The plugin generates clean, easy-to-customize configurations. All messages support custom hex colors and text styling.
+The plugin uses Okaeri Config to generate, validate, and auto-update clean YAML configuration structures.
 
 ### `config.yml`
 ```yaml
@@ -102,6 +104,7 @@ vanish-disable-item-pickup: true
 ```
 
 ### `messages.yml`
+Features full Adventure MiniMessage compatibility, enabling gorgeous native text styling, hex colors, and gradients (e.g. `<gradient:#FF5F6D:#FFC371>Text</gradient>`).
 ```yaml
 # Prefix for all plugin messages
 prefix: "<color:#A0A0A0>[<color:#00E262>Stuff+<color:#A0A0A0>] "
@@ -131,14 +134,14 @@ vanish-action-bar: "<color:#00E262>★ YOU ARE VANISHED ★"
 
 ## Build & Compilation
 
-To build the plugin and compile the final JAR from source:
+To build the plugin and create a fully shaded/relocated JAR ready for production:
 
 ### Requirements
 * **Java 21** or higher
 * **Gradle** (installed or via wrapper)
 
 ### Build Command
-Run this command in the project root:
+Compile and build the shadow JAR:
 ```bash
 gradle shadowJar
 ```
@@ -147,3 +150,31 @@ The compiled plugin will be located at:
 ```
 build/libs/Stuff-1.0.0.jar
 ```
+
+*Note: The Gradle shadow configuration automatically relocates `eu.okaeri` and `com.zaxxer.hikari` libraries to private namespaces (`me.ayosynk.stuff.libs.*`) to prevent conflicts with any other plugins on the classpath.*
+
+---
+
+## Continuous Integration
+
+`Stuff+` implements a fully automated CI/CD pipeline via GitHub Actions to compile, validate, and distribute artifacts:
+
+### Dev Builds
+* **Frequency**: Built automatically on every `push` to the `master` or `main` branches.
+* **Release Target**: Published under the rolling **[dev-latest](https://github.com/synkfr/StuffPlus/releases/tag/dev-latest)** pre-release tag on GitHub.
+* **Rolling Policy**: The pipeline automatically overwrites the previous `dev-latest` tag on every build, maintaining a clean releases page. Administrators can always access the absolute latest development features and hotfixes at this stable release target.
+
+### Stable Releases
+* **Frequency**: Generated whenever a semantic Git version tag matching `v*` (e.g., `v1.0.0`) is pushed to the repository.
+* **Release Target**: Published as a dedicated production release containing formal release notes and the production-ready shaded JAR asset.
+
+---
+
+## Developer Notes
+
+For developers looking at the source code of Stuff+, here is a summary of region-threading safety rules integrated into this repository:
+
+1. **Async Teleportation**: Never call `Player#teleport()` on Folia. Always use `Player#teleportAsync()` and queue dependent actions using `.thenRun()` or `.thenAccept()`.
+2. **Recipient Thread Safety**: Action updates (like `recipient.hidePlayer()` or `recipient.showPlayer()`) must execute on the **recipient's** regional thread context. Wrap these calls in `SchedulerUtils.runEntity(plugin, recipient, ...)` to guarantee packet delivery.
+3. **Avoid cross-region block state reads**: Calling `open.getHolder()` on block-based inventories (e.g., Chests, Furnaces) open in other regions throws threading exceptions. Instead, maintain an in-memory, thread-safe registry of `InvseeSession` objects to update live inventories without world queries.
+4. **Cinematic Follow Damping**: Issuing `teleportAsync` to follow players every single tick saturates client-side movement buffers. Use interval checking (≥4 ticks), velocity extrapolation, and a task cooldown to maintain smooth follower views.
