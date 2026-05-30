@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
+import org.bstats.bukkit.Metrics;
 
 import java.io.File;
 import java.util.Arrays;
@@ -102,6 +103,14 @@ public final class StuffPlugin extends JavaPlugin {
 
         // Start Vanish Action Bar Task (Folia compatible)
         startVanishActionBarTask();
+
+        // Initialize bStats Metrics (Shaded & Relocated)
+        try {
+            new Metrics(this, 31675);
+            getLogger().info("bStats metrics enabled successfully (ID: 31675).");
+        } catch (Exception e) {
+            getLogger().warning("Could not initialize bStats metrics: " + e.getMessage());
+        }
 
         getLogger().info("Stuff+ Plugin has been successfully enabled on Folia/Paper!");
     }

@@ -22,6 +22,9 @@ dependencies {
 
     // HikariCP (Shaded)
     implementation 'com.zaxxer:HikariCP:5.1.0'
+
+    // bStats (Shaded)
+    implementation 'org.bstats:bstats-bukkit:3.0.2'
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -39,6 +42,7 @@ shadowJar {
     // Relocate dependencies to prevent conflicts
     relocate 'eu.okaeri', 'me.ayosynk.stuff.libs.okaeri'
     relocate 'com.zaxxer.hikari', 'me.ayosynk.stuff.libs.hikari'
+    relocate 'org.bstats', 'me.ayosynk.stuff.libs.bstats'
     
     // Exclude SLF4J because Bukkit/Paper already provides it
     exclude 'org/slf4j/**'
