@@ -13,6 +13,9 @@ dependencies {
 
     // Okaeri snakeyaml configurer (for Velocity — no Bukkit dependency)
     implementation 'eu.okaeri:okaeri-configs-yaml-snakeyaml:5.0.13'
+
+    // bStats for Velocity (shaded)
+    implementation 'org.bstats:bstats-velocity:3.2.1'
 }
 
 shadowJar {
@@ -24,6 +27,7 @@ shadowJar {
     relocate 'com.zaxxer.hikari', 'me.ayosynk.stuff.libs.hikari'
     relocate 'org.h2', 'me.ayosynk.stuff.libs.h2'
     relocate 'org.xerial', 'me.ayosynk.stuff.libs.xerial'
+    relocate 'org.bstats', 'me.ayosynk.stuff.libs.bstats'
 
     // Exclude SLF4J — Velocity provides it
     exclude 'org/slf4j/**'

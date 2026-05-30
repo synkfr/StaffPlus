@@ -19,6 +19,8 @@ import me.ayosynk.stuff.database.DatabaseManager;
 import me.ayosynk.stuff.velocity.commands.VelocityPunishCommand;
 import me.ayosynk.stuff.velocity.listeners.VelocityListeners;
 
+import org.bstats.velocity.Metrics;
+
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Set;
@@ -38,6 +40,7 @@ public class StuffVelocityPlugin implements StuffPlatform {
     private final ProxyServer server;
     private final Logger logger;
     private final Path dataDirectory;
+    private final Metrics.Factory metricsFactory;
 
     private PluginConfig pluginConfig;
     private MessageConfig messageConfig;
@@ -47,11 +50,12 @@ public class StuffVelocityPlugin implements StuffPlatform {
     private final Set<String> registeredNames = ConcurrentHashMap.newKeySet();
 
     @Inject
-    public StuffVelocityPlugin(ProxyServer server, org.slf4j.Logger slf4jLogger, @DataDirectory Path dataDirectory) {
+    public StuffVelocityPlugin(ProxyServer server, org.slf4j.Logger slf4jLogger, @DataDirectory Path dataDirectory, Metrics.Factory metricsFactory) {
         this.server = server;
         // Bridge SLF4J to java.util.logging for StuffPlatform compatibility
         this.logger = java.util.logging.Logger.getLogger("Stuff+");
         this.dataDirectory = dataDirectory;
+        this.metricsFactory = metricsFactory;
     }
 
     @Subscribe
@@ -108,6 +112,9 @@ public class StuffVelocityPlugin implements StuffPlatform {
 
         // Register Listeners
         server.getEventManager().register(this, new VelocityListeners(this));
+
+        // Initialize bStats Metrics (Plugin ID: 31693)
+        metricsFactory.make(this, 31693);
 
         logger.info("Stuff+ Velocity Plugin has been successfully enabled!");
     }
