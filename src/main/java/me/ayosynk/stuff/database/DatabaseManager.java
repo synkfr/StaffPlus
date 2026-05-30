@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import me.ayosynk.stuff.migration.ImportedPunishment;
 
 public class DatabaseManager {
 
@@ -634,4 +635,50 @@ public class DatabaseManager {
                 rs.getBoolean("active")
         );
     }
+
+    /**
+     * Executes a high-performance batch insert of imported punishments.
+     * Inserts are executed inside a single transaction.
+     */
+    public CompletableFuture<Integer> importBatch(List<ImportedPunishment> punishments) {
+        CompletableFuture<Integer> future = new CompletableFuture<>();
+        SchedulerUtils.runAsync(plugin, () -> {
+            String query = "INSERT INTO stuff_punishments (uuid, ip_address, punisher_uuid, type, reason, start_time, end_time, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            try (Connection conn = dataSource.getConnection()) {
+                conn.setAutoCommit(false);
+                try (PreparedStatement ps = conn.prepareStatement(query)) {
+                    for (ImportedPunishment p : punishments) {
+                        ps.setString(1, p.uuid());
+                        ps.setString(2, p.ipAddress());
+                        ps.setString(3, p.punisherUuid());
+                        ps.setString(4, p.type());
+                        ps.setString(5, p.reason());
+                        ps.setTimestamp(6, p.startTime());
+                        ps.setTimestamp(7, p.endTime());
+                        ps.setBoolean(8, p.active());
+                        ps.addBatch();
+                    }
+                    int[] results = ps.executeBatch();
+                    conn.commit();
+                    int total = 0;
+                    for (int r : results) {
+                        if (r >= 0 || r == Statement.SUCCESS_NO_INFO) {
+                            total++;
+                        }
+                    }
+                    future.complete(total);
+                } catch (SQLException e) {
+                    conn.rollback();
+                    throw e;
+                } finally {
+                    conn.setAutoCommit(true);
+                }
+            } catch (SQLException e) {
+                plugin.getLogger().severe("Failed to execute batch import: " + e.getMessage());
+                future.completeExceptionally(e);
+            }
+        });
+        return future;
+    }
 }
+
