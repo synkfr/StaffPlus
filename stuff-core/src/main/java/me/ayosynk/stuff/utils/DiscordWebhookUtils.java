@@ -1,6 +1,6 @@
 package me.ayosynk.stuff.utils;
 
-import me.ayosynk.stuff.StuffPlugin;
+import me.ayosynk.stuff.StuffPlatform;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -12,12 +12,12 @@ public class DiscordWebhookUtils {
 
     private static final HttpClient client = HttpClient.newBuilder().build();
 
-    public static CompletableFuture<Void> sendEmbed(StuffPlugin plugin, String title, String colorHex, String player, String staff, String duration, String reason) {
-        if (!plugin.getPluginConfig().isDiscordWebhookEnabled()) {
+    public static CompletableFuture<Void> sendEmbed(StuffPlatform platform, String title, String colorHex, String player, String staff, String duration, String reason) {
+        if (!platform.getPluginConfig().isDiscordWebhookEnabled()) {
             return CompletableFuture.completedFuture(null);
         }
 
-        String webhookUrl = plugin.getPluginConfig().getDiscordWebhookUrl();
+        String webhookUrl = platform.getPluginConfig().getDiscordWebhookUrl();
         if (webhookUrl == null || webhookUrl.isEmpty()) {
             return CompletableFuture.completedFuture(null);
         }
@@ -28,8 +28,8 @@ public class DiscordWebhookUtils {
                 String timestamp = Instant.now().toString();
 
                 String json = "{\n" +
-                        "  \"username\": \"" + escapeJson(plugin.getPluginConfig().getDiscordWebhookUsername()) + "\",\n" +
-                        "  \"avatar_url\": \"" + escapeJson(plugin.getPluginConfig().getDiscordWebhookAvatarUrl()) + "\",\n" +
+                        "  \"username\": \"" + escapeJson(platform.getPluginConfig().getDiscordWebhookUsername()) + "\",\n" +
+                        "  \"avatar_url\": \"" + escapeJson(platform.getPluginConfig().getDiscordWebhookAvatarUrl()) + "\",\n" +
                         "  \"embeds\": [{\n" +
                         "    \"title\": \"" + escapeJson(title) + "\",\n" +
                         "    \"color\": " + color + ",\n" +
@@ -52,11 +52,11 @@ public class DiscordWebhookUtils {
                 client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                         .thenAccept(response -> {
                             if (response.statusCode() >= 300) {
-                                plugin.getLogger().warning("Discord webhook returned status code: " + response.statusCode() + " Response: " + response.body());
+                                platform.getLogger().warning("Discord webhook returned status code: " + response.statusCode() + " Response: " + response.body());
                             }
                         });
             } catch (Exception e) {
-                plugin.getLogger().warning("Error sending Discord webhook: " + e.getMessage());
+                platform.getLogger().warning("Error sending Discord webhook: " + e.getMessage());
             }
         });
     }
