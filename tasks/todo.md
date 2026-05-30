@@ -71,4 +71,10 @@
   - [x] Register `/history`, `/staffhistory`, and `/staffrollback` commands dynamically in `StuffPlugin.java`
   - [x] Compile and package a clean 456KB shaded shadow JAR containing HikariCP, Okaeri, and bStats dependencies
 
+- [x] **Phase 13: Customizable Warning Escalation Ladder**
+  - [x] Add warning ladder enable toggle and action threshold map configuration to `PluginConfig.java`
+  - [x] Integrate warning count query and command dispatch triggers in `/warn` command processing under `PunishCommand.java`
+  - [x] Implement Folia-safe console dispatching utilizing `SchedulerUtils.runGlobal`
+  - [x] Compile and package the updated shaded shadow JAR verifying zero syntax errors
+
 
