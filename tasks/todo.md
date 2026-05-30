@@ -99,6 +99,16 @@
   - [x] Implement `/stuffallow` case, weight protection check, and tab completion suggestions in `PunishCommand.java`
   - [x] Compile and verify clean shaded shadow JAR compilation without errors
 
+- [x] **Phase 17: Multi-Source Importer & Migration System**
+  - [x] Create modern `ImportedPunishment` normalized payload schema and `MigrationSource` interface
+  - [x] Program multi-threaded batch insertion transactions `importBatch` inside `DatabaseManager.java`
+  - [x] Implement local Vanilla JSON files parsing (`banned-players.json`, `banned-ips.json`) using Gson
+  - [x] Implement Essentials userdata YAML files parsing
+  - [x] Build automated database autodetectors for **LiteBans**, **AdvancedBan**, **MaxBans**, **BanManager**, and **BungeeAdminTools**
+  - [x] Design premium interactive status overview command `/stuffimport` (with `/migrate` and `/stuffmigrate` aliases)
+  - [x] Dynamically register `/stuffimport` executor and tab suggestions, and declare the permission node in `paper-plugin.yml`
+  - [x] Rebuild and verify shadow JAR builds cleanly
+
 ## Review & Verification Results
 
 ### 1. Compiles and Shading Integrity
@@ -114,6 +124,13 @@
 - Wired pre-login connection verification. Whitelisted UUIDs completely bypass IP-ban blocks, allowing safe connection of players sharing a banned IP while keeping the IP ban fully active for others.
 - Wired hierarchical weight checking. Lower-ranking staff members are blocked from adding or removing IP ban exemptions for accounts banned by senior administrators.
 
-### 3. General Framework Stability
+### 3. Phase 17: Multi-Source Importer & Migration System
+- Programmed batch transaction imports in a single transaction, supporting MySQL/SQLite backends.
+- Formulated automatic database scanners mapping local SQLite files and remote SQL databases automatically.
+- Extensively supports imports from: Vanilla bans, Essentials mutes/bans, LiteBans, AdvancedBan, MaxBans, BanManager, and BungeeAdminTools.
+- Built interactive command display `/stuffimport` showing active autodetected configuration directories.
+
+### 4. General Framework Stability
 - Fully compatible with Folia's multi-threaded region-threading context.
 - Zero main-thread blocking operations. All DB transactions, UUID resolves, and external logging actions execute on asynchronous execution pools or regional task loops.
+
