@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   build:
-    name: Build & Deploy Shaded JAR
+    name: Build & Deploy Shaded JARs
     runs-on: ubuntu-latest
 
     steps:
@@ -43,13 +43,30 @@ jobs:
         run: chmod +x gradlew || true
 
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew clean build
 
-      - name: Upload Shaded JAR Artifact
+      # Collect shaded JARs from both platform modules into a single staging directory
+      - name: Stage Release Artifacts
+        run: |
+          mkdir -p staging
+          cp stuff-paper/build/libs/StuffPlus-Paper-*.jar staging/
+          cp stuff-velocity/build/libs/StuffPlus-Velocity-*.jar staging/
+          echo "Staged artifacts:"
+          ls -lh staging/
+
+      - name: Upload Paper JAR Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: StuffPlus-Plugin
-          path: build/libs/*.jar
+          name: StuffPlus-Paper
+          path: staging/StuffPlus-Paper-*.jar
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload Velocity JAR Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StuffPlus-Velocity
+          path: staging/StuffPlus-Velocity-*.jar
           if-no-files-found: error
           retention-days: 7
 
@@ -67,12 +84,16 @@ jobs:
           gh release delete dev-latest --yes || true
           git push --delete origin dev-latest || true
           
-          # Create rolling dev-latest pre-release pointing explicitly to the pushed commit
-          gh release create "dev-latest" build/libs/*.jar \
+          # Create rolling dev-latest pre-release with both platform JARs
+          gh release create "dev-latest" staging/*.jar \
             --prerelease \
             --title "Dev Build (Latest)" \
             --target "${{ github.sha }}" \
-            --notes "Latest development pre-release build from branch master. Commit: $SHORT_SHA (Run #${{ github.run_number }})."
+            --notes "Latest development pre-release build from branch master. Commit: $SHORT_SHA (Run #${{ github.run_number }}).
+
+          **Artifacts:**
+          - \`StuffPlus-Paper\` — For Paper/Purpur/Folia 1.20+ servers
+          - \`StuffPlus-Velocity\` — For Velocity 3.3.0+ proxies"
 
       # 2. Production Release Deployment
       - name: Deploy Production Release
@@ -83,6 +104,10 @@ jobs:
           TAG_NAME="${{ github.ref_name }}"
           echo "Deploying production release: $TAG_NAME"
           
-          gh release create "$TAG_NAME" build/libs/*.jar \
+          gh release create "$TAG_NAME" staging/*.jar \
             --title "Release $TAG_NAME" \
-            --notes "Official production release of Stuff+ ($TAG_NAME)."
+            --notes "Official production release of Stuff+ ($TAG_NAME).
+
+          **Artifacts:**
+          - \`StuffPlus-Paper\` — For Paper/Purpur/Folia 1.20+ servers
+          - \`StuffPlus-Velocity\` — For Velocity 3.3.0+ proxies"
