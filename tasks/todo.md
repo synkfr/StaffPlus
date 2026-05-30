@@ -77,4 +77,10 @@
   - [x] Implement Folia-safe console dispatching utilizing `SchedulerUtils.runGlobal`
   - [x] Compile and package the updated shaded shadow JAR verifying zero syntax errors
 
+- [x] **Phase 14: Discord Webhook Logging**
+  - [x] Add Discord Webhook parameters (`enabled`, `url`, `username`, `avatar_url`, hex colors) to `PluginConfig.java`
+  - [x] Implement asynchronous DiscordWebhookUtils utilizing native Java 21 `HttpClient` for safe non-blocking requests
+  - [x] Hook webhook dispatches into `/mute`, `/ban`, `/ip-ban`, and `/warn` inside `PunishCommand.java`
+  - [x] Compile and verify clean shaded shadow JAR compilation without errors
+
 
