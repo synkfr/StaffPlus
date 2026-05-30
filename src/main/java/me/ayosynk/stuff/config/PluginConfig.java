@@ -26,6 +26,17 @@ public class PluginConfig extends OkaeriConfig {
     private boolean vanishDisableMobTargeting = true;
     private boolean vanishDisableItemPickup = true;
 
+    @Comment("Warning escalation ladder settings")
+    private boolean warningLadderEnabled = true;
+
+    @Comment("Actions to run when a player reaches a specific number of active warnings. Placeholders: {player}")
+    private java.util.Map<Integer, String> warningLadderActions = java.util.Map.of(
+        1, "tempmute {player} 1h [Warning Ladder] First warning",
+        2, "tempmute {player} 12h [Warning Ladder] Second warning",
+        3, "tempban {player} 3d [Warning Ladder] Reached 3 warnings",
+        4, "ban {player} [Warning Ladder] Reached 4 warnings"
+    );
+
     public String getStorageType() {
         return storageType;
     }
@@ -72,5 +83,13 @@ public class PluginConfig extends OkaeriConfig {
 
     public boolean isVanishDisableItemPickup() {
         return vanishDisableItemPickup;
+    }
+
+    public boolean isWarningLadderEnabled() {
+        return warningLadderEnabled;
+    }
+
+    public java.util.Map<Integer, String> getWarningLadderActions() {
+        return warningLadderActions;
     }
 }

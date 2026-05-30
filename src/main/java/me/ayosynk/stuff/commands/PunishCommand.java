@@ -357,6 +357,20 @@ public class PunishCommand implements CommandExecutor, TabCompleter {
                                         .replace("{reason}", reason)));
                             });
                         }
+
+                        // Dynamic Warning Escalation Ladder
+                        if (plugin.getPluginConfig().isWarningLadderEnabled()) {
+                            plugin.getDatabaseManager().getWarnings(target.uuid).thenAccept(warns -> {
+                                int activeWarnsCount = warns.size();
+                                String actionTemplate = plugin.getPluginConfig().getWarningLadderActions().get(activeWarnsCount);
+                                if (actionTemplate != null) {
+                                    String finalCommand = actionTemplate.replace("{player}", target.name);
+                                    SchedulerUtils.runGlobal(plugin, () -> {
+                                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCommand);
+                                    });
+                                }
+                            });
+                        }
                     });
                 });
                 break;
