@@ -41,3 +41,10 @@
 *   **The Resolution**: Avoid calling `.getOpenInventory()`, `.getTopInventory()`, or `.getHolder()` on other players from arbitrary threads. Instead, maintain a thread-safe registry (`ConcurrentHashMap`) mapping active custom inventory sessions (e.g., `InvseeSession` mapping staff UUID to the target UUID and custom Inventory instance). Clean these sessions up on `InventoryCloseEvent` and `PlayerQuitEvent`. This allows event handlers to update custom GUIs thread-safely by looking up registered sessions and dispatching updates to the target player's region thread.
 *   **Self-Corrective Action Rule**:
     *   *Rule*: Never call `.getHolder()` on arbitrary inventories or query `.getOpenInventory()` on other players synchronously from event listeners under Folia. Use a thread-safe registry of custom inventory sessions to isolate and safely query open GUIs.
+
+## 7. Branding & Project Naming Guidelines (Staff+ Branding)
+*   **The Issue**: Copying spelling typos or placeholder names (like "Staff" instead of "Staff") throughout packaging, commands, configurations, permissions, and documentation creates branding inconsistency and requires complete project-wide renaming.
+*   **The Resolution**: Always double-check project naming conventions and spelling with the user or initial codebase before writing code and documentation. Avoid copying typos ("Staff") throughout branding, packaging, commands, and configs.
+*   **Self-Corrective Action Rule**:
+    *   *Rule*: Verify the exact branding name and naming conventions before starting implementation. Keep a constant lookup of display names (e.g. "Staff+") versus internal packages (e.g. `me.ayosynk.staff`) to ensure consistency from day one.
+
