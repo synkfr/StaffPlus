@@ -16,6 +16,12 @@ dependencies {
 
     // bStats (shaded)
     implementation 'org.bstats:bstats-bukkit:3.0.2'
+
+    // Test dependencies
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testImplementation 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
+    testImplementation 'org.mockito:mockito-core:5.11.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 shadowJar {
@@ -31,6 +37,10 @@ shadowJar {
 
     // Exclude SLF4J — Paper provides it
     exclude 'org/slf4j/**'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 build {

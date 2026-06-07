@@ -10,6 +10,7 @@ public class StaffInfoHolder implements InventoryHolder {
     private final String targetName;
     private final String targetIp;
     private final boolean online;
+    private final java.util.Map<Integer, String> slotActions = new java.util.HashMap<>();
     private Inventory inventory;
 
     public StaffInfoHolder(UUID targetUuid, String targetName, String targetIp, boolean online) {
@@ -17,6 +18,14 @@ public class StaffInfoHolder implements InventoryHolder {
         this.targetName = targetName;
         this.targetIp = targetIp;
         this.online = online;
+    }
+
+    public void registerAction(int slot, String actionKey) {
+        slotActions.put(slot, actionKey);
+    }
+
+    public String getAction(int slot) {
+        return slotActions.get(slot);
     }
 
     @Override

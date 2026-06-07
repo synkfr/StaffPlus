@@ -487,146 +487,141 @@ public class PlayerListener implements Listener {
         String targetName = holder.getTargetName();
         boolean isOnline = holder.isOnline();
 
-        if (slot == 49) {
-            SchedulerUtils.runEntity(plugin, staff, staff::closeInventory);
-            return;
-        }
+        String action = holder.getAction(slot);
+        if (action == null) return;
 
-        if (slot == 29) { // Teleport
-            if (!isOnline) return;
-            Player target = Bukkit.getPlayer(targetUuid);
-            if (target != null && target.isOnline()) {
-                SchedulerUtils.runEntity(plugin, staff, () -> {
-                    staff.closeInventory();
-                    staff.teleportAsync(target.getLocation());
-                    staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + "<color:#00E262>Teleported to " + target.getName()));
-                });
-            }
-            return;
-        }
+        switch (action) {
+            case "close_gui":
+                SchedulerUtils.runEntity(plugin, staff, staff::closeInventory);
+                break;
 
-        if (slot == 30) { // Invsee
-            if (!isOnline) return;
-            Player target = Bukkit.getPlayer(targetUuid);
-            if (target != null && target.isOnline()) {
-                SchedulerUtils.runEntity(plugin, staff, () -> {
-                    staff.closeInventory();
-                    new me.ayosynk.staff.bukkit.commands.InvseeCommand(plugin).openInvsee(staff, target);
-                });
-            }
-            return;
-        }
+            case "teleport_target":
+                if (!isOnline) return;
+                Player target = Bukkit.getPlayer(targetUuid);
+                if (target != null && target.isOnline()) {
+                    SchedulerUtils.runEntity(plugin, staff, () -> {
+                        staff.closeInventory();
+                        staff.teleportAsync(target.getLocation());
+                        staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + "<color:#00E262>Teleported to " + target.getName()));
+                    });
+                }
+                break;
 
-        if (slot == 31) { // Clear Warnings
-            SchedulerUtils.runAsync(plugin, () -> {
-                plugin.getDatabaseManager().getWarnings(targetUuid).thenAccept(warns -> {
-                    if (warns.isEmpty()) return;
+            case "inspect_inventory":
+                if (!isOnline) return;
+                Player targetPlayer = Bukkit.getPlayer(targetUuid);
+                if (targetPlayer != null && targetPlayer.isOnline()) {
+                    SchedulerUtils.runEntity(plugin, staff, () -> {
+                        staff.closeInventory();
+                        new me.ayosynk.staff.bukkit.commands.InvseeCommand(plugin).openInvsee(staff, targetPlayer);
+                    });
+                }
+                break;
 
-                    List<CompletableFuture<Integer>> futures = new ArrayList<>();
-                    for (Punishment w : warns) {
-                        futures.add(plugin.getDatabaseManager().getPlayerWeight(w.getPunisherUuid()));
-                    }
+            case "warnings_log":
+                SchedulerUtils.runAsync(plugin, () -> {
+                    plugin.getDatabaseManager().getWarnings(targetUuid).thenAccept(warns -> {
+                        if (warns.isEmpty()) return;
 
-                    CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(() -> {
-                        int executorWeight = getHierarchyWeight(staff);
-                        boolean blocked = false;
-                        UUID higherStaffUuid = null;
-                        for (int i = 0; i < warns.size(); i++) {
-                            int punisherWeight = futures.get(i).join();
-                            if (executorWeight < punisherWeight) {
-                                blocked = true;
-                                higherStaffUuid = warns.get(i).getPunisherUuid();
-                                break;
-                            }
+                        List<CompletableFuture<Integer>> futures = new ArrayList<>();
+                        for (Punishment w : warns) {
+                            futures.add(plugin.getDatabaseManager().getPlayerWeight(w.getPunisherUuid()));
                         }
 
-                        if (blocked) {
-                            final UUID finalStaffUuid = higherStaffUuid;
-                            if (finalStaffUuid != null) {
-                                plugin.getDatabaseManager().getPlayerNameByUuid(finalStaffUuid).thenAccept(name -> {
-                                    String finalName = name != null ? name : "Console";
+                        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(() -> {
+                            int executorWeight = getHierarchyWeight(staff);
+                            boolean blocked = false;
+                            UUID higherStaffUuid = null;
+                            for (int i = 0; i < warns.size(); i++) {
+                                int punisherWeight = futures.get(i).join();
+                                if (executorWeight < punisherWeight) {
+                                    blocked = true;
+                                    higherStaffUuid = warns.get(i).getPunisherUuid();
+                                    break;
+                                }
+                            }
+
+                            if (blocked) {
+                                final UUID finalStaffUuid = higherStaffUuid;
+                                if (finalStaffUuid != null) {
+                                    plugin.getDatabaseManager().getPlayerNameByUuid(finalStaffUuid).thenAccept(name -> {
+                                        String finalName = name != null ? name : "Console";
+                                        staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + 
+                                                plugin.getMessageConfig().getCannotOverwritePunishment().replace("{staff}", finalName)));
+                                    });
+                                } else {
                                     staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + 
-                                            plugin.getMessageConfig().getCannotOverwritePunishment().replace("{staff}", finalName)));
-                                });
-                            } else {
-                                staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + 
-                                        plugin.getMessageConfig().getCannotOverwritePunishment().replace("{staff}", "Console")));
+                                            plugin.getMessageConfig().getCannotOverwritePunishment().replace("{staff}", "Console")));
+                                }
+                                return;
                             }
-                            return;
-                        }
 
-                        plugin.getDatabaseManager().clearWarnings(targetUuid).thenAccept(success -> {
-                            staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getWarnCleared().replace("{player}", targetName)));
-                            SchedulerUtils.runEntity(plugin, staff, staff::closeInventory);
+                            plugin.getDatabaseManager().clearWarnings(targetUuid).thenAccept(success -> {
+                                staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getWarnCleared().replace("{player}", targetName)));
+                                SchedulerUtils.runEntity(plugin, staff, staff::closeInventory);
+                            });
                         });
                     });
                 });
-            });
-            return;
-        }
+                break;
 
-        if (slot == 32) { // Toggle Exemption
-            SchedulerUtils.runAsync(plugin, () -> {
-                plugin.getDatabaseManager().isAllowed(targetUuid).thenAccept(allowed -> {
-                    if (allowed) {
-                        plugin.getDatabaseManager().removeAllow(targetUuid).thenAccept(success -> {
-                            staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerUnallowed().replace("{player}", targetName)));
-                            SchedulerUtils.runEntity(plugin, staff, staff::closeInventory);
-                        });
-                    } else {
-                        plugin.getDatabaseManager().addAllow(targetUuid).thenRun(() -> {
-                            staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerAllowed().replace("{player}", targetName)));
-                            SchedulerUtils.runEntity(plugin, staff, staff::closeInventory);
-                        });
-                    }
+            case "exemption_status":
+                SchedulerUtils.runAsync(plugin, () -> {
+                    plugin.getDatabaseManager().isAllowed(targetUuid).thenAccept(allowed -> {
+                        if (allowed) {
+                            plugin.getDatabaseManager().removeAllow(targetUuid).thenAccept(success -> {
+                                staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerUnallowed().replace("{player}", targetName)));
+                                SchedulerUtils.runEntity(plugin, staff, staff::closeInventory);
+                            });
+                        } else {
+                            plugin.getDatabaseManager().addAllow(targetUuid).thenRun(() -> {
+                                staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerAllowed().replace("{player}", targetName)));
+                                SchedulerUtils.runEntity(plugin, staff, staff::closeInventory);
+                            });
+                        }
+                    });
                 });
-            });
-            return;
-        }
+                break;
 
-        if (slot == 33) { // View History
-            SchedulerUtils.runEntity(plugin, staff, () -> {
-                staff.closeInventory();
-                staff.performCommand("history " + targetName);
-            });
-            return;
-        }
-
-        if (slot == 38) { // Kick
-            if (!isOnline) return;
-            Player target = Bukkit.getPlayer(targetUuid);
-            if (target != null && target.isOnline()) {
-                SchedulerUtils.runEntity(plugin, target, () -> {
-                    target.kick(MiniMessageUtils.parse("<color:#E20000>Kicked by staff member: " + staff.getName()));
-                    staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + "<color:#00E262>Kicked player " + target.getName()));
+            case "view_history":
+                SchedulerUtils.runEntity(plugin, staff, () -> {
+                    staff.closeInventory();
+                    staff.performCommand("history " + targetName);
                 });
-                SchedulerUtils.runEntity(plugin, staff, staff::closeInventory);
-            }
-            return;
-        }
+                break;
 
-        if (slot == 39) { // Warn
-            SchedulerUtils.runEntity(plugin, staff, () -> {
-                staff.closeInventory();
-                staff.performCommand("warn " + targetName + " GUI Warning");
-            });
-            return;
-        }
+            case "kick_player":
+                if (!isOnline) return;
+                Player kickTarget = Bukkit.getPlayer(targetUuid);
+                if (kickTarget != null && kickTarget.isOnline()) {
+                    SchedulerUtils.runEntity(plugin, kickTarget, () -> {
+                        kickTarget.kick(MiniMessageUtils.parse("<color:#E20000>Kicked by staff member: " + staff.getName()));
+                        staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + "<color:#00E262>Kicked player " + kickTarget.getName()));
+                    });
+                    SchedulerUtils.runEntity(plugin, staff, staff::closeInventory);
+                }
+                break;
 
-        if (slot == 40) { // Mute
-            SchedulerUtils.runEntity(plugin, staff, () -> {
-                staff.closeInventory();
-                staff.performCommand("tempmute " + targetName + " 1h GUI Mute");
-            });
-            return;
-        }
+            case "warn_player":
+                SchedulerUtils.runEntity(plugin, staff, () -> {
+                    staff.closeInventory();
+                    staff.performCommand("warn " + targetName + " GUI Warning");
+                });
+                break;
 
-        if (slot == 41) { // Ban
-            SchedulerUtils.runEntity(plugin, staff, () -> {
-                staff.closeInventory();
-                staff.performCommand("ban " + targetName + " GUI Ban");
-            });
-            return;
+            case "mute_player":
+                SchedulerUtils.runEntity(plugin, staff, () -> {
+                    staff.closeInventory();
+                    staff.performCommand("tempmute " + targetName + " 1h GUI Mute");
+                });
+                break;
+
+            case "ban_player":
+                SchedulerUtils.runEntity(plugin, staff, () -> {
+                    staff.closeInventory();
+                    staff.performCommand("ban " + targetName + " GUI Ban");
+                });
+                break;
         }
     }
 }

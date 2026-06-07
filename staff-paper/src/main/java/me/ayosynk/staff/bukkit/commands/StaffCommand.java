@@ -37,6 +37,23 @@ public class StaffCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
+        if (args.length >= 1 && args[0].equalsIgnoreCase("reload")) {
+            if (!sender.hasPermission("staff.staff.reload") && !sender.hasPermission("staff.staff") && !(sender instanceof org.bukkit.command.ConsoleCommandSender)) {
+                sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getNoPermission()));
+                return true;
+            }
+            try {
+                plugin.getPluginConfig().load(true);
+                plugin.getMessageConfig().load(true);
+                plugin.getMenuManager().load();
+                sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + "<color:#00E262>Configurations and menus reloaded successfully."));
+            } catch (Exception e) {
+                sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + "<color:#E20000>Error reloading configurations: " + e.getMessage()));
+                plugin.getLogger().severe("Error reloading configurations: " + e.getMessage());
+            }
+            return true;
+        }
+
         if (!(sender instanceof Player)) {
             sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerOnly()));
             return true;
@@ -45,7 +62,7 @@ public class StaffCommand implements CommandExecutor, TabCompleter {
         Player staff = (Player) sender;
 
         if (args.length < 2 || !args[0].equalsIgnoreCase("info")) {
-            staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + "<color:#E20000>Usage: /staff info <player>"));
+            staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + "<color:#E20000>Usage: /staff info <player> or /staff reload"));
             return true;
         }
 
@@ -94,234 +111,144 @@ public class StaffCommand implements CommandExecutor, TabCompleter {
         Player targetPlayer = Bukkit.getPlayer(target.uuid);
         boolean isOnline = targetPlayer != null && targetPlayer.isOnline() && plugin.canSee(staff, targetPlayer);
 
+        me.ayosynk.staff.bukkit.config.StaffInfoMenuConfig config = plugin.getMenuManager().getStaffInfoMenuConfig();
+
         StaffInfoHolder holder = new StaffInfoHolder(target.uuid, target.name, target.ip, isOnline);
-        Inventory inv = Bukkit.createInventory(holder, 54, MiniMessageUtils.parse("<color:#A0A0A0>Staff Info: <color:#00E262>" + target.name));
+        String guiTitle = replacePlaceholders(config.title, target, isOnline, targetPlayer, weight, warnings, alts, isAllowed);
+        Inventory inv = Bukkit.createInventory(holder, config.size, MiniMessageUtils.parse(guiTitle));
         holder.setInventory(inv);
 
-        // 1. Fill borders with Gray Stained Glass Panes
-        ItemStack border = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta borderMeta = border.getItemMeta();
-        if (borderMeta != null) {
-            borderMeta.displayName(MiniMessageUtils.parse(" "));
-            border.setItemMeta(borderMeta);
-        }
+        Set<Integer> populatedSlots = new java.util.HashSet<>();
 
-        // Fill top row (0-8) and bottom row (45-53, except close button)
-        for (int i = 0; i < 9; i++) inv.setItem(i, border);
-        for (int i = 45; i < 54; i++) {
-            if (i != 49) inv.setItem(i, border);
-        }
-        // Fill columns
-        for (int i = 9; i < 45; i += 9) {
-            inv.setItem(i, border);
-            inv.setItem(i + 8, border);
-        }
+        for (Map.Entry<String, me.ayosynk.staff.bukkit.config.StaffInfoMenuConfig.MenuItem> entry : config.items.entrySet()) {
+            String actionKey = entry.getKey();
+            me.ayosynk.staff.bukkit.config.StaffInfoMenuConfig.MenuItem itemConfig = entry.getValue();
 
-        // 2. Profile Head (Slot 13)
-        ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-        SkullMeta headMeta = (SkullMeta) head.getItemMeta();
-        if (headMeta != null) {
-            headMeta.setOwningPlayer(Bukkit.getOfflinePlayer(target.uuid));
-            headMeta.displayName(MiniMessageUtils.parse("<color:#00E262>" + target.name));
-            List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
-            lore.add(MiniMessageUtils.parse("<color:#A0A0A0>UUID: <color:#FFFFFF>" + target.uuid));
-            lore.add(MiniMessageUtils.parse("<color:#A0A0A0>IP Address: <color:#FFFFFF>" + (target.ip != null && !target.ip.isEmpty() ? target.ip : "N/A")));
-            lore.add(MiniMessageUtils.parse("<color:#A0A0A0>Hierarchy Weight: <color:#00E262>" + weight));
-            headMeta.lore(lore);
-            head.setItemMeta(headMeta);
-        }
-        inv.setItem(13, head);
-
-        // 3. Compass - Connection & Session Details (Slot 11)
-        ItemStack compass = new ItemStack(Material.COMPASS);
-        ItemMeta compMeta = compass.getItemMeta();
-        if (compMeta != null) {
-            compMeta.displayName(MiniMessageUtils.parse("<color:#E2B700>Session Status"));
-            List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
-            lore.add(MiniMessageUtils.parse("<color:#A0A0A0>Status: " + (isOnline ? "<color:#00E262>Online" : "<color:#E20000>Offline")));
-            if (isOnline) {
-                lore.add(MiniMessageUtils.parse("<color:#A0A0A0>GameMode: <color:#FFFFFF>" + targetPlayer.getGameMode().name()));
-                lore.add(MiniMessageUtils.parse("<color:#A0A0A0>Flying: <color:#FFFFFF>" + (targetPlayer.isFlying() ? "Yes" : "No")));
-                lore.add(MiniMessageUtils.parse("<color:#A0A0A0>Vanished: <color:#FFFFFF>" + (plugin.isVanished(target.uuid) ? "Yes" : "No")));
-                lore.add(MiniMessageUtils.parse("<color:#A0A0A0>Ping: <color:#FFFFFF>" + targetPlayer.getPing() + "ms"));
+            List<Integer> slots = new ArrayList<>();
+            if (itemConfig.slots != null && !itemConfig.slots.isEmpty()) {
+                slots.addAll(itemConfig.slots);
+            } else if (itemConfig.slot >= 0) {
+                slots.add(itemConfig.slot);
             }
-            compMeta.lore(lore);
-            compass.setItemMeta(compMeta);
-        }
-        inv.setItem(11, compass);
 
-        // 4. Grass Block - World Location (Slot 15)
-        ItemStack grass = new ItemStack(Material.GRASS_BLOCK);
-        ItemMeta grassMeta = grass.getItemMeta();
-        if (grassMeta != null) {
-            grassMeta.displayName(MiniMessageUtils.parse("<color:#00C2E2>Location Info"));
-            List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
-            if (isOnline) {
-                Location loc = targetPlayer.getLocation();
-                lore.add(MiniMessageUtils.parse("<color:#A0A0A0>World: <color:#FFFFFF>" + loc.getWorld().getName()));
-                lore.add(MiniMessageUtils.parse("<color:#A0A0A0>X: <color:#FFFFFF>" + String.format("%.1f", loc.getX())));
-                lore.add(MiniMessageUtils.parse("<color:#A0A0A0>Y: <color:#FFFFFF>" + String.format("%.1f", loc.getY())));
-                lore.add(MiniMessageUtils.parse("<color:#A0A0A0>Z: <color:#FFFFFF>" + String.format("%.1f", loc.getZ())));
+            if (slots.isEmpty()) continue;
+
+            boolean isOnlineOnly = actionKey.equals("teleport_target") || 
+                                   actionKey.equals("inspect_inventory") || 
+                                   actionKey.equals("kick_player");
+
+            ItemStack item;
+            if (isOnlineOnly && !isOnline) {
+                item = makeDisabledPane(itemConfig.name);
             } else {
-                lore.add(MiniMessageUtils.parse("<color:#E20000>Target is offline."));
-            }
-            grassMeta.lore(lore);
-            grass.setItemMeta(grassMeta);
-        }
-        inv.setItem(15, grass);
-
-        // 5. Book - Database Status (Slot 22)
-        ItemStack book = new ItemStack(Material.BOOK);
-        ItemMeta bookMeta = book.getItemMeta();
-        if (bookMeta != null) {
-            bookMeta.displayName(MiniMessageUtils.parse("<color:#FFAA00>Database Statistics"));
-            List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
-            lore.add(MiniMessageUtils.parse("<color:#A0A0A0>Active Warnings: <color:#FFAA00>" + warnings.size()));
-            int altCount = alts.size() > 1 ? alts.size() - 1 : 0;
-            lore.add(MiniMessageUtils.parse("<color:#A0A0A0>Alt Accounts on IP: <color:#FFAA00>" + altCount));
-            lore.add(MiniMessageUtils.parse("<color:#A0A0A0>IP Ban Exempted: <color:#FFFFFF>" + (isAllowed ? "<color:#00E262>Yes" : "<color:#E20000>No")));
-            bookMeta.lore(lore);
-            book.setItemMeta(bookMeta);
-        }
-        inv.setItem(22, book);
-
-        // 6. Ender Pearl - Teleport (Slot 29, online only)
-        if (isOnline) {
-            ItemStack pearl = new ItemStack(Material.ENDER_PEARL);
-            ItemMeta pearlMeta = pearl.getItemMeta();
-            if (pearlMeta != null) {
-                pearlMeta.displayName(MiniMessageUtils.parse("<color:#00E262>Teleport to Target"));
-                pearlMeta.lore(Collections.singletonList(MiniMessageUtils.parse("<color:#A0A0A0>Click to teleport to player's current location.")));
-                pearl.setItemMeta(pearlMeta);
-            }
-            inv.setItem(29, pearl);
-        } else {
-            inv.setItem(29, makeDisabledPane("Teleport to Target"));
-        }
-
-        // 7. Chest - Invsee Inspector (Slot 30, online only)
-        if (isOnline) {
-            ItemStack chest = new ItemStack(Material.CHEST);
-            ItemMeta chestMeta = chest.getItemMeta();
-            if (chestMeta != null) {
-                chestMeta.displayName(MiniMessageUtils.parse("<color:#00E262>Inspect Inventory"));
-                chestMeta.lore(Collections.singletonList(MiniMessageUtils.parse("<color:#A0A0A0>Click to open live inventory viewer (/invsee).")));
-                chest.setItemMeta(chestMeta);
-            }
-            inv.setItem(30, chest);
-        } else {
-            inv.setItem(30, makeDisabledPane("Inspect Inventory"));
-        }
-
-        // 8. Bookshelf - Active Warnings Log (Slot 31)
-        ItemStack bookshelf = new ItemStack(Material.BOOKSHELF);
-        ItemMeta shelfMeta = bookshelf.getItemMeta();
-        if (shelfMeta != null) {
-            shelfMeta.displayName(MiniMessageUtils.parse("<color:#FFAA00>Active Warnings Profile"));
-            List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
-            if (warnings.isEmpty()) {
-                lore.add(MiniMessageUtils.parse("<color:#A0A0A0>No active warnings logged."));
-            } else {
-                for (Punishment w : warnings) {
-                    lore.add(MiniMessageUtils.parse("<color:#A0A0A0>- " + w.getReason() + " (" + DATE_FORMAT.format(w.getStartTime()) + ")"));
+                Material mat = Material.matchMaterial(itemConfig.material);
+                if (mat == null) {
+                    mat = Material.STONE;
                 }
-                lore.add(MiniMessageUtils.parse(" "));
-                lore.add(MiniMessageUtils.parse("<color:#FFAA00>Click to clear all warnings."));
+
+                if (actionKey.equals("exemption_status") && !isAllowed && mat == Material.BEACON) {
+                    mat = Material.ANVIL;
+                }
+
+                item = new ItemStack(mat);
+                ItemMeta meta = item.getItemMeta();
+                if (meta != null) {
+                    if (mat == Material.PLAYER_HEAD && meta instanceof SkullMeta) {
+                        ((SkullMeta) meta).setOwningPlayer(Bukkit.getOfflinePlayer(target.uuid));
+                    }
+
+                    String displayName = replacePlaceholders(itemConfig.name, target, isOnline, targetPlayer, weight, warnings, alts, isAllowed);
+                    meta.displayName(MiniMessageUtils.parse(displayName));
+
+                    List<net.kyori.adventure.text.Component> loreComponents = new ArrayList<>();
+                    for (String line : itemConfig.lore) {
+                        if (line.contains("{warnings_list}")) {
+                            if (warnings.isEmpty()) {
+                                loreComponents.add(MiniMessageUtils.parse("<color:#A0A0A0>No active warnings logged."));
+                            } else {
+                                for (Punishment w : warnings) {
+                                    loreComponents.add(MiniMessageUtils.parse("<color:#A0A0A0>- " + w.getReason() + " (" + DATE_FORMAT.format(w.getStartTime()) + ")"));
+                                }
+                            }
+                        } else {
+                            loreComponents.add(MiniMessageUtils.parse(replacePlaceholders(line, target, isOnline, targetPlayer, weight, warnings, alts, isAllowed)));
+                        }
+                    }
+                    meta.lore(loreComponents);
+                    item.setItemMeta(meta);
+                }
             }
-            shelfMeta.lore(lore);
-            bookshelf.setItemMeta(shelfMeta);
-        }
-        inv.setItem(31, bookshelf);
 
-        // 9. Beacon / Barrier - IP Ban Exemption Toggle (Slot 32)
-        ItemStack exemptItem = new ItemStack(isAllowed ? Material.BEACON : Material.ANVIL);
-        ItemMeta exmMeta = exemptItem.getItemMeta();
-        if (exmMeta != null) {
-            exmMeta.displayName(MiniMessageUtils.parse(isAllowed ? "<color:#00E262>Exemption Status: Whitelisted" : "<color:#E2B700>Exemption Status: Normal"));
-            List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
-            lore.add(MiniMessageUtils.parse("<color:#A0A0A0>Allows player to bypass active IP-bans."));
-            lore.add(MiniMessageUtils.parse(" "));
-            lore.add(MiniMessageUtils.parse(isAllowed ? "<color:#E20000>Click to REMOVE whitelist bypass." : "<color:#00E262>Click to ENABLE whitelist bypass."));
-            exmMeta.lore(lore);
-            exemptItem.setItemMeta(exmMeta);
-        }
-        inv.setItem(32, exemptItem);
-
-        // 10. Paper - View Full History (Slot 33)
-        ItemStack paper = new ItemStack(Material.PAPER);
-        ItemMeta paperMeta = paper.getItemMeta();
-        if (paperMeta != null) {
-            paperMeta.displayName(MiniMessageUtils.parse("<color:#00E262>View Logs History"));
-            paperMeta.lore(Collections.singletonList(MiniMessageUtils.parse("<color:#A0A0A0>Click to print full punishment history to chat.")));
-            paper.setItemMeta(paperMeta);
-        }
-        inv.setItem(33, paper);
-
-        // 11. Feather - Kick Target (Slot 38, online only)
-        if (isOnline) {
-            ItemStack feather = new ItemStack(Material.FEATHER);
-            ItemMeta featherMeta = feather.getItemMeta();
-            if (featherMeta != null) {
-                featherMeta.displayName(MiniMessageUtils.parse("<color:#E2B700>Kick Player"));
-                featherMeta.lore(Collections.singletonList(MiniMessageUtils.parse("<color:#A0A0A0>Click to kick player from the server.")));
-                feather.setItemMeta(featherMeta);
+            for (int s : slots) {
+                if (s >= 0 && s < config.size) {
+                    inv.setItem(s, item);
+                    holder.registerAction(s, actionKey);
+                    populatedSlots.add(s);
+                }
             }
-            inv.setItem(38, feather);
-        } else {
-            inv.setItem(38, makeDisabledPane("Kick Player"));
         }
 
-        // 12. Golden Axe - Warn Player (Slot 39)
-        ItemStack axe = new ItemStack(Material.GOLDEN_AXE);
-        ItemMeta axeMeta = axe.getItemMeta();
-        if (axeMeta != null) {
-            axeMeta.displayName(MiniMessageUtils.parse("<color:#FFAA00>Warn Player"));
-            axeMeta.lore(Collections.singletonList(MiniMessageUtils.parse("<color:#A0A0A0>Click to issue warning (Reason: GUI Warning).")));
-            axe.setItemMeta(axeMeta);
-        }
-        inv.setItem(39, axe);
+        if (config.fillItem != null) {
+            Material fillMat = Material.matchMaterial(config.fillItem.material);
+            if (fillMat != null) {
+                ItemStack fillStack = new ItemStack(fillMat);
+                ItemMeta fillMeta = fillStack.getItemMeta();
+                if (fillMeta != null) {
+                    fillMeta.displayName(MiniMessageUtils.parse(config.fillItem.name));
+                    List<net.kyori.adventure.text.Component> fillLore = new ArrayList<>();
+                    for (String line : config.fillItem.lore) {
+                        fillLore.add(MiniMessageUtils.parse(line));
+                    }
+                    fillMeta.lore(fillLore);
+                    fillStack.setItemMeta(fillMeta);
+                }
 
-        // 13. Bell - Mute Player (Slot 40)
-        ItemStack bell = new ItemStack(Material.BELL);
-        ItemMeta bellMeta = bell.getItemMeta();
-        if (bellMeta != null) {
-            bellMeta.displayName(MiniMessageUtils.parse("<color:#E2B700>Mute Player"));
-            bellMeta.lore(Collections.singletonList(MiniMessageUtils.parse("<color:#A0A0A0>Click to mute player for 1 hour (Reason: GUI Mute).")));
-            bell.setItemMeta(bellMeta);
+                for (int i = 0; i < config.size; i++) {
+                    if (!populatedSlots.contains(i)) {
+                        inv.setItem(i, fillStack);
+                    }
+                }
+            }
         }
-        inv.setItem(40, bell);
-
-        // 14. Netherite Sword - Ban Player (Slot 41)
-        ItemStack sword = new ItemStack(Material.NETHERITE_SWORD);
-        ItemMeta swordMeta = sword.getItemMeta();
-        if (swordMeta != null) {
-            swordMeta.displayName(MiniMessageUtils.parse("<color:#E20000>Ban Player"));
-            swordMeta.lore(Collections.singletonList(MiniMessageUtils.parse("<color:#A0A0A0>Click to ban player permanently (Reason: GUI Ban).")));
-            sword.setItemMeta(swordMeta);
-        }
-        inv.setItem(41, sword);
-
-        // 15. Barrier - Close Menu (Slot 49)
-        ItemStack barrier = new ItemStack(Material.BARRIER);
-        ItemMeta barrierMeta = barrier.getItemMeta();
-        if (barrierMeta != null) {
-            barrierMeta.displayName(MiniMessageUtils.parse("<color:#E20000>Close GUI"));
-            barrier.setItemMeta(barrierMeta);
-        }
-        inv.setItem(49, barrier);
 
         staff.openInventory(inv);
     }
 
-    private ItemStack makeDisabledPane(String title) {
+    private ItemStack makeDisabledPane(String name) {
         ItemStack item = new ItemStack(Material.RED_STAINED_GLASS_PANE);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.displayName(MiniMessageUtils.parse("<color:#E20000>" + title + " <color:#A0A0A0>(Offline)"));
+            meta.displayName(MiniMessageUtils.parse("<color:#E20000>" + cleanName(name) + " <color:#A0A0A0>(Offline)"));
             meta.lore(Collections.singletonList(MiniMessageUtils.parse("<color:#A0A0A0>Action unavailable while target is offline.")));
             item.setItemMeta(meta);
         }
         return item;
+    }
+
+    private String cleanName(String name) {
+        if (name == null) return "";
+        return name.replaceAll("<[^>]*>", "");
+    }
+
+    private String replacePlaceholders(String text, ResolvedTarget target, boolean isOnline, Player targetPlayer, int weight, List<Punishment> warnings, List<me.ayosynk.staff.database.DatabaseManager.PlayerRecord> alts, boolean isAllowed) {
+        if (text == null) return "";
+        return text.replace("{player}", target.name)
+                .replace("{uuid}", target.uuid != null ? target.uuid.toString() : "N/A")
+                .replace("{ip}", target.ip != null && !target.ip.isEmpty() ? target.ip : "N/A")
+                .replace("{weight}", String.valueOf(weight))
+                .replace("{status}", isOnline ? "<color:#00E262>Online" : "<color:#E20000>Offline")
+                .replace("{gamemode}", isOnline && targetPlayer != null ? targetPlayer.getGameMode().name() : "N/A")
+                .replace("{flying}", isOnline && targetPlayer != null ? (targetPlayer.isFlying() ? "Yes" : "No") : "N/A")
+                .replace("{vanished}", isOnline && targetPlayer != null ? (plugin.isVanished(target.uuid) ? "Yes" : "No") : "N/A")
+                .replace("{ping}", isOnline && targetPlayer != null ? String.valueOf(targetPlayer.getPing()) : "N/A")
+                .replace("{world}", isOnline && targetPlayer != null ? targetPlayer.getLocation().getWorld().getName() : "N/A")
+                .replace("{x}", isOnline && targetPlayer != null ? String.format("%.1f", targetPlayer.getLocation().getX()) : "0.0")
+                .replace("{y}", isOnline && targetPlayer != null ? String.format("%.1f", targetPlayer.getLocation().getY()) : "0.0")
+                .replace("{z}", isOnline && targetPlayer != null ? String.format("%.1f", targetPlayer.getLocation().getZ()) : "0.0")
+                .replace("{warnings}", String.valueOf(warnings.size()))
+                .replace("{alts}", String.valueOf(alts.size() > 1 ? alts.size() - 1 : 0))
+                .replace("{allowed}", isAllowed ? "<color:#00E262>Yes" : "<color:#E20000>No")
+                .replace("{exemption_action}", isAllowed ? "<color:#E20000>Click to REMOVE whitelist bypass." : "<color:#00E262>Click to ENABLE whitelist bypass.");
     }
 
     private CompletableFuture<ResolvedTarget> resolveTarget(String input) {
@@ -374,12 +301,12 @@ public class StaffCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    // Tab Completion for /staff info
+    // Tab Completion for /staff
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String alias, @NotNull String[] args) {
         if (args.length == 1) {
             String input = args[0].toLowerCase();
-            return Collections.singletonList("info").stream()
+            return Arrays.asList("info", "reload").stream()
                     .filter(s -> s.startsWith(input))
                     .collect(Collectors.toList());
         }

@@ -34,6 +34,7 @@ public final class StaffBukkitPlugin extends JavaPlugin implements StaffPlatform
     private MessageConfig messageConfig;
     private DatabaseManager databaseManager;
     private me.ayosynk.staff.migration.MigrationManager migrationManager;
+    private me.ayosynk.staff.bukkit.config.MenuManager menuManager;
 
     // Cache of all players ever seen (for tab completion)
     private final Set<String> registeredNames = ConcurrentHashMap.newKeySet();
@@ -77,6 +78,14 @@ public final class StaffBukkitPlugin extends JavaPlugin implements StaffPlatform
             e.printStackTrace();
             getServer().getPluginManager().disablePlugin(this);
             return;
+        }
+
+        // Initialize Menu Manager
+        try {
+            this.menuManager = new me.ayosynk.staff.bukkit.config.MenuManager(this);
+            this.menuManager.load();
+        } catch (Exception e) {
+            getLogger().warning("Could not initialize menus: " + e.getMessage());
         }
 
         // Initialize Database
@@ -248,6 +257,7 @@ public final class StaffBukkitPlugin extends JavaPlugin implements StaffPlatform
 
     // Getters
     public me.ayosynk.staff.migration.MigrationManager getMigrationManager() { return migrationManager; }
+    public me.ayosynk.staff.bukkit.config.MenuManager getMenuManager() { return menuManager; }
 
     // Cache operations
     public Set<String> getRegisteredNames() { return registeredNames; }

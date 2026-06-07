@@ -1,0 +1,122 @@
+name: "<color:#A0A0A0>Staff Info: <color:#00E262>{player}"
+size: 54
+
+items:
+  border_item:
+    slots: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 26, 27, 35, 36, 44, 45, 46, 47, 48, 50, 51, 52, 53]
+    item:
+      material: GRAY_STAINED_GLASS_PANE
+      name: " "
+      lore: []
+  profile_head:
+    slot: 13
+    item:
+      material: PLAYER_HEAD
+      name: "<color:#00E262>{player}"
+      lore:
+        - "<color:#A0A0A0>UUID: <color:#FFFFFF>{uuid}"
+        - "<color:#A0A0A0>IP Address: <color:#FFFFFF>{ip}"
+        - "<color:#A0A0A0>Hierarchy Weight: <color:#00E262>{weight}"
+  session_status:
+    slot: 11
+    item:
+      material: COMPASS
+      name: "<color:#E2B700>Session Status"
+      lore:
+        - "<color:#A0A0A0>Status: {status}"
+        - "<color:#A0A0A0>GameMode: <color:#FFFFFF>{gamemode}"
+        - "<color:#A0A0A0>Flying: <color:#FFFFFF>{flying}"
+        - "<color:#A0A0A0>Vanished: <color:#FFFFFF>{vanished}"
+        - "<color:#A0A0A0>Ping: <color:#FFFFFF>{ping}ms"
+  location_info:
+    slot: 15
+    item:
+      material: GRASS_BLOCK
+      name: "<color:#00C2E2>Location Info"
+      lore:
+        - "<color:#A0A0A0>World: <color:#FFFFFF>{world}"
+        - "<color:#A0A0A0>X: <color:#FFFFFF>{x}"
+        - "<color:#A0A0A0>Y: <color:#FFFFFF>{y}"
+        - "<color:#A0A0A0>Z: <color:#FFFFFF>{z}"
+  database_statistics:
+    slot: 22
+    item:
+      material: BOOK
+      name: "<color:#FFAA00>Database Statistics"
+      lore:
+        - "<color:#A0A0A0>Active Warnings: <color:#FFAA00>{warnings}"
+        - "<color:#A0A0A0>Alt Accounts on IP: <color:#FFAA00>{alts}"
+        - "<color:#A0A0A0>IP Ban Exempted: <color:#FFFFFF>{allowed}"
+  teleport_target:
+    slot: 29
+    item:
+      material: ENDER_PEARL
+      name: "<color:#00E262>Teleport to Target"
+      lore:
+        - "<color:#A0A0A0>Click to teleport to player's current location."
+  inspect_inventory:
+    slot: 30
+    item:
+      material: CHEST
+      name: "<color:#00E262>Inspect Inventory"
+      lore:
+        - "<color:#A0A0A0>Click to open live inventory viewer (/invsee)."
+  warnings_log:
+    slot: 31
+    item:
+      material: BOOKSHELF
+      name: "<color:#FFAA00>Active Warnings Profile"
+      lore:
+        - "{warnings_list}"
+        - " "
+        - "<color:#FFAA00>Click to clear all warnings."
+  exemption_status:
+    slot: 32
+    item:
+      material: BEACON
+      name: "<color:#00E262>Exemption Status"
+      lore:
+        - "<color:#A0A0A0>Allows player to bypass active IP-bans."
+        - " "
+        - "{exemption_action}"
+  view_history:
+    slot: 33
+    item:
+      material: PAPER
+      name: "<color:#00E262>View Logs History"
+      lore:
+        - "<color:#A0A0A0>Click to print full punishment history to chat."
+  kick_player:
+    slot: 38
+    item:
+      material: FEATHER
+      name: "<color:#E2B700>Kick Player"
+      lore:
+        - "<color:#A0A0A0>Click to kick player from the server."
+  warn_player:
+    slot: 39
+    item:
+      material: GOLDEN_AXE
+      name: "<color:#FFAA00>Warn Player"
+      lore:
+        - "<color:#A0A0A0>Click to issue warning (Reason: GUI Warning)."
+  mute_player:
+    slot: 40
+    item:
+      material: BELL
+      name: "<color:#E2B700>Mute Player"
+      lore:
+        - "<color:#A0A0A0>Click to mute player for 1 hour (Reason: GUI Mute)."
+  ban_player:
+    slot: 41
+    item:
+      material: NETHERITE_SWORD
+      name: "<color:#E20000>Ban Player"
+      lore:
+        - "<color:#A0A0A0>Click to ban player permanently (Reason: GUI Ban)."
+  close_gui:
+    slot: 49
+    item:
+      material: BARRIER
+      name: "<color:#E20000>Close GUI"
+      lore: []

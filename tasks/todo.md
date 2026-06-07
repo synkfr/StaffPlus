@@ -140,6 +140,18 @@
   - [x] Add `staff.info` permission description in `paper-plugin.yml`
   - [x] Verify build compiles and tests cleanly
 
+- [x] **Phase 21: Customizable Staff Info GUI via YAML & Reload Command**
+  - [x] Disable default italics in all parsed MiniMessage components globally (GUI display names & lore)
+  - [x] Create customizable `StaffInfoMenuConfig` data container supporting zmenu-like layout schema
+  - [x] Implement error-resilient YAML loader `MenuManager` checking for size, slot, and material validation
+  - [x] Register default `staff_info.yml` menu layout in plugin jar resources
+  - [x] Integrate `MenuManager` initialization & getter in `StaffBukkitPlugin`
+  - [x] Add `/staff reload` subcommand supporting console/player configuration & menu reloads
+  - [x] Refactor `StaffCommand` GUI building to dynamically draw items, slots, titles, and placeholders from configuration
+  - [x] Refactor `PlayerListener` click handling using dynamic slot-to-action registry from `StaffInfoHolder`
+  - [x] Verify build compiles and shaded JAR builds cleanly
+  - [x] Write localized YAML parser test to prove error resilience and graceful fallback
+
 ## Review & Verification Results
 
 ### 1. Compiles and Shading Integrity
@@ -182,6 +194,14 @@
 - Provides clickable punish-shortcuts (kick, warn, mute, ban, clear history, and toggle whitelist bypass) utilizing hierarchy weight permission checks.
 - Safely handles offline players by turning active buttons to red glass panes.
 - Compiles successfully without warnings/errors under Paper/Folia.
+
+### 8. Phase 21: Customizable Staff Info GUI via YAML & Reload Command
+- Removed default italics globally across item names/lore by altering the MiniMessage parsing decorator.
+- Extracted all `/staff info` layout characteristics (title, size, materials, names, slots list, fill item, and placeholders) to `menus/staff_info.yml` following the zmenu YAML schema format.
+- Implemented a robust `MenuManager` parser catching parsing or validation errors (invalid YAML syntax, invalid materials, bad sizes, out of bound slots) and logging warning reports while dynamically falling back to standard configuration settings.
+- Wired `/staff reload` console and player command executing real-time reloads of config, messages, and GUI files.
+- Completed full unit test validation (`MenuManagerTest.java`) confirming graceful error handling and correct default settings fallback under invalid YAML/logical configurations.
+- Verified compilation builds cleanly and generated shaded JAR.
 
 
 

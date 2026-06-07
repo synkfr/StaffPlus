@@ -14,6 +14,9 @@ public final class MiniMessageUtils {
         if (input == null) {
             return Component.empty();
         }
-        return MiniMessage.miniMessage().deserialize(input);
+        return Component.text()
+                .decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false)
+                .append(MiniMessage.miniMessage().deserialize(input))
+                .build();
     }
 }
