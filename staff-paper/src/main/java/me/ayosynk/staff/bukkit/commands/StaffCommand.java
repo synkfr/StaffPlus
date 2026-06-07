@@ -114,7 +114,7 @@ public class StaffCommand implements CommandExecutor, TabCompleter {
         me.ayosynk.staff.bukkit.config.StaffInfoMenuConfig config = plugin.getMenuManager().getStaffInfoMenuConfig();
 
         StaffInfoHolder holder = new StaffInfoHolder(target.uuid, target.name, target.ip, isOnline);
-        String guiTitle = replacePlaceholders(config.title, target, isOnline, targetPlayer, weight, warnings, alts, isAllowed);
+        String guiTitle = replacePlaceholders(config.name, target, isOnline, targetPlayer, weight, warnings, alts, isAllowed);
         Inventory inv = Bukkit.createInventory(holder, config.size, MiniMessageUtils.parse(guiTitle));
         holder.setInventory(inv);
 
@@ -139,9 +139,9 @@ public class StaffCommand implements CommandExecutor, TabCompleter {
 
             ItemStack item;
             if (isOnlineOnly && !isOnline) {
-                item = makeDisabledPane(itemConfig.name);
+                item = makeDisabledPane(itemConfig.item.name);
             } else {
-                Material mat = Material.matchMaterial(itemConfig.material);
+                Material mat = Material.matchMaterial(itemConfig.item.material);
                 if (mat == null) {
                     mat = Material.STONE;
                 }
@@ -157,11 +157,11 @@ public class StaffCommand implements CommandExecutor, TabCompleter {
                         ((SkullMeta) meta).setOwningPlayer(Bukkit.getOfflinePlayer(target.uuid));
                     }
 
-                    String displayName = replacePlaceholders(itemConfig.name, target, isOnline, targetPlayer, weight, warnings, alts, isAllowed);
+                    String displayName = replacePlaceholders(itemConfig.item.name, target, isOnline, targetPlayer, weight, warnings, alts, isAllowed);
                     meta.displayName(MiniMessageUtils.parse(displayName));
 
                     List<net.kyori.adventure.text.Component> loreComponents = new ArrayList<>();
-                    for (String line : itemConfig.lore) {
+                    for (String line : itemConfig.item.lore) {
                         if (line.contains("{warnings_list}")) {
                             if (warnings.isEmpty()) {
                                 loreComponents.add(MiniMessageUtils.parse("<color:#A0A0A0>No active warnings logged."));

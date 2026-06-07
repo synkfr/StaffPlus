@@ -1,36 +1,51 @@
 package me.ayosynk.staff.bukkit.config;
 
+import eu.okaeri.configs.OkaeriConfig;
+import eu.okaeri.configs.annotation.Names;
+import eu.okaeri.configs.annotation.NameStrategy;
+
 import java.util.*;
 
-public class StaffInfoMenuConfig {
-    public String title = "<color:#A0A0A0>Staff Info: <color:#00E262>{player}";
+@Names(strategy = NameStrategy.HYPHEN_CASE)
+public class StaffInfoMenuConfig extends OkaeriConfig {
+
+    public String name = "<color:#A0A0A0>Staff Info: <color:#00E262>{player}";
     public int size = 54;
 
-    public static class MenuItem {
-        public String material;
-        public String name;
-        public List<String> lore = new ArrayList<>();
+    public static class MenuItem extends OkaeriConfig {
         public int slot = -1;
         public List<Integer> slots = new ArrayList<>();
 
+        public static class ItemProperties extends OkaeriConfig {
+            public String material;
+            public String name;
+            public List<String> lore = new ArrayList<>();
+
+            public ItemProperties(String material, String name, String... lore) {
+                this.material = material;
+                this.name = name;
+                this.lore = Arrays.asList(lore);
+            }
+
+            public ItemProperties() {}
+        }
+
+        public ItemProperties item = new ItemProperties();
+
         public MenuItem(String material, String name, int slot, String... lore) {
-            this.material = material;
-            this.name = name;
             this.slot = slot;
-            this.lore = Arrays.asList(lore);
+            this.item = new ItemProperties(material, name, lore);
         }
 
         public MenuItem(String material, String name, List<Integer> slots, String... lore) {
-            this.material = material;
-            this.name = name;
             this.slots = slots;
-            this.lore = Arrays.asList(lore);
+            this.item = new ItemProperties(material, name, lore);
         }
 
         public MenuItem() {}
     }
 
-    public static class FillItem {
+    public static class FillItem extends OkaeriConfig {
         public String material;
         public String name = " ";
         public List<String> lore = new ArrayList<>();
@@ -44,7 +59,7 @@ public class StaffInfoMenuConfig {
         public FillItem() {}
     }
 
-    public Map<String, MenuItem> items = new HashMap<>();
+    public Map<String, MenuItem> items = new LinkedHashMap<>();
     public FillItem fillItem = null;
 
     public StaffInfoMenuConfig() {

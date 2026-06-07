@@ -53,7 +53,7 @@ public class MenuManagerTest {
         // Verify fallback defaults are used
         StaffInfoMenuConfig config = menuManager.getStaffInfoMenuConfig();
         assertNotNull(config);
-        assertEquals("<color:#A0A0A0>Staff Info: <color:#00E262>{player}", config.title);
+        assertEquals("<color:#A0A0A0>Staff Info: <color:#00E262>{player}", config.name);
         assertEquals(54, config.size);
         assertTrue(config.items.containsKey("border_item"));
         
@@ -91,7 +91,7 @@ public class MenuManagerTest {
         // Verify invalid material fell back to default (BARRIER)
         StaffInfoMenuConfig.MenuItem closeGui = config.items.get("close_gui");
         assertNotNull(closeGui);
-        assertEquals("BARRIER", closeGui.material);
+        assertEquals("BARRIER", closeGui.item.material);
 
         // Verify out of bounds slot fell back to default (49)
         assertEquals(49, closeGui.slot);
