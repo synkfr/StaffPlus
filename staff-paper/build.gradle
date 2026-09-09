@@ -41,6 +41,8 @@ shadowJar {
 
 test {
     useJUnitPlatform()
+    systemProperty 'net.bytebuddy.experimental', 'true'
+    jvmArgs += ['-XX:+EnableDynamicAgentLoading']
 }
 
 build {
