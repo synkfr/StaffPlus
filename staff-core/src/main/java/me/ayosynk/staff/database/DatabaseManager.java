@@ -636,4 +636,88 @@ public class DatabaseManager {
             }
         }, ForkJoinPool.commonPool());
     }
+
+    public static class StaffLeaderboardEntry {
+        private final UUID staffUuid;
+        private final String staffName;
+        private final int count;
+
+        public StaffLeaderboardEntry(UUID staffUuid, String staffName, int count) {
+            this.staffUuid = staffUuid;
+            this.staffName = staffName;
+            this.count = count;
+        }
+
+        public UUID getStaffUuid() { return staffUuid; }
+        public String getStaffName() { return staffName; }
+        public int getCount() { return count; }
+    }
+
+    public CompletableFuture<List<Punishment>> getRecentBans(int offset, int limit) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<Punishment> bans = new ArrayList<>();
+            String query = "SELECT * FROM staff_punishments WHERE type IN ('BAN', 'IP_BAN') ORDER BY start_time DESC LIMIT ? OFFSET ?";
+            try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+                ps.setInt(1, limit);
+                ps.setInt(2, Math.max(0, offset));
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        bans.add(mapPunishment(rs));
+                    }
+                }
+            } catch (SQLException e) {
+                platform.getLogger().severe("Error fetching recent bans: " + e.getMessage());
+                throw new RuntimeException(e);
+            }
+            return bans;
+        }, ForkJoinPool.commonPool());
+    }
+
+    public CompletableFuture<Integer> getTotalBanCount() {
+        return CompletableFuture.supplyAsync(() -> {
+            String query = "SELECT COUNT(*) FROM staff_punishments WHERE type IN ('BAN', 'IP_BAN')";
+            try (Connection conn = dataSource.getConnection();
+                 Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(query)) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+                return 0;
+            } catch (SQLException e) {
+                platform.getLogger().severe("Error fetching total ban count: " + e.getMessage());
+                throw new RuntimeException(e);
+            }
+        }, ForkJoinPool.commonPool());
+    }
+
+    public CompletableFuture<List<StaffLeaderboardEntry>> getStaffBanLeaderboard(int limit) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<StaffLeaderboardEntry> list = new ArrayList<>();
+            String query = "SELECT p.punisher_uuid, COUNT(*) as cnt, pl.username " +
+                    "FROM staff_punishments p " +
+                    "LEFT JOIN staff_players pl ON p.punisher_uuid = pl.uuid " +
+                    "WHERE p.type IN ('BAN', 'IP_BAN') AND p.punisher_uuid IS NOT NULL " +
+                    "GROUP BY p.punisher_uuid, pl.username " +
+                    "ORDER BY cnt DESC LIMIT ?";
+            try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+                ps.setInt(1, limit);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        String uuidStr = rs.getString("punisher_uuid");
+                        UUID uuid = uuidStr != null ? UUID.fromString(uuidStr) : null;
+                        String name = rs.getString("username");
+                        if (name == null) {
+                            name = "Console";
+                        }
+                        int count = rs.getInt("cnt");
+                        list.add(new StaffLeaderboardEntry(uuid, name, count));
+                    }
+                }
+            } catch (SQLException e) {
+                platform.getLogger().severe("Error fetching staff ban leaderboard: " + e.getMessage());
+                throw new RuntimeException(e);
+            }
+            return list;
+        }, ForkJoinPool.commonPool());
+    }
 }

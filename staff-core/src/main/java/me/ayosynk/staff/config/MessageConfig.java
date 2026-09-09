@@ -65,6 +65,19 @@ public class MessageConfig extends OkaeriConfig {
     // Invsee messages (Bukkit only)
     private String invseeOpened = "<color:#00E262>Opening live inventory of {player}...";
 
+    private String updateAvailable = "<color:#E2B700>A new version of Staff+ is available: <color:#00E262>v{latest}</color> (Current: <color:#A0A0A0>v{current}</color>)\n<color:#A0A0A0>Download: <click:open_url:'{url}'><color:#00E262><underlined>{url}</underlined></color></click>";
+
+    private String bansHeader = "<color:#E2B700>------------- [ Ban History (Page {page}/{pages}) ] -------------";
+    private String bansItemActive = "<color:#E20000>[ACTIVE]</color> <color:#00E262>{player}</color> banned by <color:#00E262>{staff}</color>: {reason} <color:#A0A0A0>({date})</color>";
+    private String bansItemExpired = "<color:#A0A0A0>[EXPIRED] <color:#00E262>{player}</color> banned by <color:#00E262>{staff}</color>: {reason} ({date})</color>";
+    private String bansFooter = "<click:run_command:'/bans {prev}'><color:#00E262>[« Previous]</color></click> <color:#A0A0A0>| <click:run_command:'/bans {next}'><color:#00E262>[Next »]</color></click>";
+    private String bansEmpty = "<color:#A0A0A0>No bans found in database.";
+
+    private String bansLeaderboardDisabled = "<color:#E20000>Bans leaderboard is currently disabled.";
+    private String bansLeaderboardHeader = "<color:#E2B700>------------- [ Staff Ban Leaderboard ] -------------";
+    private String bansLeaderboardItem = "<color:#E2B700>#{rank}</color> <color:#00E262>{staff}</color> <color:#A0A0A0>- <color:#00E262>{count}</color> bans</color>";
+    private String bansLeaderboardEmpty = "<color:#A0A0A0>No staff punishments recorded on this server.";
+
     public String getPrefix() { return prefix; }
     public String getNoPermission() { return noPermission; }
     public String getCannotOverwritePunishment() { return cannotOverwritePunishment; }
@@ -104,4 +117,14 @@ public class MessageConfig extends OkaeriConfig {
     public String getMonitorNotActive() { return monitorNotActive; }
     public String getMonitorTargetOffline() { return monitorTargetOffline; }
     public String getInvseeOpened() { return invseeOpened; }
+    public String getUpdateAvailable() { return updateAvailable; }
+    public String getBansHeader() { return bansHeader; }
+    public String getBansItemActive() { return bansItemActive; }
+    public String getBansItemExpired() { return bansItemExpired; }
+    public String getBansFooter() { return bansFooter; }
+    public String getBansEmpty() { return bansEmpty; }
+    public String getBansLeaderboardDisabled() { return bansLeaderboardDisabled; }
+    public String getBansLeaderboardHeader() { return bansLeaderboardHeader; }
+    public String getBansLeaderboardItem() { return bansLeaderboardItem; }
+    public String getBansLeaderboardEmpty() { return bansLeaderboardEmpty; }
 }

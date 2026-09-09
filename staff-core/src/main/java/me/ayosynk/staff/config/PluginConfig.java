@@ -48,6 +48,10 @@ public class PluginConfig extends OkaeriConfig {
     private String discordWebhookColorMute = "FFAA00";
     private String discordWebhookColorWarn = "FFFF55";
 
+    private boolean updateCheckerEnabled = true;
+    private boolean updateCheckerNotifyAdmins = true;
+    private boolean bansLeaderboardEnabled = true;
+
     public String getStorageType() {
         return storageType;
     }
@@ -130,5 +134,17 @@ public class PluginConfig extends OkaeriConfig {
 
     public String getDiscordWebhookColorWarn() {
         return discordWebhookColorWarn;
+    }
+
+    public boolean isUpdateCheckerEnabled() {
+        return updateCheckerEnabled;
+    }
+
+    public boolean isUpdateCheckerNotifyAdmins() {
+        return updateCheckerNotifyAdmins;
+    }
+
+    public boolean isBansLeaderboardEnabled() {
+        return bansLeaderboardEnabled;
     }
 }

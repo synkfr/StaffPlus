@@ -42,4 +42,6 @@ public interface StaffPlatform {
      * Dispatches a console command on the platform (used for warning escalation ladder).
      */
     void dispatchConsoleCommand(String command);
+
+    String getPluginVersion();
 }
