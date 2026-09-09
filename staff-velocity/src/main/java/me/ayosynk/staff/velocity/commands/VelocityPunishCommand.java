@@ -66,6 +66,8 @@ public class VelocityPunishCommand implements SimpleCommand {
             case "staffrollback" -> handleStaffRollback(source, args, db);
             case "staffallow" -> handleStaffAllow(source, args, db);
             case "staffimport" -> handleStaffImport(source, args);
+            case "bans", "banhistory", "banlist" -> handleBans(source, args, db);
+            case "bansleaderboard", "banleaderboard", "staffleaderboard" -> handleBansLeaderboard(source, db);
             default -> source.sendMessage(parse("<color:#E20000>Unknown command."));
         }
     }
@@ -73,6 +75,10 @@ public class VelocityPunishCommand implements SimpleCommand {
     @Override
     public CompletableFuture<List<String>> suggestAsync(Invocation invocation) {
         String[] args = invocation.arguments();
+        String alias = invocation.alias().toLowerCase();
+        if ((alias.equals("bans") || alias.equals("banhistory") || alias.equals("banlist")) && args.length <= 1) {
+            return CompletableFuture.completedFuture(List.of("1", "2", "3"));
+        }
         if (args.length <= 1) {
             String input = args.length == 1 ? args[0].toLowerCase() : "";
             return CompletableFuture.completedFuture(
@@ -517,6 +523,116 @@ public class VelocityPunishCommand implements SimpleCommand {
         }).exceptionally(ex -> {
             source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + "<color:#E20000>Migration failed: " + ex.getCause().getMessage()));
             return null;
+        });
+    }
+
+    private void handleBans(com.velocitypowered.api.command.CommandSource source, String[] args, DatabaseManager db) {
+        int page = 1;
+        if (args.length > 0) {
+            try {
+                page = Math.max(1, Integer.parseInt(args[0]));
+            } catch (NumberFormatException ignored) {
+                page = 1;
+            }
+        }
+
+        final int targetPage = page;
+        final int pageSize = 8;
+        final java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm");
+
+        db.getTotalBanCount().thenAccept(totalBans -> {
+            if (totalBans <= 0) {
+                source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getBansEmpty()));
+                return;
+            }
+
+            int totalPages = (int) Math.ceil((double) totalBans / pageSize);
+            int validPage = Math.min(Math.max(1, targetPage), totalPages);
+            int offset = (validPage - 1) * pageSize;
+
+            db.getRecentBans(offset, pageSize).thenAccept(bans -> {
+                if (bans.isEmpty()) {
+                    source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getBansEmpty()));
+                    return;
+                }
+
+                String header = plugin.getMessageConfig().getBansHeader()
+                        .replace("{page}", String.valueOf(validPage))
+                        .replace("{pages}", String.valueOf(totalPages))
+                        .replace("{total}", String.valueOf(totalBans));
+                source.sendMessage(parse(header));
+
+                List<CompletableFuture<Void>> futures = new ArrayList<>();
+                List<String> renderedLines = Collections.synchronizedList(new ArrayList<>());
+
+                for (Punishment p : bans) {
+                    CompletableFuture<String> targetFuture = p.getUuid() != null
+                            ? db.getPlayerNameByUuid(p.getUuid())
+                            : CompletableFuture.completedFuture(p.getIpAddress() != null ? p.getIpAddress() : "Unknown");
+
+                    CompletableFuture<String> punisherFuture = p.getPunisherUuid() != null
+                            ? db.getPlayerNameByUuid(p.getPunisherUuid())
+                            : CompletableFuture.completedFuture("Console");
+
+                    CompletableFuture<Void> lineFuture = targetFuture.thenCombine(punisherFuture, (targetName, staffName) -> {
+                        String finalTarget = targetName != null ? targetName : (p.getIpAddress() != null ? p.getIpAddress() : "Unknown");
+                        String finalStaff = staffName != null ? staffName : "Console";
+                        String dateStr = dateFormat.format(p.getStartTime());
+
+                        String template = p.isActive() && !p.isExpired()
+                                ? plugin.getMessageConfig().getBansItemActive()
+                                : plugin.getMessageConfig().getBansItemExpired();
+
+                        return template
+                                .replace("{player}", finalTarget)
+                                .replace("{staff}", finalStaff)
+                                .replace("{reason}", p.getReason())
+                                .replace("{date}", dateStr);
+                    }).thenAccept(renderedLines::add);
+
+                    futures.add(lineFuture);
+                }
+
+                CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(() -> {
+                    for (String line : renderedLines) {
+                        source.sendMessage(parse(line));
+                    }
+
+                    int prevPage = Math.max(1, validPage - 1);
+                    int nextPage = Math.min(totalPages, validPage + 1);
+
+                    String footer = plugin.getMessageConfig().getBansFooter()
+                            .replace("{prev}", String.valueOf(prevPage))
+                            .replace("{next}", String.valueOf(nextPage));
+                    source.sendMessage(parse(footer));
+                });
+            });
+        });
+    }
+
+    private void handleBansLeaderboard(com.velocitypowered.api.command.CommandSource source, DatabaseManager db) {
+        if (!plugin.getPluginConfig().isBansLeaderboardEnabled()) {
+            source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getBansLeaderboardDisabled()));
+            return;
+        }
+
+        db.getStaffBanLeaderboard(10).thenAccept(entries -> {
+            if (entries.isEmpty()) {
+                source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getBansLeaderboardEmpty()));
+                return;
+            }
+
+            source.sendMessage(parse(plugin.getMessageConfig().getBansLeaderboardHeader()));
+
+            int rank = 1;
+            for (DatabaseManager.StaffLeaderboardEntry entry : entries) {
+                String line = plugin.getMessageConfig().getBansLeaderboardItem()
+                        .replace("{rank}", String.valueOf(rank))
+                        .replace("{staff}", entry.getStaffName())
+                        .replace("{count}", String.valueOf(entry.getCount()));
+                source.sendMessage(parse(line));
+                rank++;
+            }
         });
     }
 

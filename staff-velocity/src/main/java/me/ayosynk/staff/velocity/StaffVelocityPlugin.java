@@ -31,7 +31,7 @@ import java.util.logging.Logger;
 @Plugin(
     id = "staffplus",
     name = "Staff+",
-    version = "1.0.0",
+    version = "1.1.0",
     description = "Network-wide moderation plugin for Velocity proxies",
     authors = {"me.ayosynk", "Antigravity"}
 )
@@ -46,6 +46,7 @@ public class StaffVelocityPlugin implements StaffPlatform {
     private MessageConfig messageConfig;
     private DatabaseManager databaseManager;
     private me.ayosynk.staff.migration.MigrationManager migrationManager;
+    private me.ayosynk.staff.utils.UpdateChecker updateChecker;
 
     private final Set<String> registeredNames = ConcurrentHashMap.newKeySet();
 
@@ -116,6 +117,9 @@ public class StaffVelocityPlugin implements StaffPlatform {
         // Initialize bStats Metrics (Plugin ID: 31693)
         metricsFactory.make(this, 31693);
 
+        this.updateChecker = new me.ayosynk.staff.utils.UpdateChecker(this);
+        this.updateChecker.checkForUpdates();
+
         logger.info("Staff+ Velocity Plugin has been successfully enabled!");
     }
 
@@ -134,7 +138,8 @@ public class StaffVelocityPlugin implements StaffPlatform {
         // Register all punishment commands
         String[] punishCommands = {"ban", "tempban", "unban", "ip-ban", "tempip-ban", "unip-ban",
                 "mute", "tempmute", "unmute", "warn", "warns",
-                "history", "staffhistory", "staffrollback", "staffallow", "staffimport"};
+                "history", "staffhistory", "staffrollback", "staffallow", "staffimport",
+                "bans", "banhistory", "banlist", "bansleaderboard"};
 
         for (String cmd : punishCommands) {
             var meta = cm.metaBuilder(cmd).plugin(this).build();
@@ -166,6 +171,13 @@ public class StaffVelocityPlugin implements StaffPlatform {
         server.getCommandManager().executeAsync(server.getConsoleCommandSource(), command);
     }
 
+    @Override
+    public String getPluginVersion() {
+        return server.getPluginManager().getPlugin("staffplus")
+                .flatMap(p -> p.getDescription().getVersion())
+                .orElse("1.1.0");
+    }
+
     // ==========================================
     // Getters
     // ==========================================
@@ -177,4 +189,6 @@ public class StaffVelocityPlugin implements StaffPlatform {
     public Set<String> getRegisteredNames() { return registeredNames; }
 
     public void cacheName(String name) { registeredNames.add(name); }
+
+    public me.ayosynk.staff.utils.UpdateChecker getUpdateChecker() { return updateChecker; }
 }

@@ -3,6 +3,7 @@ package me.ayosynk.staff.velocity.listeners;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.LoginEvent;
+import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.proxy.Player;
 import me.ayosynk.staff.database.Punishment;
@@ -104,5 +105,21 @@ public class VelocityListeners {
                     event.setResult(PlayerChatEvent.ChatResult.denied());
                 }
             });
+    }
+
+    @Subscribe
+    public void onPostLogin(PostLoginEvent event) {
+        Player player = event.getPlayer();
+        if (plugin.getPluginConfig().isUpdateCheckerNotifyAdmins()) {
+            if (player.hasPermission("staff.admin") || player.hasPermission("staff.update.notify")) {
+                if (plugin.getUpdateChecker() != null && plugin.getUpdateChecker().isUpdateAvailable()) {
+                    String updateMsg = plugin.getMessageConfig().getUpdateAvailable()
+                            .replace("{latest}", plugin.getUpdateChecker().getLatestVersion())
+                            .replace("{current}", plugin.getPluginVersion())
+                            .replace("{url}", plugin.getUpdateChecker().getModrinthUrl());
+                    player.sendMessage(miniMessage.deserialize(plugin.getMessageConfig().getPrefix() + updateMsg));
+                }
+            }
+        }
     }
 }
