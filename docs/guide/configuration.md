@@ -49,6 +49,13 @@ discord-webhook-avatar-url: "https://i.imgur.com/8Qp49X0.png"
 discord-webhook-color-ban: "FF5555"
 discord-webhook-color-mute: "FFAA00"
 discord-webhook-color-warn: "FFFF55"
+
+# Update Checker settings (Modrinth)
+update-checker-enabled: true
+update-checker-notify-admins: true
+
+# Staff Ban Leaderboard settings
+bans-leaderboard-enabled: true
 ```
 
 ### Config Mappings Explained
@@ -78,6 +85,13 @@ These settings are **only used on the Paper edition**. They are safely ignored i
 * **`discord-webhook-url`**: Your channel's secure Discord Webhook link.
 * **`discord-webhook-username` / `avatar-url`**: Customized profiles displayed in Discord embeds.
 * **`discord-webhook-color-*`**: Custom embed border hex colors for ban, mute, and warning events.
+
+#### Update Checker (Modrinth)
+* **`update-checker-enabled`**: Toggle automatic asynchronous version checks against Modrinth releases.
+* **`update-checker-notify-admins`**: If enabled, notifies server admins and OPs on join/login when a newer version is published.
+
+#### Staff Ban Leaderboard
+* **`bans-leaderboard-enabled`**: Toggle access to the `/bansleaderboard` command for staff activity metrics.
 
 ---
 

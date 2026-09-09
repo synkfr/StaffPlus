@@ -26,6 +26,8 @@ These commands are available on **both** Paper/Purpur/Folia servers and Velocity
 | `/staffrollback` | Revokes all active punishments placed by a staff member. | `/staffrollback <staff> [confirm]` | `staff.staffrollback` |
 | `/staffallow` | Exempts a player/UUID from active IP bans. | `/staffallow <player> [remove]` | `staff.staffallow` |
 | `/staffimport` | Imports punishments from other moderation plugins. | `/staffimport <source> [params...]` | `staff.import` |
+| `/bans` | Views paginated recent server bans. | `/bans [page]` | `staff.bans` |
+| `/bansleaderboard` | Views staff leaderboard by bans issued. | `/bansleaderboard` | `staff.bansleaderboard` |
 
 ---
 
@@ -86,3 +88,5 @@ Many commands have shorthand aliases for convenience:
 | `/staffrollback` | `/rollbackstaff`, `/rollback` |
 | `/staffallow` | `/allowip`, `/allow` |
 | `/staffimport` | `/migrate`, `/staffmigrate` |
+| `/bans` | `/banhistory`, `/banlist` |
+| `/bansleaderboard` | `/banleaderboard`, `/staffleaderboard` |

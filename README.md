@@ -34,6 +34,9 @@ Both editions share the same database, configs, and migration system — deploy 
 | Inventory Inspector (`/invsee`) | ✅ | ❌ |
 | Gamemode Shortcuts | ✅ | ❌ |
 | Flight Toggle (`/fly`) | ✅ | ❌ |
+| Global Ban History (`/bans`) | ✅ | ✅ |
+| Ban Leaderboard (`/bansleaderboard`) | ✅ | ✅ |
+| Modrinth Update Notifier | ✅ | ✅ |
 | bStats Metrics | ✅ | ✅ |
 | Folia Scheduler Safety | ✅ | N/A |
 | Proxy-Level Ban Enforcement | ❌ | ✅ |
@@ -140,6 +143,8 @@ Both editions share the same database, configs, and migration system — deploy 
 | `/staffrollback` | Rollback all active punishments placed by a staff member. | `/staffrollback <staff> [confirm]` | `staff.staffrollback` |
 | `/staffallow` | Exempt a player/UUID from active IP bans. | `/staffallow <player> [remove]` | `staff.staffallow` |
 | `/staffimport` | Import punishments from other plugins. | `/staffimport <source> [params...]` | `staff.import` |
+| `/bans` | View paginated recent server bans. | `/bans [page]` | `staff.bans` |
+| `/bansleaderboard` | View staff leaderboard by bans issued. | `/bansleaderboard` | `staff.bansleaderboard` |
 
 ### Paper-Only Commands
 
@@ -163,14 +168,14 @@ Both editions share the same database, configs, and migration system — deploy 
 
 ### Paper Edition (Paper / Purpur / Folia)
 
-1. Download `StaffPlus-Paper-1.0.0.jar` from [Releases](https://github.com/synkfr/StaffPlus/releases).
+1. Download `StaffPlus-Paper-1.1.0.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
 2. Place the JAR in your server's `plugins/` folder.
 3. Restart your server.
 4. Edit `plugins/Staff/config.yml` and `plugins/Staff/messages.yml` to your liking.
 
 ### Velocity Edition (Proxy)
 
-1. Download `StaffPlus-Velocity-1.0.0.jar` from [Releases](https://github.com/synkfr/StaffPlus/releases).
+1. Download `StaffPlus-Velocity-1.1.0.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
 2. Place the JAR in your Velocity proxy's `plugins/` folder.
 3. Restart your proxy.
 4. Edit `plugins/staffplus/config.yml` and `plugins/staffplus/messages.yml` to your liking.
@@ -236,6 +241,13 @@ discord-webhook-avatar-url: "https://i.imgur.com/8Qp49X0.png"
 discord-webhook-color-ban: "FF5555"
 discord-webhook-color-mute: "FFAA00"
 discord-webhook-color-warn: "FFFF55"
+
+# Update Checker settings (Modrinth)
+update-checker-enabled: true
+update-checker-notify-admins: true
+
+# Staff Ban Leaderboard settings
+bans-leaderboard-enabled: true
 ```
 
 ### `messages.yml`

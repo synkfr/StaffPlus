@@ -156,6 +156,20 @@
   - [x] Check if player is in spectator mode before calling `setSpectatorTarget(null)` in `restoreSpectatorState`
   - [x] Build and compile the project to verify correctness
 
+- [x] **Phase 23: Modrinth Version Notifier, /bans History, and /bansleaderboard**
+  - [x] Configure JUnit test environment with ByteBuddy experimental property for Java 25 compatibility
+  - [x] Add `StaffPlatform#getPluginVersion()` for platform-agnostic version queries
+  - [x] Implement asynchronous `UpdateChecker` querying Modrinth v2 API (`https://api.modrinth.com/v2/project/staff+/version`)
+  - [x] Add update checker and leaderboard settings to `PluginConfig.java` and MiniMessage templates to `MessageConfig.java`
+  - [x] Add `getRecentBans`, `getTotalBanCount`, and `getStaffBanLeaderboard` queries to `DatabaseManager.java`
+  - [x] Implement Paper `BansCommand.java` supporting paginated `/bans [page]` and `/bansleaderboard`
+  - [x] Register commands and update notifications on Paper (`StaffBukkitPlugin`, `PlayerListener`, `paper-plugin.yml`)
+  - [x] Register commands and update notifications on Velocity (`StaffVelocityPlugin`, `VelocityPunishCommand`, `VelocityListeners`)
+  - [x] Add `UpdateCheckerTest` unit test verifying semantic version comparisons
+  - [x] Bump project version to `1.1.0` and create `CHANGELOGS.md`
+  - [x] Update documentation across `README.md`, `commands.md`, `configuration.md`, and `getting-started.md`
+  - [x] Verify clean compile, shaded JARs creation, and test execution via `./gradlew clean build`
+
 ## Review & Verification Results
 
 ### 1. Compiles and Shading Integrity
@@ -210,6 +224,15 @@
 ### 9. Phase 22: Fix spectator target restoration exception
 - Added a game mode check `staff.getGameMode() == GameMode.SPECTATOR` prior to calling `staff.setSpectatorTarget(null)` in `restoreSpectatorState`.
 - Verified the build compiles successfully with `./gradlew clean build`.
+
+### 10. Phase 23: Version Notifier (Modrinth), /bans, and /bansleaderboard (v1.1.0)
+- Added Modrinth v2 API update checker (`https://api.modrinth.com/v2/project/staff+/version`) with console logging on startup and in-game notifications for admins/OPs on join/login.
+- Added cross-platform `/bans [page]` (aliases: `/banhistory`, `/banlist`) with clickable MiniMessage previous/next pagination buttons and active/expired badges.
+- Added cross-platform `/bansleaderboard` (aliases: `/banleaderboard`, `/staffleaderboard`) showing the Top 10 staff by bans issued with a config toggle `bans-leaderboard-enabled`.
+- Added `UpdateCheckerTest` unit test covering semantic versioning.
+- Bumped version to `1.1.0` across Gradle, Paper, Velocity, and npm package definitions.
+- Created `CHANGELOGS.md` and updated all documentation files.
+- Successfully compiled shaded JARs (`StaffPlus-Paper-1.1.0.jar` and `StaffPlus-Velocity-1.1.0.jar`) with zero errors.
 
 
 

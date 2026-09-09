@@ -56,4 +56,10 @@ features:
   - icon: 🔄
     title: Multi-Source Importer
     details: Zero-config auto-scanning and batch imports from Vanilla, Essentials, LiteBans, AdvancedBan, MaxBans, BanManager, and BungeeAdminTools.
+  - icon: 📜
+    title: Global Ban History & Leaderboard
+    details: Browse active and expired server bans with interactive page buttons (/bans), or track staff moderation metrics (/bansleaderboard).
+  - icon: 🔔
+    title: Modrinth Version Notifier
+    details: Automatic asynchronous update checking against Modrinth releases, notifying server admins with direct download links.
 ---
