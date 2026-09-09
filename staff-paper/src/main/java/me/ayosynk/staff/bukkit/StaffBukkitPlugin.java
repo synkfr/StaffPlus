@@ -35,6 +35,7 @@ public final class StaffBukkitPlugin extends JavaPlugin implements StaffPlatform
     private DatabaseManager databaseManager;
     private me.ayosynk.staff.migration.MigrationManager migrationManager;
     private me.ayosynk.staff.bukkit.config.MenuManager menuManager;
+    private me.ayosynk.staff.utils.UpdateChecker updateChecker;
 
     // Cache of all players ever seen (for tab completion)
     private final Set<String> registeredNames = ConcurrentHashMap.newKeySet();
@@ -126,6 +127,9 @@ public final class StaffBukkitPlugin extends JavaPlugin implements StaffPlatform
             getLogger().warning("Could not initialize bStats metrics: " + e.getMessage());
         }
 
+        this.updateChecker = new me.ayosynk.staff.utils.UpdateChecker(this);
+        this.updateChecker.checkForUpdates();
+
         getLogger().info("Staff+ Bukkit Plugin has been successfully enabled on Folia/Paper!");
     }
 
@@ -172,6 +176,11 @@ public final class StaffBukkitPlugin extends JavaPlugin implements StaffPlatform
         SchedulerUtils.runGlobal(this, () ->
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command)
         );
+    }
+
+    @Override
+    public String getPluginVersion() {
+        return getPluginMeta().getVersion();
     }
 
     // ==========================================
@@ -235,6 +244,10 @@ public final class StaffBukkitPlugin extends JavaPlugin implements StaffPlatform
 
         me.ayosynk.staff.bukkit.commands.StaffCommand staffCommand = new me.ayosynk.staff.bukkit.commands.StaffCommand(this);
         registerDynamic(commandMap, "staff", "Access staff utility subcommands.", "/staff <subcommand>", Collections.emptyList(), staffCommand, staffCommand);
+
+        me.ayosynk.staff.bukkit.commands.BansCommand bansCommand = new me.ayosynk.staff.bukkit.commands.BansCommand(this);
+        registerDynamic(commandMap, "bans", "View recent bans on the server.", "/bans [page]", Arrays.asList("banhistory", "banlist"), bansCommand, bansCommand);
+        registerDynamic(commandMap, "bansleaderboard", "View the staff ban leaderboard.", "/bansleaderboard", Arrays.asList("banleaderboard", "staffleaderboard"), bansCommand, bansCommand);
     }
 
     private void registerDynamic(org.bukkit.command.CommandMap commandMap, String name, String description, String usage, List<String> aliases, org.bukkit.command.CommandExecutor executor, org.bukkit.command.TabCompleter tabCompleter) {
@@ -258,6 +271,7 @@ public final class StaffBukkitPlugin extends JavaPlugin implements StaffPlatform
     // Getters
     public me.ayosynk.staff.migration.MigrationManager getMigrationManager() { return migrationManager; }
     public me.ayosynk.staff.bukkit.config.MenuManager getMenuManager() { return menuManager; }
+    public me.ayosynk.staff.utils.UpdateChecker getUpdateChecker() { return updateChecker; }
 
     // Cache operations
     public Set<String> getRegisteredNames() { return registeredNames; }

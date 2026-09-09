@@ -222,6 +222,18 @@ public class PlayerListener implements Listener {
                 player.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getVanishEnabled()));
             }
         });
+
+        if (plugin.getPluginConfig().isUpdateCheckerNotifyAdmins()) {
+            if (player.hasPermission("staff.admin") || player.hasPermission("staff.update.notify") || player.isOp()) {
+                if (plugin.getUpdateChecker() != null && plugin.getUpdateChecker().isUpdateAvailable()) {
+                    String updateMsg = plugin.getMessageConfig().getUpdateAvailable()
+                            .replace("{latest}", plugin.getUpdateChecker().getLatestVersion())
+                            .replace("{current}", plugin.getPluginVersion())
+                            .replace("{url}", plugin.getUpdateChecker().getModrinthUrl());
+                    player.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + updateMsg));
+                }
+            }
+        }
     }
 
     /**
