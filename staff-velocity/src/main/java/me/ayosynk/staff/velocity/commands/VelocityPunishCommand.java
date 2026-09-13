@@ -11,6 +11,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,11 +41,17 @@ public class VelocityPunishCommand implements SimpleCommand {
         String[] args = invocation.arguments();
         String label = invocation.alias().toLowerCase();
 
-        // Permission check
-        String permission = "staff." + label.replace("-", "");
-        if (!source.hasPermission(permission)) {
-            source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getNoPermission()));
-            return;
+        if (label.equals("staff") || label.equals("staffplus")) {
+            if (!source.hasPermission("staff.staff") && !source.hasPermission("staff.staff.reload") && (source instanceof Player)) {
+                source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getNoPermission()));
+                return;
+            }
+        } else {
+            String permission = "staff." + label.replace("-", "");
+            if (!source.hasPermission(permission)) {
+                source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getNoPermission()));
+                return;
+            }
         }
 
         DatabaseManager db = plugin.getDatabaseManager();
@@ -68,6 +75,10 @@ public class VelocityPunishCommand implements SimpleCommand {
             case "staffimport" -> handleStaffImport(source, args);
             case "bans", "banhistory", "banlist" -> handleBans(source, args, db);
             case "bansleaderboard", "banleaderboard", "staffleaderboard" -> handleBansLeaderboard(source, db);
+            case "kick" -> handleKick(source, args);
+            case "unwarn" -> handleUnwarn(source, args, db);
+            case "checkban", "bancheck" -> handleCheckban(source, args, db);
+            case "staff", "staffplus" -> handleStaff(source, args);
             default -> source.sendMessage(parse("<color:#E20000>Unknown command."));
         }
     }
@@ -76,8 +87,14 @@ public class VelocityPunishCommand implements SimpleCommand {
     public CompletableFuture<List<String>> suggestAsync(Invocation invocation) {
         String[] args = invocation.arguments();
         String alias = invocation.alias().toLowerCase();
+        if (alias.equals("staff") || alias.equals("staffplus")) {
+            if (args.length <= 1) {
+                return CompletableFuture.completedFuture(List.of("reload"));
+            }
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
         if ((alias.equals("bans") || alias.equals("banhistory") || alias.equals("banlist")) && args.length <= 1) {
-            return CompletableFuture.completedFuture(List.of("1", "2", "3"));
+            return CompletableFuture.completedFuture(List.of("1", "2", "3", "--chat"));
         }
         if (args.length <= 1) {
             String input = args.length == 1 ? args[0].toLowerCase() : "";
@@ -664,5 +681,184 @@ public class VelocityPunishCommand implements SimpleCommand {
             sb.append(args[i]);
         }
         return sb.toString();
+    }
+
+    private void handleKick(com.velocitypowered.api.command.CommandSource source, String[] args) {
+        if (args.length < 1) {
+            source.sendMessage(parse("<color:#E20000>Usage: /kick <player> [reason]"));
+            return;
+        }
+        String targetName = args[0];
+        Optional<Player> targetOpt = plugin.getServer().getPlayer(targetName);
+        if (targetOpt.isEmpty()) {
+            source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", targetName)));
+            return;
+        }
+
+        Player target = targetOpt.get();
+        if (source instanceof Player senderPlayer) {
+            if (target.hasPermission("staff.admin") && !senderPlayer.hasPermission("staff.admin")) {
+                source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getCannotKickHigherRank()));
+                return;
+            }
+        }
+
+        String reason = args.length > 1 ? joinArgs(args, 1) : "Kicked by an operator.";
+        String senderName = source instanceof Player p ? p.getUsername() : "Console";
+        String kickMsg = plugin.getMessageConfig().getKickMessage().replace("{reason}", reason);
+        target.disconnect(parse(kickMsg));
+
+        source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerKicked()
+                .replace("{player}", target.getUsername())
+                .replace("{reason}", reason)));
+
+        broadcastToAll(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerKickedBroadcast()
+                .replace("{player}", target.getUsername())
+                .replace("{staff}", senderName)
+                .replace("{reason}", reason));
+
+        DiscordWebhookUtils.sendEmbed(plugin, "Player Kicked", plugin.getPluginConfig().getDiscordWebhookColorKick(), target.getUsername(), senderName, "N/A", reason);
+    }
+
+    private void handleUnwarn(com.velocitypowered.api.command.CommandSource source, String[] args, DatabaseManager db) {
+        if (args.length < 1) {
+            source.sendMessage(parse("<color:#E20000>Usage: /unwarn <player> [id]"));
+            return;
+        }
+        String targetName = args[0];
+        String senderName = source instanceof Player p ? p.getUsername() : "Console";
+
+        db.getPlayerUuidByName(targetName).thenAccept(targetUuid -> {
+            if (targetUuid == null) {
+                source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", targetName)));
+                return;
+            }
+
+            int explicitId = -1;
+            if (args.length >= 2) {
+                try {
+                    explicitId = Integer.parseInt(args[1]);
+                } catch (NumberFormatException ignored) {}
+            }
+
+            if (explicitId != -1) {
+                final int warnId = explicitId;
+                db.getPunishmentById(warnId).thenAccept(p -> {
+                    if (p == null || p.getType() != Punishment.Type.WARN || !p.isActive()) {
+                        source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getWarningNotFound()));
+                        return;
+                    }
+                    db.removeWarningById(warnId).thenAccept(success -> {
+                        if (success) {
+                            source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerUnwarned().replace("{player}", targetName)));
+                            broadcastToAll(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerUnwarnedBroadcast()
+                                    .replace("{player}", targetName)
+                                    .replace("{staff}", senderName));
+                        } else {
+                            source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getWarningNotFound()));
+                        }
+                    });
+                });
+            } else {
+                db.getLatestActiveWarning(targetUuid).thenAccept(latest -> {
+                    if (latest == null) {
+                        source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getNoActiveWarnings().replace("{player}", targetName)));
+                        return;
+                    }
+                    db.removeWarningById(latest.getId()).thenAccept(success -> {
+                        if (success) {
+                            source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerUnwarned().replace("{player}", targetName)));
+                            broadcastToAll(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerUnwarnedBroadcast()
+                                    .replace("{player}", targetName)
+                                    .replace("{staff}", senderName));
+                        } else {
+                            source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getNoActiveWarnings().replace("{player}", targetName)));
+                        }
+                    });
+                });
+            }
+        });
+    }
+
+    private void handleCheckban(com.velocitypowered.api.command.CommandSource source, String[] args, DatabaseManager db) {
+        if (args.length < 1) {
+            source.sendMessage(parse("<color:#E20000>Usage: /checkban <player/IP>"));
+            return;
+        }
+        String input = args[0];
+        boolean isIp = input.matches("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$");
+
+        if (isIp) {
+            db.getActivePunishment(null, input, Punishment.Type.IP_BAN).thenAccept(p -> {
+                if (p == null) {
+                    source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getCheckbanNotBanned().replace("{target}", input)));
+                    return;
+                }
+                displayCheckban(source, input, p, true, db);
+            });
+        } else {
+            db.getPlayerUuidByName(input).thenAccept(uuid -> {
+                if (uuid == null) {
+                    source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", input)));
+                    return;
+                }
+                db.getActivePunishment(uuid, null, Punishment.Type.BAN).thenAccept(p -> {
+                    if (p != null) {
+                        displayCheckban(source, input, p, false, db);
+                    } else {
+                        db.getActivePunishment(uuid, null, Punishment.Type.IP_BAN).thenAccept(ipBan -> {
+                            if (ipBan != null) {
+                                displayCheckban(source, input, ipBan, true, db);
+                            } else {
+                                source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getCheckbanNotBanned().replace("{target}", input)));
+                            }
+                        });
+                    }
+                });
+            });
+        }
+    }
+
+    private void displayCheckban(com.velocitypowered.api.command.CommandSource source, String targetDisplay, Punishment p, boolean isIp, DatabaseManager db) {
+        CompletableFuture<String> staffFut = p.getPunisherUuid() != null
+                ? db.getPlayerNameByUuid(p.getPunisherUuid())
+                : CompletableFuture.completedFuture("Console");
+
+        staffFut.thenAccept(staffName -> {
+            String finalStaff = staffName != null ? staffName : "Console";
+            String duration = p.isPermanent() ? "Permanent" : DurationUtils.formatDuration(p.getDuration());
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String date = sdf.format(p.getStartTime());
+
+            source.sendMessage(parse(plugin.getMessageConfig().getCheckbanHeader().replace("{target}", targetDisplay)));
+            String template = isIp ? plugin.getMessageConfig().getCheckbanActiveIp() : plugin.getMessageConfig().getCheckbanActive();
+            String msg = template
+                    .replace("{target}", targetDisplay)
+                    .replace("{ip}", p.getIpAddress() != null ? p.getIpAddress() : targetDisplay)
+                    .replace("{staff}", finalStaff)
+                    .replace("{reason}", p.getReason())
+                    .replace("{date}", date)
+                    .replace("{duration}", duration);
+            source.sendMessage(parse(msg));
+        });
+    }
+
+    private void handleStaff(com.velocitypowered.api.command.CommandSource source, String[] args) {
+        if (args.length >= 1 && args[0].equalsIgnoreCase("reload")) {
+            if (!source.hasPermission("staff.staff.reload") && !source.hasPermission("staff.staff") && (source instanceof Player)) {
+                source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getNoPermission()));
+                return;
+            }
+            try {
+                plugin.getPluginConfig().load(true);
+                plugin.getMessageConfig().load(true);
+                source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getConfigsReloaded()));
+            } catch (Exception e) {
+                source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + "<color:#E20000>Error reloading configurations: " + e.getMessage()));
+                plugin.getLogger().severe("Error reloading configurations: " + e.getMessage());
+            }
+            return;
+        }
+        source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + "<color:#E20000>Usage: /staff reload"));
     }
 }

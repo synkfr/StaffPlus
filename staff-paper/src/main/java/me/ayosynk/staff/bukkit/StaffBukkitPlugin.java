@@ -242,8 +242,12 @@ public final class StaffBukkitPlugin extends JavaPlugin implements StaffPlatform
         me.ayosynk.staff.bukkit.commands.ImportCommand importCommand = new me.ayosynk.staff.bukkit.commands.ImportCommand(this, this.migrationManager);
         registerDynamic(commandMap, "staffimport", "Import punishments from other plugins.", "/staffimport <source> [params...]", Arrays.asList("migrate", "staffmigrate"), importCommand, importCommand);
 
+        registerDynamic(commandMap, "kick", "Kicks an online player.", "/kick <player> [reason]", Collections.emptyList(), punishCommand, punishCommand);
+        registerDynamic(commandMap, "unwarn", "Removes a warning from a player.", "/unwarn <player> [id]", Collections.emptyList(), punishCommand, punishCommand);
+        registerDynamic(commandMap, "checkban", "Checks active ban status for a player or IP.", "/checkban <player/IP>", Arrays.asList("bancheck"), punishCommand, punishCommand);
+
         me.ayosynk.staff.bukkit.commands.StaffCommand staffCommand = new me.ayosynk.staff.bukkit.commands.StaffCommand(this);
-        registerDynamic(commandMap, "staff", "Access staff utility subcommands.", "/staff <subcommand>", Collections.emptyList(), staffCommand, staffCommand);
+        registerDynamic(commandMap, "staff", "Access staff utility subcommands.", "/staff <subcommand>", Arrays.asList("staffplus", "staff+"), staffCommand, staffCommand);
 
         me.ayosynk.staff.bukkit.commands.BansCommand bansCommand = new me.ayosynk.staff.bukkit.commands.BansCommand(this);
         registerDynamic(commandMap, "bans", "View recent bans on the server.", "/bans [page]", Arrays.asList("banhistory", "banlist"), bansCommand, bansCommand);

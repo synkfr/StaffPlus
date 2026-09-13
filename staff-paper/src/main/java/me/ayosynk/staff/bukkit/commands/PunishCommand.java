@@ -581,7 +581,200 @@ public class PunishCommand implements CommandExecutor, TabCompleter {
                 });
                 break;
             }
+
+            case "kick": {
+                Player target = Bukkit.getPlayer(targetInput);
+                if (target == null) {
+                    sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", targetInput)));
+                    return;
+                }
+
+                int senderWeight = getHierarchyWeight(sender);
+                int targetWeight = getHierarchyWeight(target);
+                if (senderWeight <= targetWeight && sender instanceof Player) {
+                    sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getCannotKickHigherRank()));
+                    return;
+                }
+
+                String reason = buildReason(args, 1);
+                String kickMsg = plugin.getMessageConfig().getKickMessage().replace("{reason}", reason);
+                SchedulerUtils.runEntity(plugin, target, () -> target.kick(MiniMessageUtils.parse(kickMsg)));
+
+                sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerKicked()
+                        .replace("{player}", target.getName())
+                        .replace("{reason}", reason)));
+
+                SchedulerUtils.runGlobal(plugin, () -> {
+                    String broadcast = plugin.getMessageConfig().getPlayerKickedBroadcast()
+                            .replace("{player}", target.getName())
+                            .replace("{staff}", senderName)
+                            .replace("{reason}", reason);
+                    Bukkit.broadcast(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + broadcast));
+                });
+
+                me.ayosynk.staff.utils.DiscordWebhookUtils.sendEmbed(
+                        plugin,
+                        "Player Kicked",
+                        plugin.getPluginConfig().getDiscordWebhookColorKick(),
+                        target.getName(),
+                        senderName,
+                        "N/A",
+                        reason
+                );
+                break;
+            }
+
+            case "unwarn": {
+                resolveTarget(targetInput).thenAccept(target -> {
+                    if (target == null || target.uuid == null) {
+                        sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", targetInput)));
+                        return;
+                    }
+
+                    int explicitId = -1;
+                    if (args.length >= 2) {
+                        try {
+                            explicitId = Integer.parseInt(args[1]);
+                        } catch (NumberFormatException ignored) {}
+                    }
+
+                    if (explicitId != -1) {
+                        final int warnId = explicitId;
+                        plugin.getDatabaseManager().getPunishmentById(warnId).thenAccept(p -> {
+                            if (p == null || p.getType() != Punishment.Type.WARN || !p.isActive()) {
+                                sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getWarningNotFound()));
+                                return;
+                            }
+
+                            UUID punisherUuid = p.getPunisherUuid();
+                            CompletableFuture<Integer> punisherWeightFut = punisherUuid != null
+                                    ? plugin.getDatabaseManager().getPlayerWeight(punisherUuid)
+                                    : CompletableFuture.completedFuture(Integer.MAX_VALUE);
+
+                            punisherWeightFut.thenAccept(punisherWeight -> {
+                                int executorWeight = getHierarchyWeight(sender);
+                                if (executorWeight < punisherWeight) {
+                                    sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getCannotUnwarnHigherRank()));
+                                    return;
+                                }
+
+                                plugin.getDatabaseManager().removeWarningById(warnId).thenAccept(success -> {
+                                    if (success) {
+                                        sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerUnwarned().replace("{player}", target.name)));
+                                        SchedulerUtils.runGlobal(plugin, () -> {
+                                            String broadcast = plugin.getMessageConfig().getPlayerUnwarnedBroadcast()
+                                                    .replace("{player}", target.name)
+                                                    .replace("{staff}", senderName);
+                                            Bukkit.broadcast(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + broadcast));
+                                        });
+                                    } else {
+                                        sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getWarningNotFound()));
+                                    }
+                                });
+                            });
+                        });
+                    } else {
+                        plugin.getDatabaseManager().getLatestActiveWarning(target.uuid).thenAccept(latest -> {
+                            if (latest == null) {
+                                sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getNoActiveWarnings().replace("{player}", target.name)));
+                                return;
+                            }
+
+                            UUID punisherUuid = latest.getPunisherUuid();
+                            CompletableFuture<Integer> punisherWeightFut = punisherUuid != null
+                                    ? plugin.getDatabaseManager().getPlayerWeight(punisherUuid)
+                                    : CompletableFuture.completedFuture(Integer.MAX_VALUE);
+
+                            punisherWeightFut.thenAccept(punisherWeight -> {
+                                int executorWeight = getHierarchyWeight(sender);
+                                if (executorWeight < punisherWeight) {
+                                    sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getCannotUnwarnHigherRank()));
+                                    return;
+                                }
+
+                                plugin.getDatabaseManager().removeWarningById(latest.getId()).thenAccept(success -> {
+                                    if (success) {
+                                        sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerUnwarned().replace("{player}", target.name)));
+                                        SchedulerUtils.runGlobal(plugin, () -> {
+                                            String broadcast = plugin.getMessageConfig().getPlayerUnwarnedBroadcast()
+                                                    .replace("{player}", target.name)
+                                                    .replace("{staff}", senderName);
+                                            Bukkit.broadcast(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + broadcast));
+                                        });
+                                    } else {
+                                        sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getNoActiveWarnings().replace("{player}", target.name)));
+                                    }
+                                });
+                            });
+                        });
+                    }
+                });
+                break;
+            }
+
+            case "checkban":
+            case "bancheck": {
+                resolveTarget(targetInput).thenAccept(target -> {
+                    if (target == null) {
+                        sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", targetInput)));
+                        return;
+                    }
+
+                    boolean isIp = IP_PATTERN.matcher(targetInput).matches();
+                    if (isIp) {
+                        plugin.getDatabaseManager().getActivePunishment(null, targetInput, Punishment.Type.IP_BAN).thenAccept(p -> {
+                            if (p == null) {
+                                sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getCheckbanNotBanned().replace("{target}", targetInput)));
+                                return;
+                            }
+                            displayBanCheck(sender, targetInput, p, true);
+                        });
+                    } else {
+                        plugin.getDatabaseManager().getActivePunishment(target.uuid, target.ip, Punishment.Type.BAN).thenAccept(p -> {
+                            if (p != null) {
+                                displayBanCheck(sender, target.name, p, false);
+                                return;
+                            }
+                            if (target.ip != null) {
+                                plugin.getDatabaseManager().getActivePunishment(target.uuid, target.ip, Punishment.Type.IP_BAN).thenAccept(ipBan -> {
+                                    if (ipBan != null) {
+                                        displayBanCheck(sender, target.name, ipBan, true);
+                                    } else {
+                                        sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getCheckbanNotBanned().replace("{target}", target.name)));
+                                    }
+                                });
+                            } else {
+                                sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getCheckbanNotBanned().replace("{target}", target.name)));
+                            }
+                        });
+                    }
+                });
+                break;
+            }
         }
+    }
+
+    private void displayBanCheck(CommandSender sender, String targetDisplay, Punishment p, boolean isIp) {
+        CompletableFuture<String> punisherNameFut = p.getPunisherUuid() != null
+                ? plugin.getDatabaseManager().getPlayerNameByUuid(p.getPunisherUuid())
+                : CompletableFuture.completedFuture("Console");
+
+        punisherNameFut.thenAccept(staffName -> {
+            String finalStaff = staffName != null ? staffName : "Console";
+            String duration = p.isPermanent() ? "Permanent" : me.ayosynk.staff.utils.DurationUtils.formatDuration(p.getDuration());
+            String date = DATE_FORMAT.format(p.getStartTime());
+
+            sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getCheckbanHeader().replace("{target}", targetDisplay)));
+            String template = isIp ? plugin.getMessageConfig().getCheckbanActiveIp() : plugin.getMessageConfig().getCheckbanActive();
+            String msg = template
+                    .replace("{target}", targetDisplay)
+                    .replace("{ip}", p.getIpAddress() != null ? p.getIpAddress() : targetDisplay)
+                    .replace("{staff}", finalStaff)
+                    .replace("{reason}", p.getReason())
+                    .replace("{date}", date)
+                    .replace("{duration}", duration);
+            sender.sendMessage(MiniMessageUtils.parse(msg));
+        });
     }
 
     private String buildReason(String[] args, int startIndex) {

@@ -31,7 +31,7 @@ import java.util.logging.Logger;
 @Plugin(
     id = "staffplus",
     name = "Staff+",
-    version = "1.1.0",
+    version = "1.2.0",
     description = "Network-wide moderation plugin for Velocity proxies",
     authors = {"me.ayosynk", "Antigravity"}
 )
@@ -139,7 +139,8 @@ public class StaffVelocityPlugin implements StaffPlatform {
         String[] punishCommands = {"ban", "tempban", "unban", "ip-ban", "tempip-ban", "unip-ban",
                 "mute", "tempmute", "unmute", "warn", "warns",
                 "history", "staffhistory", "staffrollback", "staffallow", "staffimport",
-                "bans", "banhistory", "banlist", "bansleaderboard"};
+                "bans", "banhistory", "banlist", "bansleaderboard",
+                "kick", "unwarn", "checkban", "bancheck", "staff", "staffplus"};
 
         for (String cmd : punishCommands) {
             var meta = cm.metaBuilder(cmd).plugin(this).build();
@@ -175,7 +176,7 @@ public class StaffVelocityPlugin implements StaffPlatform {
     public String getPluginVersion() {
         return server.getPluginManager().getPlugin("staffplus")
                 .flatMap(p -> p.getDescription().getVersion())
-                .orElse("1.1.0");
+                .orElse("1.2.0");
     }
 
     // ==========================================

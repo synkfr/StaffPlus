@@ -1,5 +1,5 @@
 name: Staff
-version: 1.1.0
+version: 1.2.0
 main: me.ayosynk.staff.bukkit.StaffBukkitPlugin
 api-version: '1.20'
 folia-supported: true
@@ -35,5 +35,9 @@ permissions:
       staff.staff: true
       staff.bans: true
       staff.bansleaderboard: true
+      staff.kick: true
+      staff.unwarn: true
+      staff.checkban: true
+      staff.staff.reload: true
       staff.update.notify: true
 
