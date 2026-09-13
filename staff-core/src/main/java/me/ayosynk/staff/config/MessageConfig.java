@@ -78,6 +78,31 @@ public class MessageConfig extends OkaeriConfig {
     private String bansLeaderboardItem = "<color:#E2B700>#{rank}</color> <color:#00E262>{staff}</color> <color:#A0A0A0>- <color:#00E262>{count}</color> bans</color>";
     private String bansLeaderboardEmpty = "<color:#A0A0A0>No staff punishments recorded on this server.";
 
+    private String playerKicked = "<color:#00E262>You kicked {player} for: {reason}";
+    private String playerKickedBroadcast = "<color:#E20000>{player} was kicked by {staff} for: {reason}";
+    private String kickMessage = "<color:#E20000>You were kicked from the server.\n<color:#A0A0A0>Reason: <color:#FFFFFF>{reason}";
+    private String cannotKickHigherRank = "<color:#E20000>You cannot kick a staff member with higher or equal hierarchy rank.";
+
+    private String playerUnwarned = "<color:#00E262>Successfully removed warning for {player}.";
+    private String playerUnwarnedBroadcast = "<color:#00E262>{staff} removed a warning from {player}.";
+    private String noActiveWarnings = "<color:#E20000>{player} has no active warnings.";
+    private String warningNotFound = "<color:#E20000>Warning with specified ID not found or is already inactive.";
+    private String cannotUnwarnHigherRank = "<color:#E20000>You cannot remove a warning issued by a staff member with higher hierarchy rank.";
+
+    private String checkbanHeader = "<color:#E2B700>------------- [ Ban Status: {target} ] -------------";
+    private String checkbanActive = "<color:#E20000>[ACTIVE BAN]</color>\n<color:#A0A0A0>Target: <color:#FFFFFF>{target}</color>\n<color:#A0A0A0>Staff: <color:#00E262>{staff}</color>\n<color:#A0A0A0>Reason: <color:#FFFFFF>{reason}</color>\n<color:#A0A0A0>Issued: <color:#FFFFFF>{date}</color>\n<color:#A0A0A0>Expires: <color:#E2B700>{duration}</color>";
+    private String checkbanActiveIp = "<color:#E20000>[ACTIVE IP-BAN]</color>\n<color:#A0A0A0>IP: <color:#FFFFFF>{ip}</color>\n<color:#A0A0A0>Staff: <color:#00E262>{staff}</color>\n<color:#A0A0A0>Reason: <color:#FFFFFF>{reason}</color>\n<color:#A0A0A0>Issued: <color:#FFFFFF>{date}</color>\n<color:#A0A0A0>Expires: <color:#E2B700>{duration}</color>";
+    private String checkbanNotBanned = "<color:#00E262>{target} is not currently banned.";
+
+    private String bansGuiTitle = "<color:#1F1F1F>Bans - Page {page}/{pages}";
+    private String bansLeaderboardGuiTitle = "<color:#1F1F1F>Staff Ban Leaderboard";
+    private String bansFormTitle = "Recent Bans (Page {page}/{pages})";
+    private String bansFormContent = "Total bans recorded: {total}\nSelect a ban to inspect details:";
+    private String bansLeaderboardFormTitle = "Staff Ban Leaderboard";
+    private String bansLeaderboardFormContent = "Top 10 staff members by total bans issued:";
+
+    private String configsReloaded = "<color:#00E262>Configurations and messages reloaded successfully.";
+
     public String getPrefix() { return prefix; }
     public String getNoPermission() { return noPermission; }
     public String getCannotOverwritePunishment() { return cannotOverwritePunishment; }
@@ -127,4 +152,24 @@ public class MessageConfig extends OkaeriConfig {
     public String getBansLeaderboardHeader() { return bansLeaderboardHeader; }
     public String getBansLeaderboardItem() { return bansLeaderboardItem; }
     public String getBansLeaderboardEmpty() { return bansLeaderboardEmpty; }
+    public String getPlayerKicked() { return playerKicked; }
+    public String getPlayerKickedBroadcast() { return playerKickedBroadcast; }
+    public String getKickMessage() { return kickMessage; }
+    public String getCannotKickHigherRank() { return cannotKickHigherRank; }
+    public String getPlayerUnwarned() { return playerUnwarned; }
+    public String getPlayerUnwarnedBroadcast() { return playerUnwarnedBroadcast; }
+    public String getNoActiveWarnings() { return noActiveWarnings; }
+    public String getWarningNotFound() { return warningNotFound; }
+    public String getCannotUnwarnHigherRank() { return cannotUnwarnHigherRank; }
+    public String getCheckbanHeader() { return checkbanHeader; }
+    public String getCheckbanActive() { return checkbanActive; }
+    public String getCheckbanActiveIp() { return checkbanActiveIp; }
+    public String getCheckbanNotBanned() { return checkbanNotBanned; }
+    public String getBansGuiTitle() { return bansGuiTitle; }
+    public String getBansLeaderboardGuiTitle() { return bansLeaderboardGuiTitle; }
+    public String getBansFormTitle() { return bansFormTitle; }
+    public String getBansFormContent() { return bansFormContent; }
+    public String getBansLeaderboardFormTitle() { return bansLeaderboardFormTitle; }
+    public String getBansLeaderboardFormContent() { return bansLeaderboardFormContent; }
+    public String getConfigsReloaded() { return configsReloaded; }
 }

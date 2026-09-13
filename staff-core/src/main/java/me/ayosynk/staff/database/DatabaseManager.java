@@ -403,6 +403,64 @@ public class DatabaseManager {
         }, ForkJoinPool.commonPool());
     }
 
+    public CompletableFuture<Punishment> getLatestActiveWarning(UUID uuid) {
+        return CompletableFuture.supplyAsync(() -> {
+            String query = "SELECT * FROM staff_punishments WHERE uuid = ? AND type = 'WARN' AND active = 1 ORDER BY start_time DESC LIMIT 1";
+            try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+                ps.setString(1, uuid.toString());
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return mapPunishment(rs);
+                    }
+                }
+            } catch (SQLException e) {
+                platform.getLogger().severe("Could not retrieve latest warning for " + uuid + ": " + e.getMessage());
+                throw new RuntimeException(e);
+            }
+            return null;
+        }, ForkJoinPool.commonPool());
+    }
+
+    public CompletableFuture<Boolean> removeWarningById(int id) {
+        return CompletableFuture.supplyAsync(() -> {
+            String query = "UPDATE staff_punishments SET active = 0 WHERE id = ? AND type = 'WARN' AND active = 1";
+            try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+                ps.setInt(1, id);
+                return ps.executeUpdate() > 0;
+            } catch (SQLException e) {
+                platform.getLogger().severe("Could not remove warning " + id + ": " + e.getMessage());
+                throw new RuntimeException(e);
+            }
+        }, ForkJoinPool.commonPool());
+    }
+
+    public CompletableFuture<Boolean> removeLatestWarning(UUID uuid) {
+        return getLatestActiveWarning(uuid).thenCompose(latest -> {
+            if (latest == null) {
+                return CompletableFuture.completedFuture(false);
+            }
+            return removeWarningById(latest.getId());
+        });
+    }
+
+    public CompletableFuture<Punishment> getPunishmentById(int id) {
+        return CompletableFuture.supplyAsync(() -> {
+            String query = "SELECT * FROM staff_punishments WHERE id = ?";
+            try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+                ps.setInt(1, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return mapPunishment(rs);
+                    }
+                }
+            } catch (SQLException e) {
+                platform.getLogger().severe("Could not retrieve punishment by ID " + id + ": " + e.getMessage());
+                throw new RuntimeException(e);
+            }
+            return null;
+        }, ForkJoinPool.commonPool());
+    }
+
     /**
      * Helper to load and dynamically verify active punishments (muting / banning / IP banning).
      * Deactivates the punishment automatically if it is expired.

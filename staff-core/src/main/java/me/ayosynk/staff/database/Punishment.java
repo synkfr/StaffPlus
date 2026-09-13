@@ -57,7 +57,16 @@ public class Punishment {
     public void setActive(boolean active) { this.active = active; }
 
     public boolean isExpired() {
-        if (endTime == null) return false; // Permanent
+        if (endTime == null) return false;
         return System.currentTimeMillis() > endTime.getTime();
+    }
+
+    public boolean isPermanent() {
+        return endTime == null;
+    }
+
+    public long getDuration() {
+        if (endTime == null) return -1;
+        return endTime.getTime() - startTime.getTime();
     }
 }

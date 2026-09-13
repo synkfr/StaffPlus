@@ -43,10 +43,10 @@ public class PluginConfig extends OkaeriConfig {
     private String discordWebhookUsername = "Staff+ Moderation";
     private String discordWebhookAvatarUrl = "https://i.imgur.com/8Qp49X0.png";
 
-    @Comment("Hex color codes for webhook embeds (without the #)")
     private String discordWebhookColorBan = "FF5555";
     private String discordWebhookColorMute = "FFAA00";
     private String discordWebhookColorWarn = "FFFF55";
+    private String discordWebhookColorKick = "FF8800";
 
     private boolean updateCheckerEnabled = true;
     private boolean updateCheckerNotifyAdmins = true;
@@ -134,6 +134,10 @@ public class PluginConfig extends OkaeriConfig {
 
     public String getDiscordWebhookColorWarn() {
         return discordWebhookColorWarn;
+    }
+
+    public String getDiscordWebhookColorKick() {
+        return discordWebhookColorKick;
     }
 
     public boolean isUpdateCheckerEnabled() {
