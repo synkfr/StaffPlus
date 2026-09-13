@@ -28,14 +28,14 @@ Both editions share the same database, config format, and migration system.
 
 ### Paper Edition (Paper / Folia)
 
-1. Download `StaffPlus-Paper-1.1.0.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
-2. Place the JAR in your server's `plugins/` directory.
-3. Start the server to generate the default configuration files.
-4. Customize `plugins/Staff/config.yml` and `plugins/Staff/messages.yml`, then restart.
+1. Download `StaffPlus-Paper-1.2.0.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
+2. Place the jar in your server's `plugins/` directory.
+3. Start the server once to generate default configuration files in `plugins/StaffPlus/`.
+4. Configure database settings and permissions, then restart or run `/staff reload`.
 
-### Velocity Edition (Proxy)
+### Velocity Proxy
 
-1. Download `StaffPlus-Velocity-1.1.0.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
+1. Download `StaffPlus-Velocity-1.2.0.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
 2. Place the JAR in your Velocity proxy's `plugins/` directory.
 3. Start the proxy to generate the default configuration files.
 4. Customize `plugins/staffplus/config.yml` and `plugins/staffplus/messages.yml`, then restart.
@@ -77,8 +77,8 @@ cd StaffPlus
 
 The compiled shaded plugins will be located at:
 ```
-staff-paper/build/libs/StaffPlus-Paper-1.1.0.jar     # Paper/Purpur/Folia servers
-staff-velocity/build/libs/StaffPlus-Velocity-1.1.0.jar  # Velocity proxies
+staff-paper/build/libs/StaffPlus-Paper-1.2.0.jar     # Paper/Purpur/Folia servers
+staff-velocity/build/libs/StaffPlus-Velocity-1.2.0.jar  # Velocity proxies
 ```
 
 ### Project Structure

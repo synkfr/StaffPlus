@@ -36,6 +36,11 @@ Both editions share the same database, configs, and migration system — deploy 
 | Flight Toggle (`/fly`) | ✅ | ❌ |
 | Global Ban History (`/bans`) | ✅ | ✅ |
 | Ban Leaderboard (`/bansleaderboard`) | ✅ | ✅ |
+| Kick (`/kick`) | ✅ | ✅ |
+| Unwarn (`/unwarn`) | ✅ | ✅ |
+| Checkban (`/checkban`) | ✅ | ✅ |
+| Live Reload (`/staff reload`) | ✅ | ✅ |
+| Bedrock Geyser Forms | ✅ | N/A |
 | Modrinth Update Notifier | ✅ | ✅ |
 | bStats Metrics | ✅ | ✅ |
 | Folia Scheduler Safety | ✅ | N/A |
@@ -143,8 +148,12 @@ Both editions share the same database, configs, and migration system — deploy 
 | `/staffrollback` | Rollback all active punishments placed by a staff member. | `/staffrollback <staff> [confirm]` | `staff.staffrollback` |
 | `/staffallow` | Exempt a player/UUID from active IP bans. | `/staffallow <player> [remove]` | `staff.staffallow` |
 | `/staffimport` | Import punishments from other plugins. | `/staffimport <source> [params...]` | `staff.import` |
-| `/bans` | View paginated recent server bans. | `/bans [page]` | `staff.bans` |
-| `/bansleaderboard` | View staff leaderboard by bans issued. | `/bansleaderboard` | `staff.bansleaderboard` |
+| `/bans` | View recent server bans (GUI / Geyser Form / Chat). | `/bans [page] [--chat]` | `staff.bans` |
+| `/bansleaderboard` | View staff leaderboard by bans issued. | `/bansleaderboard [--chat]` | `staff.bansleaderboard` |
+| `/kick` | Kick an online player with hierarchy validation. | `/kick <player> [reason]` | `staff.kick` |
+| `/unwarn` | Remove a player's latest or specific warning. | `/unwarn <player> [id]` | `staff.unwarn` |
+| `/checkban` | Audit active ban/IP-ban status of player or IP. | `/checkban <player/IP>` | `staff.checkban` |
+| `/staff reload` | Reload configuration files live without restart. | `/staff reload` | `staff.staff.reload` |
 
 ### Paper-Only Commands
 
@@ -168,14 +177,14 @@ Both editions share the same database, configs, and migration system — deploy 
 
 ### Paper Edition (Paper / Purpur / Folia)
 
-1. Download `StaffPlus-Paper-1.1.0.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
+1. Download `StaffPlus-Paper-1.2.0.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
 2. Place the JAR in your server's `plugins/` folder.
 3. Restart your server.
 4. Edit `plugins/Staff/config.yml` and `plugins/Staff/messages.yml` to your liking.
 
 ### Velocity Edition (Proxy)
 
-1. Download `StaffPlus-Velocity-1.1.0.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
+1. Download `StaffPlus-Velocity-1.2.0.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
 2. Place the JAR in your Velocity proxy's `plugins/` folder.
 3. Restart your proxy.
 4. Edit `plugins/staffplus/config.yml` and `plugins/staffplus/messages.yml` to your liking.

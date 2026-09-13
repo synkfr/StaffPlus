@@ -26,8 +26,12 @@ These commands are available on **both** Paper/Purpur/Folia servers and Velocity
 | `/staffrollback` | Revokes all active punishments placed by a staff member. | `/staffrollback <staff> [confirm]` | `staff.staffrollback` |
 | `/staffallow` | Exempts a player/UUID from active IP bans. | `/staffallow <player> [remove]` | `staff.staffallow` |
 | `/staffimport` | Imports punishments from other moderation plugins. | `/staffimport <source> [params...]` | `staff.import` |
-| `/bans` | Views paginated recent server bans. | `/bans [page]` | `staff.bans` |
-| `/bansleaderboard` | Views staff leaderboard by bans issued. | `/bansleaderboard` | `staff.bansleaderboard` |
+| `/bans` | Views recent server bans (GUI / Geyser Form / Chat). | `/bans [page] [--chat]` | `staff.bans` |
+| `/bansleaderboard` | Views staff leaderboard by bans issued. | `/bansleaderboard [--chat]` | `staff.bansleaderboard` |
+| `/kick` | Kicks an online player from the server/proxy. | `/kick <player> [reason]` | `staff.kick` |
+| `/unwarn` | Removes latest or specific warning profile. | `/unwarn <player> [id]` | `staff.unwarn` |
+| `/checkban` | Checks active ban / IP-ban status for player or IP. | `/checkban <player/IP>` | `staff.checkban` |
+| `/staff reload` | Reloads configurations and messages live. | `/staff reload` | `staff.staff.reload` |
 
 ---
 
@@ -90,3 +94,16 @@ Many commands have shorthand aliases for convenience:
 | `/staffimport` | `/migrate`, `/staffmigrate` |
 | `/bans` | `/banhistory`, `/banlist` |
 | `/bansleaderboard` | `/banleaderboard`, `/staffleaderboard` |
+| `/checkban` | `/bancheck` |
+| `/staff` | `/staffplus`, `/staff+` |
+
+---
+
+## Interactive GUIs & Geyser Forms
+
+* **Bedrock Edition (Geyser / Floodgate)**:
+  * When executed by Bedrock players, `/bans` and `/bansleaderboard` automatically open native **Geyser Forms** (`SimpleForm`) with interactive buttons, detail modals, and back navigation.
+* **Java Edition**:
+  * When executed by Java players on Paper, `/bans` and `/bansleaderboard` open 54-slot chest inventories featuring player heads, active status badges, podium ranking layouts, and page buttons.
+* **Console / Chat Fallback**:
+  * Running with `--chat` (or `-c`), or executing from Console / Velocity, outputs paginated interactive chat text.

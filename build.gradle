@@ -7,12 +7,13 @@ subprojects {
     apply plugin: 'java'
 
     group = 'me.ayosynk.staff'
-    version = '1.1.0'
+    version = '1.2.0'
 
     repositories {
         mavenCentral()
         maven { url = 'https://repo.papermc.io/repository/maven-public/' }
         maven { url = 'https://repo.okaeri.cloud/releases' }
+        maven { url = 'https://repo.opencollab.dev/main/' }
     }
 
     tasks.withType(JavaCompile).configureEach {

@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.0] - 2026-09-13
+
+### Added
+* **Native Bedrock Geyser Forms**:
+  * Implemented `BedrockFormManager` with dual detection for `GeyserApi` (`Geyser-Spigot`) and `FloodgateApi` (`floodgate`).
+  * Bedrock players running `/bans` receive a native Bedrock `SimpleForm` with paginated ban list buttons, detailed ban modal inspections, and back navigation.
+  * Bedrock players running `/bansleaderboard` receive a native Bedrock `SimpleForm` displaying top staff member statistics and ban counts.
+  * Runtime soft-dependency isolation guaranteeing zero `NoClassDefFoundError` or crashes on servers without Geyser or Floodgate.
+* **Java Chest Inventory GUIs**:
+  * Implemented `BansMenuHolder` 54-slot chest GUI on Paper for Java players with player heads, active/expired status badges, and clickable page navigation buttons.
+  * Implemented `BansLeaderboardHolder` 54-slot chest GUI on Paper displaying top 10 staff with gold, silver, and bronze podium styling and player heads.
+  * Full support for `--chat` / `-c` flag and automatic fallback to paginated chat text for Console and Velocity proxy execution.
+* **New Moderation Commands**:
+  * `/kick <player> [reason]`: Online player kick enforcing administrative hierarchy checks, Folia entity-thread safety, and Discord webhook logging.
+  * `/unwarn <player> [id]`: Deactivates a player's latest active warning (or a specific warning ID) with hierarchy weight validation against the issuing staff member.
+  * `/checkban <player/IP>` (alias `/bancheck`): Status audit command displaying active ban or IP-ban status, expiry, issuing staff, and reason.
+* **Dynamic Configuration Reloading**:
+  * Added `/staff reload` (and `/staffplus reload`) across both Paper and Velocity to dynamically reload `config.yml` and `messages.yml` without server restarts.
+* **Core Database Enhancements**:
+  * Added `getLatestActiveWarning(UUID)` to `DatabaseManager` for quick warning resolution.
+  * Added `removeWarningById(int)` and `removeLatestWarning(UUID)` for warning revocation.
+  * Added `getPunishmentById(int)` for targeted punishment inspection.
+  * Added `isPermanent()` and `getDuration()` helpers to `Punishment`.
+
+### Changed
+* Bumped project version to `1.2.0` across all subprojects, build scripts, plugin descriptors, and documentation.
+* Added `staff.kick`, `staff.unwarn`, `staff.checkban`, and `staff.staff.reload` permission nodes to `paper-plugin.yml`.
+
+---
+
 ## [1.1.0] - 2026-09-09
 
 ### Added

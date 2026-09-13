@@ -234,5 +234,17 @@
 - Created `CHANGELOGS.md` and updated all documentation files.
 - Successfully compiled shaded JARs (`StaffPlus-Paper-1.1.0.jar` and `StaffPlus-Velocity-1.1.0.jar`) with zero errors.
 
+### 11. Phase 24: Bedrock Geyser Forms, Java Chest GUIs, /kick, /unwarn, /checkban, and /staff reload (v1.2.0)
+- Implemented native Bedrock Geyser Forms (`SimpleForm`) for `/bans` and `/bansleaderboard` via `BedrockFormManager` with dual detection for `GeyserApi` and `FloodgateApi`.
+- Implemented 54-slot chest GUIs (`BansMenuHolder`, `BansLeaderboardHolder`) for Java players on Paper with custom player heads, status indicators, and page navigation buttons.
+- Supported `--chat` / `-c` flag and automatic fallback to paginated chat text for Console and Velocity proxy.
+- Implemented `/kick <player> [reason]` with hierarchy check, Folia entity-thread execution, and Discord webhook logging.
+- Implemented `/unwarn <player> [id]` with hierarchy validation and database deactivation.
+- Implemented `/checkban <player/IP>` (alias `/bancheck`) for active ban and IP-ban status audits.
+- Implemented `/staff reload` (and `/staffplus reload`) across Paper and Velocity for dynamic live reload without restart.
+- Bumped version to `1.2.0` across Gradle, Paper, Velocity, and npm package definitions.
+- Successfully compiled shaded JARs (`StaffPlus-Paper-1.2.0.jar` and `StaffPlus-Velocity-1.2.0.jar`) with zero errors.
+
+
 
 
