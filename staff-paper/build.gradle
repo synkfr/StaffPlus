@@ -10,6 +10,10 @@ dependencies {
     // Paper API (provided at runtime by the server)
     compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
 
+    // Geyser and Floodgate APIs (optional soft dependencies for Bedrock forms)
+    compileOnly 'org.geysermc.geyser:api:2.11.2-SNAPSHOT'
+    compileOnly 'org.geysermc.floodgate:api:2.2.3-SNAPSHOT'
+
     // Okaeri Bukkit serializer (shaded, extends the core snakeyaml configurer)
     implementation 'eu.okaeri:okaeri-configs-yaml-bukkit:5.0.13'
     implementation 'eu.okaeri:okaeri-configs-serdes-bukkit:5.0.13'

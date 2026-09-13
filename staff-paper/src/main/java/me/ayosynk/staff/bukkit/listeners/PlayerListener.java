@@ -2,6 +2,8 @@ package me.ayosynk.staff.bukkit.listeners;
 
 import me.ayosynk.staff.bukkit.StaffBukkitPlugin;
 import me.ayosynk.staff.bukkit.commands.InvseeCommand;
+import me.ayosynk.staff.bukkit.commands.BansLeaderboardHolder;
+import me.ayosynk.staff.bukkit.commands.BansMenuHolder;
 import me.ayosynk.staff.bukkit.commands.InvseeHolder;
 import me.ayosynk.staff.bukkit.commands.StaffInfoHolder;
 import me.ayosynk.staff.database.Punishment;
@@ -267,6 +269,27 @@ public class PlayerListener implements Listener {
      */
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
+        if (event.getInventory().getHolder() instanceof BansMenuHolder bansHolder) {
+            event.setCancelled(true);
+            if (event.getWhoClicked() instanceof Player player) {
+                int slot = event.getRawSlot();
+                if (slot == 45 && bansHolder.getPage() > 1) {
+                    BansMenuHolder.open(plugin, player, bansHolder.getPage() - 1);
+                } else if (slot == 53 && bansHolder.getPage() < bansHolder.getTotalPages()) {
+                    BansMenuHolder.open(plugin, player, bansHolder.getPage() + 1);
+                }
+            }
+            return;
+        }
+
+        if (event.getInventory().getHolder() instanceof BansLeaderboardHolder) {
+            event.setCancelled(true);
+            if (event.getRawSlot() == 49) {
+                event.getWhoClicked().closeInventory();
+            }
+            return;
+        }
+
         if (event.getInventory().getHolder() instanceof StaffInfoHolder) {
             handleStaffInfoClick(event);
             return;

@@ -31,19 +31,39 @@ public class BansCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
         String name = cmd.getName().toLowerCase();
+        boolean forceChat = false;
+        int page = 1;
+
+        for (String arg : args) {
+            if (arg.equalsIgnoreCase("--chat") || arg.equalsIgnoreCase("-c")) {
+                forceChat = true;
+            } else {
+                try {
+                    page = Math.max(1, Integer.parseInt(arg));
+                } catch (NumberFormatException ignored) {}
+            }
+        }
 
         if (name.equals("bansleaderboard") || name.equals("banleaderboard") || name.equals("staffleaderboard")) {
+            if (sender instanceof org.bukkit.entity.Player player && !forceChat) {
+                if (me.ayosynk.staff.bukkit.compat.BedrockFormManager.isBedrock(player)) {
+                    me.ayosynk.staff.bukkit.compat.BedrockFormManager.openLeaderboardForm(plugin, player);
+                } else {
+                    BansLeaderboardHolder.open(plugin, player);
+                }
+                return true;
+            }
             SchedulerUtils.runAsync(plugin, () -> handleLeaderboard(sender));
             return true;
         }
 
-        int page = 1;
-        if (args.length > 0) {
-            try {
-                page = Math.max(1, Integer.parseInt(args[0]));
-            } catch (NumberFormatException ignored) {
-                page = 1;
+        if (sender instanceof org.bukkit.entity.Player player && !forceChat) {
+            if (me.ayosynk.staff.bukkit.compat.BedrockFormManager.isBedrock(player)) {
+                me.ayosynk.staff.bukkit.compat.BedrockFormManager.openBansForm(plugin, player, page);
+            } else {
+                BansMenuHolder.open(plugin, player, page);
             }
+            return true;
         }
 
         final int targetPage = page;
@@ -154,11 +174,15 @@ public class BansCommand implements CommandExecutor, TabCompleter {
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
         String name = cmd.getName().toLowerCase();
         if ((name.equals("bans") || name.equals("banhistory") || name.equals("banlist")) && args.length == 1) {
-            List<String> pages = new ArrayList<>();
-            pages.add("1");
-            pages.add("2");
-            pages.add("3");
-            return pages;
+            List<String> suggestions = new ArrayList<>();
+            suggestions.add("1");
+            suggestions.add("2");
+            suggestions.add("3");
+            suggestions.add("--chat");
+            return suggestions;
+        }
+        if ((name.equals("bansleaderboard") || name.equals("banleaderboard") || name.equals("staffleaderboard")) && args.length == 1) {
+            return Collections.singletonList("--chat");
         }
         return Collections.emptyList();
     }
