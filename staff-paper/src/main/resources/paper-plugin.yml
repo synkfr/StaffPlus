@@ -1,5 +1,5 @@
 name: Staff
-version: 1.2.0
+version: 1.2.1
 main: me.ayosynk.staff.bukkit.StaffBukkitPlugin
 api-version: '1.20'
 folia-supported: true

@@ -245,6 +245,10 @@
 - Bumped version to `1.2.0` across Gradle, Paper, Velocity, and npm package definitions.
 - Successfully compiled shaded JARs (`StaffPlus-Paper-1.2.0.jar` and `StaffPlus-Velocity-1.2.0.jar`) with zero errors.
 
-
-
-
+### 12. Phase 25: Bedrock / Geyser Classloader Isolation Fix & Version Bump (v1.2.1)
+- Decoupled `BedrockFormManager` into a zero-dependency facade, removing compile-only Cumulus and Geyser/Floodgate imports from the class verification path.
+- Extracted Bedrock form creation and invocation to internal `BedrockFormHandler`, `GeyserInvoker`, and `FloodgateInvoker` classes loaded strictly on-demand when `Geyser-Spigot` or `floodgate` is active.
+- Fixed `NoClassDefFoundError: org/geysermc/cumulus/form/Form` when invoking `/bans` or `/bansleaderboard` on backend Paper servers without Geyser installed locally.
+- Added `BedrockCompatTest` unit test verifying runtime safety and fallback behavior when dependencies are missing.
+- Bumped version to `1.2.1` across Gradle, Paper, Velocity, npm package definitions, and documentation.
+- Rebuilt shaded JARs (`StaffPlus-Paper-1.2.1.jar` and `StaffPlus-Velocity-1.2.1.jar`) with zero errors.

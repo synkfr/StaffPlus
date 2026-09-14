@@ -31,7 +31,7 @@ import java.util.logging.Logger;
 @Plugin(
     id = "staffplus",
     name = "Staff+",
-    version = "1.2.0",
+    version = "1.2.1",
     description = "Network-wide moderation plugin for Velocity proxies",
     authors = {"me.ayosynk", "Antigravity"}
 )
@@ -176,7 +176,7 @@ public class StaffVelocityPlugin implements StaffPlatform {
     public String getPluginVersion() {
         return server.getPluginManager().getPlugin("staffplus")
                 .flatMap(p -> p.getDescription().getVersion())
-                .orElse("1.2.0");
+                .orElse("1.2.1");
     }
 
     // ==========================================

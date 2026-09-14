@@ -1,6 +1,6 @@
 {
   "name": "staff-plus-docs",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "type": "module",
   "description": "Documentation for Staff+ Bukkit/Paper/Folia Plugin",
   "scripts": {

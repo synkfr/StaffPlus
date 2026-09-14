@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.1] - 2026-09-14
+
+### Fixed
+* **Bedrock / Geyser Classloader Isolation**:
+  * Decoupled `BedrockFormManager` into a zero-dependency facade, eliminating compile-only Cumulus and Geyser/Floodgate imports from the class verification path.
+  * Isolated Cumulus form creation and API calls into internal `BedrockFormHandler`, `GeyserInvoker`, and `FloodgateInvoker` classes, classloaded strictly on-demand only when `Geyser-Spigot` or `floodgate` is enabled on the Paper server.
+  * Resolved `NoClassDefFoundError: org/geysermc/cumulus/form/Form` that prevented `/bans`, `/banhistory`, and `/bansleaderboard` from opening on backend Paper servers operating without local Geyser or Floodgate plugins (e.g., proxy-only Geyser network architectures).
+  * Backend Paper servers without Floodgate now gracefully fall back to native 54-slot Java chest inventory GUIs with zero console errors or stack traces.
+  * Added `BedrockCompatTest` unit test verifying that Bedrock detection cleanly returns false without throwing classloading exceptions when dependencies are absent.
+
+### Changed
+* Bumped project version to `1.2.1` across all subprojects, build scripts, plugin descriptors, and documentation.
+
+---
+
 ## [1.2.0] - 2026-09-13
 
 ### Added
