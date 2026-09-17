@@ -93,9 +93,8 @@ public class StaffVelocityPlugin implements StaffPlatform {
             this.databaseManager = new DatabaseManager(this);
             this.databaseManager.init();
         } catch (Exception e) {
-            logger.severe("Could not initialize database! Plugin will not function.");
+            logger.severe("Could not initialize database: " + e.getMessage());
             e.printStackTrace();
-            return;
         }
 
         // Load name cache

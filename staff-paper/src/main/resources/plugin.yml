@@ -127,4 +127,3 @@ permissions:
   staff.update.notify:
     description: Receive notifications when updates are available.
     default: op
-

@@ -38,6 +38,8 @@ shadowJar {
     relocate 'org.bstats', 'me.ayosynk.staff.libs.bstats'
     relocate 'org.h2', 'me.ayosynk.staff.libs.h2'
     relocate 'org.xerial', 'me.ayosynk.staff.libs.xerial'
+    relocate 'org.mariadb.jdbc', 'me.ayosynk.staff.libs.mariadb'
+    relocate 'com.mysql', 'me.ayosynk.staff.libs.mysql'
 
     // Exclude SLF4J — Paper provides it
     exclude 'org/slf4j/**'

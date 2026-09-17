@@ -20,7 +20,18 @@ public class DynamicCommand extends org.bukkit.command.Command {
     }
 
     @Override
+    public boolean testPermissionSilent(@NotNull CommandSender target) {
+        if (target.isOp() || target.hasPermission("staff.admin")) {
+            return true;
+        }
+        return super.testPermissionSilent(target);
+    }
+
+    @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull String commandLabel, @NotNull String[] args) {
+        if (!testPermission(sender)) {
+            return true;
+        }
         return executor.onCommand(sender, this, commandLabel, args);
     }
 

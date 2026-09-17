@@ -41,14 +41,26 @@ public class VelocityPunishCommand implements SimpleCommand {
         String[] args = invocation.arguments();
         String label = invocation.alias().toLowerCase();
 
-        if (label.equals("staff") || label.equals("staffplus")) {
-            if (!source.hasPermission("staff.staff") && !source.hasPermission("staff.staff.reload") && (source instanceof Player)) {
-                source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getNoPermission()));
-                return;
+        String permission;
+        switch (label) {
+            case "bans", "banhistory", "banlist" -> permission = "staff.bans";
+            case "bansleaderboard", "banleaderboard", "staffleaderboard" -> permission = "staff.bansleaderboard";
+            case "checkban", "bancheck" -> permission = "staff.checkban";
+            case "staff", "staffplus", "staff+" -> {
+                if (args.length >= 1 && args[0].equalsIgnoreCase("reload")) {
+                    permission = "staff.staff.reload";
+                } else {
+                    permission = "staff.staff";
+                }
             }
-        } else {
-            String permission = "staff." + label.replace("-", "");
-            if (!source.hasPermission(permission)) {
+            default -> permission = "staff." + label.replace("-", "");
+        }
+
+        if (source instanceof Player) {
+            boolean hasPerm = source.hasPermission("staff.admin")
+                    || source.hasPermission(permission)
+                    || (permission.equals("staff.staff.reload") && source.hasPermission("staff.staff"));
+            if (!hasPerm) {
                 source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getNoPermission()));
                 return;
             }
@@ -845,13 +857,14 @@ public class VelocityPunishCommand implements SimpleCommand {
 
     private void handleStaff(com.velocitypowered.api.command.CommandSource source, String[] args) {
         if (args.length >= 1 && args[0].equalsIgnoreCase("reload")) {
-            if (!source.hasPermission("staff.staff.reload") && !source.hasPermission("staff.staff") && (source instanceof Player)) {
+            if (source instanceof Player && !source.hasPermission("staff.admin") && !source.hasPermission("staff.staff.reload") && !source.hasPermission("staff.staff")) {
                 source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getNoPermission()));
                 return;
             }
             try {
                 plugin.getPluginConfig().load(true);
                 plugin.getMessageConfig().load(true);
+                plugin.getDatabaseManager().init();
                 source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getConfigsReloaded()));
             } catch (Exception e) {
                 source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + "<color:#E20000>Error reloading configurations: " + e.getMessage()));

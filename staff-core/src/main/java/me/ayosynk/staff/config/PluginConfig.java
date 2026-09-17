@@ -8,10 +8,10 @@ import eu.okaeri.configs.annotation.Names;
 @Names(strategy = NameStrategy.HYPHEN_CASE)
 public class PluginConfig extends OkaeriConfig {
 
-    @Comment("Storage type: SQLITE or MYSQL")
+    @Comment("Storage type: SQLITE, MYSQL, or MARIADB")
     private String storageType = "sqlite";
 
-    @Comment("MySQL Connection Details (only used if storage-type is MYSQL)")
+    @Comment("MySQL / MariaDB Connection Details (only used if storage-type is MYSQL or MARIADB)")
     private String mysqlHost = "localhost";
     private int mysqlPort = 3306;
     private String mysqlDatabase = "minecraft";

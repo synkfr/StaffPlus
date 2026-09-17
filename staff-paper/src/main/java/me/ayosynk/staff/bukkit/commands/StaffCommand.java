@@ -38,7 +38,7 @@ public class StaffCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
         if (args.length >= 1 && args[0].equalsIgnoreCase("reload")) {
-            if (!sender.hasPermission("staff.staff.reload") && !sender.hasPermission("staff.staff") && !(sender instanceof org.bukkit.command.ConsoleCommandSender)) {
+            if (!sender.isOp() && !sender.hasPermission("staff.admin") && !sender.hasPermission("staff.staff.reload") && !sender.hasPermission("staff.staff") && !(sender instanceof org.bukkit.command.ConsoleCommandSender)) {
                 sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getNoPermission()));
                 return true;
             }
@@ -46,6 +46,7 @@ public class StaffCommand implements CommandExecutor, TabCompleter {
                 plugin.getPluginConfig().load(true);
                 plugin.getMessageConfig().load(true);
                 plugin.getMenuManager().load();
+                plugin.getDatabaseManager().init();
                 sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + "<color:#00E262>Configurations and menus reloaded successfully."));
             } catch (Exception e) {
                 sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + "<color:#E20000>Error reloading configurations: " + e.getMessage()));

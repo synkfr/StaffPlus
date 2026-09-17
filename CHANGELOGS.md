@@ -7,9 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.2.1] - 2026-09-14
+## [1.2.1] - 2026-09-17
 
 ### Fixed
+* **Database Driver Bundling & Connection Hardening**:
+  * Shaded and relocated official `com.mysql:mysql-connector-j:8.3.0` and `org.mariadb.jdbc:mariadb-java-client:3.3.3` across Paper and Velocity editions, fixing `ClassNotFoundException` / `No suitable driver found` on proxies and bare server environments.
+  * Added native support for `storage-type: "mariadb"` alongside `"mysql"` and `"sqlite"`.
+  * Added essential JDBC properties to connection pools: `createDatabaseIfNotExist=true` (prevents `Unknown database` errors), `allowPublicKeyRetrieval=true` (fixes MySQL 8+ authentication), `serverTimezone=UTC`, and `characterEncoding=utf8`.
+  * Implemented automated graceful fallback to local SQLite (`database.db`) with clear console warnings if a remote MySQL/MariaDB database cannot be reached, ensuring the plugin never disables itself and commands remain fully functional.
+  * Dynamic database reconnection: `/staff reload` now automatically re-initializes and reconnects the database pool on both Paper and Velocity.
+* **Command Permissions & Operator Bypass**:
+  * Added operator (`isOp()`) and `staff.admin` bypass to `DynamicCommand` and `StaffCommand` on Paper, guaranteeing OP players have access to `/bans`, `/banhistory`, `/staff reload`, and all moderation utilities.
+  * Added top-level permission declarations with `default: op` in `paper-plugin.yml` and created `plugin.yml` for complete compatibility with LuckPerms and Spigot-based permission managers.
+  * Fixed command permission mapping on Velocity: alias commands (`/banhistory`, `/banlist`, `/bancheck`) now resolve to their canonical permission nodes (`staff.bans`, `staff.checkban`), and `staff.admin` grants global access to all proxy moderation commands.
 * **Bedrock / Geyser Classloader Isolation**:
   * Decoupled `BedrockFormManager` into a zero-dependency facade, eliminating compile-only Cumulus and Geyser/Floodgate imports from the class verification path.
   * Isolated Cumulus form creation and API calls into internal `BedrockFormHandler`, `GeyserInvoker`, and `FloodgateInvoker` classes, classloaded strictly on-demand only when `Geyser-Spigot` or `floodgate` is enabled on the Paper server.

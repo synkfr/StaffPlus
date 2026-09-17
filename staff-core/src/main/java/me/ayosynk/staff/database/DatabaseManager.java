@@ -27,43 +27,116 @@ public class DatabaseManager {
 
     private final StaffPlatform platform;
     private HikariDataSource dataSource;
+    private volatile boolean isRemote = false;
 
     public DatabaseManager(StaffPlatform platform) {
         this.platform = platform;
     }
 
-    public void init() {
-        PluginConfig config = platform.getPluginConfig();
-        HikariConfig hikariConfig = new HikariConfig();
+    public boolean isRemote() {
+        return isRemote;
+    }
 
-        if (config.getStorageType().equalsIgnoreCase("mysql")) {
-            hikariConfig.setJdbcUrl("jdbc:mysql://" + config.getMysqlHost() + ":" + config.getMysqlPort() + "/" + config.getMysqlDatabase());
-            hikariConfig.setUsername(config.getMysqlUsername());
-            hikariConfig.setPassword(config.getMysqlPassword());
-            hikariConfig.addDataSourceProperty("cachePrepStmts", "true");
-            hikariConfig.addDataSourceProperty("prepStmtCacheSize", "250");
-            hikariConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-            hikariConfig.addDataSourceProperty("useServerPrepStmts", "true");
-            hikariConfig.addDataSourceProperty("useSSL", String.valueOf(config.isMysqlUseSsl()));
-            hikariConfig.setMaximumPoolSize(config.getMysqlPoolSize());
-        } else {
-            // SQLite
-            File dbFile = new File(platform.getDataFolder(), "database.db");
-            if (!dbFile.getParentFile().exists()) {
-                dbFile.getParentFile().mkdirs();
+    private String resolveDriver(String defaultClass, String relocatedClass) {
+        try {
+            return Class.forName(relocatedClass).getName();
+        } catch (ClassNotFoundException e) {
+            try {
+                return Class.forName(defaultClass).getName();
+            } catch (ClassNotFoundException e2) {
+                return defaultClass;
             }
-            hikariConfig.setJdbcUrl("jdbc:sqlite:" + dbFile.getAbsolutePath());
-            hikariConfig.setDriverClassName("org.sqlite.JDBC");
-            hikariConfig.setMaximumPoolSize(1);
+        }
+    }
+
+    public synchronized void init() {
+        if (dataSource != null && !dataSource.isClosed()) {
+            try {
+                dataSource.close();
+            } catch (Exception ignored) {}
         }
 
-        hikariConfig.setPoolName("StaffPool");
-        this.dataSource = new HikariDataSource(hikariConfig);
+        PluginConfig config = platform.getPluginConfig();
+        String storage = config.getStorageType() != null ? config.getStorageType().toLowerCase() : "sqlite";
 
+        if (storage.equals("mysql") || storage.equals("mariadb")) {
+            try {
+                initRemote(config, storage);
+                this.isRemote = true;
+                setupTables();
+                platform.getLogger().info("Successfully connected to " + storage.toUpperCase() + " database at " + config.getMysqlHost() + ":" + config.getMysqlPort() + "/" + config.getMysqlDatabase());
+                return;
+            } catch (Exception e) {
+                platform.getLogger().severe("Failed to connect to " + storage.toUpperCase() + " database (" + config.getMysqlHost() + ":" + config.getMysqlPort() + "/" + config.getMysqlDatabase() + "): " + e.getMessage());
+                platform.getLogger().warning("Falling back to local SQLite database so Staff+ remains functional!");
+                if (dataSource != null && !dataSource.isClosed()) {
+                    try {
+                        dataSource.close();
+                    } catch (Exception ignored) {}
+                }
+                this.isRemote = false;
+            }
+        }
+
+        initSqlite();
+        this.isRemote = false;
         setupTables();
     }
 
-    public void shutdown() {
+    private void initRemote(PluginConfig config, String storage) {
+        HikariConfig hikariConfig = new HikariConfig();
+        boolean isMariaDb = storage.equals("mariadb");
+
+        String driverClass;
+        String jdbcUrl;
+        if (isMariaDb) {
+            driverClass = resolveDriver("org.mariadb.jdbc.Driver", "me.ayosynk.staff.libs.mariadb.Driver");
+            jdbcUrl = "jdbc:mariadb://" + config.getMysqlHost() + ":" + config.getMysqlPort() + "/" + config.getMysqlDatabase();
+        } else {
+            driverClass = resolveDriver("com.mysql.cj.jdbc.Driver", "me.ayosynk.staff.libs.mysql.cj.jdbc.Driver");
+            jdbcUrl = "jdbc:mysql://" + config.getMysqlHost() + ":" + config.getMysqlPort() + "/" + config.getMysqlDatabase();
+        }
+
+        hikariConfig.setDriverClassName(driverClass);
+        hikariConfig.setJdbcUrl(jdbcUrl);
+        hikariConfig.setUsername(config.getMysqlUsername());
+        hikariConfig.setPassword(config.getMysqlPassword());
+
+        hikariConfig.addDataSourceProperty("cachePrepStmts", "true");
+        hikariConfig.addDataSourceProperty("prepStmtCacheSize", "250");
+        hikariConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+        hikariConfig.addDataSourceProperty("useServerPrepStmts", "true");
+        hikariConfig.addDataSourceProperty("useSSL", String.valueOf(config.isMysqlUseSsl()));
+        hikariConfig.addDataSourceProperty("createDatabaseIfNotExist", "true");
+        hikariConfig.addDataSourceProperty("allowPublicKeyRetrieval", "true");
+        hikariConfig.addDataSourceProperty("serverTimezone", "UTC");
+        hikariConfig.addDataSourceProperty("characterEncoding", "utf8");
+
+        hikariConfig.setMaximumPoolSize(Math.max(1, config.getMysqlPoolSize()));
+        hikariConfig.setConnectionTimeout(10000);
+        hikariConfig.setMaxLifetime(1800000);
+        hikariConfig.setKeepaliveTime(60000);
+        hikariConfig.setPoolName("StaffRemotePool");
+
+        this.dataSource = new HikariDataSource(hikariConfig);
+    }
+
+    private void initSqlite() {
+        HikariConfig hikariConfig = new HikariConfig();
+        File dbFile = new File(platform.getDataFolder(), "database.db");
+        if (!dbFile.getParentFile().exists()) {
+            dbFile.getParentFile().mkdirs();
+        }
+        hikariConfig.setJdbcUrl("jdbc:sqlite:" + dbFile.getAbsolutePath());
+        hikariConfig.setDriverClassName(resolveDriver("org.sqlite.JDBC", "me.ayosynk.staff.libs.xerial.sqlite.JDBC"));
+        hikariConfig.setMaximumPoolSize(1);
+        hikariConfig.setConnectionTimeout(10000);
+        hikariConfig.setPoolName("StaffSqlitePool");
+
+        this.dataSource = new HikariDataSource(hikariConfig);
+    }
+
+    public synchronized void shutdown() {
         if (dataSource != null && !dataSource.isClosed()) {
             dataSource.close();
         }
@@ -91,9 +164,8 @@ public class DatabaseManager {
             } catch (SQLException ignored) {}
 
             // Punishments Table
-            String storage = platform.getPluginConfig().getStorageType();
             String query;
-            if (storage.equalsIgnoreCase("mysql")) {
+            if (isRemote) {
                 query = "CREATE TABLE IF NOT EXISTS staff_punishments (" +
                         "id INT AUTO_INCREMENT PRIMARY KEY, " +
                         "uuid VARCHAR(36), " +
@@ -129,7 +201,7 @@ public class DatabaseManager {
      */
     public CompletableFuture<Void> savePlayer(UUID uuid, String username, String ip, int weight) {
         return CompletableFuture.runAsync(() -> {
-            boolean isMysql = platform.getPluginConfig().getStorageType().equalsIgnoreCase("mysql");
+            boolean isMysql = isRemote;
             String query;
             if (isMysql) {
                 query = "INSERT INTO staff_players (uuid, username, ip_address, last_seen, weight) VALUES (?, ?, ?, ?, ?) " +
@@ -184,7 +256,7 @@ public class DatabaseManager {
      */
     public CompletableFuture<Void> addAllow(UUID uuid) {
         return CompletableFuture.runAsync(() -> {
-            boolean isMysql = platform.getPluginConfig().getStorageType().equalsIgnoreCase("mysql");
+            boolean isMysql = isRemote;
             String query;
             if (isMysql) {
                 query = "INSERT INTO staff_allows (uuid, active) VALUES (?, 1) " +
