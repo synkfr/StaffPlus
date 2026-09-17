@@ -11,10 +11,10 @@ Both the **Paper** and **Velocity** editions use the **same configuration format
 The primary configuration file manages database setups, vanish settings, warning escalation, and Discord webhooks:
 
 ```yaml
-# Storage type: SQLITE or MYSQL
+# Storage type: SQLITE, MYSQL, or MARIADB
 storage-type: "sqlite"
 
-# MySQL Connection Details (only used if storage-type is MYSQL)
+# MySQL / MariaDB Connection Details (only used if storage-type is MYSQL or MARIADB)
 mysql-host: "localhost"
 mysql-port: 3306
 mysql-database: "minecraft"
@@ -61,11 +61,13 @@ bans-leaderboard-enabled: true
 ### Config Mappings Explained
 
 #### Database Settings
-* **`storage-type`**: Choose between local `sqlite` (zero configuration) or a centralized remote `mysql` cluster. Use `mysql` for network-wide punishment sharing between Paper and Velocity.
-* **`mysql-*`**: Connection settings for your MySQL database. Powered by an isolated **HikariCP** connection pool for maximum performance and asynchronous safety.
+* **`storage-type`**: Choose between local `sqlite` (zero configuration), remote `mysql`, or `mariadb`. Official shaded drivers for MySQL Connector/J and MariaDB Java Client are bundled directly into both Paper and Velocity editions.
+* **`mysql-*`**: Connection parameters for your remote database. Powered by an isolated **HikariCP** pool with automated table generation and `createDatabaseIfNotExist=true` support.
+* **Resilient Fallback**: If remote MySQL/MariaDB fails to connect, Staff+ logs clear diagnostic details and automatically falls back to local SQLite (`database.db`) so the plugin never disables itself and commands remain operational.
+* **Live Reload**: Updating database credentials and running `/staff reload` dynamically reconnects the database pool without server restarts.
 
 ::: tip Network Mode
-To share punishments across Paper + Velocity, set `storage-type: "mysql"` and use identical `mysql-*` credentials in both `config.yml` files.
+To share punishments across Paper + Velocity, set `storage-type: "mysql"` (or `"mariadb"`) and use identical credentials in both `config.yml` files.
 :::
 
 #### Vanish Settings (Paper Only)

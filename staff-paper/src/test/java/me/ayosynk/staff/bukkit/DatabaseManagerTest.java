@@ -101,7 +101,7 @@ public class DatabaseManagerTest {
             public void dispatchConsoleCommand(String command) {}
 
             @Override
-            public String getPluginVersion() { return "1.2.1"; }
+            public String getPluginVersion() { return "1.2.2"; }
         };
     }
 }

@@ -54,7 +54,8 @@ These commands are available **only** on Paper/Purpur/Folia servers. They requir
 
 ## Special Wildcard & Bypass Nodes
 
-* **`staff.admin`**: Grants access to all administrative capabilities and commands of `Staff+` by default. Typically assigned to OPs and high-tier Administrators.
+* **`staff.admin`**: Grants access to all administrative capabilities and commands of `Staff+` by default. On Paper, server operators (`isOp()`) automatically receive full access to all commands without needing explicit configuration.
+* **Velocity Proxy Permissions**: Since Velocity does not have an `/op` command, proxy permissions must be assigned via a proxy permissions plugin such as LuckPerms on Velocity (`/lpv user <username> permission set staff.admin true`).
 * **`staff.vanish.see`**: Allows staff to see other vanished players in the game, in tab lists, and list them in command autocompletions. *(Paper only)*
 
 ---

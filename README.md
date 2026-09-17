@@ -177,25 +177,29 @@ Both editions share the same database, configs, and migration system — deploy 
 
 ### Paper Edition (Paper / Purpur / Folia)
 
-1. Download `StaffPlus-Paper-1.2.1.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
+1. Download `StaffPlus-Paper-1.2.2.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
 2. Place the JAR in your server's `plugins/` folder.
 3. Restart your server.
 4. Edit `plugins/Staff/config.yml` and `plugins/Staff/messages.yml` to your liking.
 
 ### Velocity Edition (Proxy)
 
-1. Download `StaffPlus-Velocity-1.2.1.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
+1. Download `StaffPlus-Velocity-1.2.2.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
 2. Place the JAR in your Velocity proxy's `plugins/` folder.
 3. Restart your proxy.
 4. Edit `plugins/staffplus/config.yml` and `plugins/staffplus/messages.yml` to your liking.
+5. **Permissions on Velocity**: Grant proxy permissions to staff via LuckPerms on Velocity:
+   ```bash
+   /lpv user <your_username> permission set staff.admin true
+   ```
 
 ### Shared Database (Network Mode)
 
-To share punishments across your entire network, configure **both** editions to use the same MySQL database:
+To share punishments across your entire network, configure **both** editions to use the same MySQL or MariaDB database:
 
 ```yaml
 # config.yml (same on both Paper and Velocity)
-storage-type: "mysql"
+storage-type: "mysql" # or "mariadb"
 mysql-host: "your-db-host"
 mysql-port: 3306
 mysql-database: "staffplus"
@@ -212,10 +216,10 @@ The plugin uses Okaeri Config to generate, validate, and auto-update clean YAML 
 ### `config.yml`
 
 ```yaml
-# Storage type: SQLITE or MYSQL
+# Storage type: SQLITE, MYSQL, or MARIADB
 storage-type: "sqlite"
 
-# MySQL Connection Details (only used if storage-type is MYSQL)
+# MySQL / MariaDB Connection Details (only used if storage-type is MYSQL or MARIADB)
 mysql-host: "localhost"
 mysql-port: 3306
 mysql-database: "minecraft"

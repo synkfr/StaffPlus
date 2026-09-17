@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.2.1] - 2026-09-17
+## [1.2.2] - 2026-09-17
 
 ### Fixed
 * **Database Driver Bundling & Connection Hardening**:
@@ -20,6 +20,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * Added operator (`isOp()`) and `staff.admin` bypass to `DynamicCommand` and `StaffCommand` on Paper, guaranteeing OP players have access to `/bans`, `/banhistory`, `/staff reload`, and all moderation utilities.
   * Added top-level permission declarations with `default: op` in `paper-plugin.yml` and created `plugin.yml` for complete compatibility with LuckPerms and Spigot-based permission managers.
   * Fixed command permission mapping on Velocity: alias commands (`/banhistory`, `/banlist`, `/bancheck`) now resolve to their canonical permission nodes (`staff.bans`, `staff.checkban`), and `staff.admin` grants global access to all proxy moderation commands.
+* **Unit Testing**:
+  * Added `DatabaseManagerTest` unit test suite covering SQLite initialization, player records, and remote database fallback.
+
+### Changed
+* Bumped project version to `1.2.2` across all subprojects, build scripts, plugin descriptors, and documentation.
+
+---
+
+## [1.2.1] - 2026-09-14
+
+### Fixed
 * **Bedrock / Geyser Classloader Isolation**:
   * Decoupled `BedrockFormManager` into a zero-dependency facade, eliminating compile-only Cumulus and Geyser/Floodgate imports from the class verification path.
   * Isolated Cumulus form creation and API calls into internal `BedrockFormHandler`, `GeyserInvoker`, and `FloodgateInvoker` classes, classloaded strictly on-demand only when `Geyser-Spigot` or `floodgate` is enabled on the Paper server.

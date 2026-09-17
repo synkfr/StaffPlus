@@ -252,3 +252,14 @@
 - Added `BedrockCompatTest` unit test verifying runtime safety and fallback behavior when dependencies are missing.
 - Bumped version to `1.2.1` across Gradle, Paper, Velocity, npm package definitions, and documentation.
 - Rebuilt shaded JARs (`StaffPlus-Paper-1.2.1.jar` and `StaffPlus-Velocity-1.2.1.jar`) with zero errors.
+
+### 13. Phase 26: Database Driver Bundling, Resilient SQLite Fallback, Permission Fixes & Version Bump (v1.2.2)
+- Shaded and relocated official `com.mysql:mysql-connector-j:8.3.0` and `org.mariadb.jdbc:mariadb-java-client:3.3.3` across Paper and Velocity editions.
+- Added native support for `storage-type: "mariadb"` and configured essential connection properties (`createDatabaseIfNotExist`, `allowPublicKeyRetrieval`, `serverTimezone`, `characterEncoding`).
+- Implemented automatic fallback to local SQLite (`database.db`) with diagnostic logging when remote database connections fail, preventing plugin shutdowns.
+- Fixed command permissions: added OP and `staff.admin` bypass in `DynamicCommand` and `StaffCommand` on Paper; mapped aliases (`/banhistory`, `/banlist`, `/bancheck`, `/staff reload`) and added `staff.admin` override on Velocity.
+- Declared all permissions with `default: op` in `paper-plugin.yml` and added standard `plugin.yml`.
+- Added `DatabaseManagerTest` unit test suite covering SQLite and fallback behavior.
+- Bumped version to `1.2.2` across Gradle, Paper, Velocity, npm package definitions, and updated all documentation.
+- Successfully compiled shaded JARs (`StaffPlus-Paper-1.2.2.jar` and `StaffPlus-Velocity-1.2.2.jar`) with zero errors.
+
