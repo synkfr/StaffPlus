@@ -63,13 +63,26 @@ Starting in v1.2.2:
 
 ## 🔑 Permissions & Velocity Proxy
 
-### Q: Why do I get "no permission" for `/bans`, `/banhistory`, or `/staff reload` even if I have OP?
+### Q: Why do I get "no permission" on Velocity even if I have OP on Paper?
 * **On Paper/Folia backend servers**: All Staff+ commands default to Server Operators (`default: op`). Additionally, assigning `staff.admin` grants immediate full access to all commands and bypasses all restrictions.
-* **On Velocity proxy servers**: The Velocity proxy has no native `/op` command. To use proxy commands (`/ban`, `/mute`, `/bans`, `/banhistory`, `/staff reload`), you must assign permissions via a proxy permission plugin such as LuckPerms Velocity:
+* **On Velocity proxy servers**: The Velocity proxy has no native `/op` command. If you manage permissions via LuckPerms Velocity, you can assign `staff.admin`:
   ```bash
   /lpv user <your-username> permission set staff.admin true
   ```
-  This single permission grants access to all proxy moderation actions and administrative commands.
+* **Seamless Backend Forwarding (`velocity-forward-to-backend: true`)**: If you only manage LuckPerms and OPs on your backend Paper servers, Staff+ automatically forwards commands executed on Velocity down to your active Paper server (`player.spoofChatInput`), allowing Paper to evaluate LuckPerms and OP status seamlessly!
+
+---
+
+## 🚪 Proxy Disconnects & Limbo Prevention
+
+### Q: Why did kicks and bans send players to Limbo instead of disconnecting them?
+By default in Velocity networks with fallback configurations, when a backend server kicks a player, Velocity's failover mechanism redirects the player to fallback or limbo servers rather than dropping their connection.
+
+In Staff+:
+* Staff+ listens directly to Velocity's `KickedFromServerEvent`.
+* When a player is explicitly kicked (`/kick`) or banned by staff, Velocity intercepts the event and executes `DisconnectPlayer.create(reason)`.
+* This completely disconnects the player from the proxy network with their kick/ban reason, preventing them from bouncing into Limbo.
+* Routine server reboots and shutdowns ("Server closed") continue to smoothly route players back to your lobby.
 
 ---
 

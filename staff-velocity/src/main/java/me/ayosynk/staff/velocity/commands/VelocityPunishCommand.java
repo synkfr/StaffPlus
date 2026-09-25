@@ -36,6 +36,11 @@ public class VelocityPunishCommand implements SimpleCommand {
     }
 
     @Override
+    public boolean hasPermission(Invocation invocation) {
+        return true;
+    }
+
+    @Override
     public void execute(Invocation invocation) {
         var source = invocation.source();
         String[] args = invocation.arguments();
@@ -46,6 +51,9 @@ public class VelocityPunishCommand implements SimpleCommand {
             case "bans", "banhistory", "banlist" -> permission = "staff.bans";
             case "bansleaderboard", "banleaderboard", "staffleaderboard" -> permission = "staff.bansleaderboard";
             case "checkban", "bancheck" -> permission = "staff.checkban";
+            case "ip-ban", "ipban", "banip" -> permission = "staff.ipban";
+            case "tempip-ban", "tempipban", "tempbanip" -> permission = "staff.tempipban";
+            case "unip-ban", "unipban", "unbanip" -> permission = "staff.unipban";
             case "staff", "staffplus", "staff+" -> {
                 if (args.length >= 1 && args[0].equalsIgnoreCase("reload")) {
                     permission = "staff.staff.reload";
@@ -56,11 +64,16 @@ public class VelocityPunishCommand implements SimpleCommand {
             default -> permission = "staff." + label.replace("-", "");
         }
 
-        if (source instanceof Player) {
-            boolean hasPerm = source.hasPermission("staff.admin")
-                    || source.hasPermission(permission)
-                    || (permission.equals("staff.staff.reload") && source.hasPermission("staff.staff"));
+        if (source instanceof Player player) {
+            boolean hasPerm = player.hasPermission("staff.admin")
+                    || player.hasPermission(permission)
+                    || (permission.equals("staff.staff.reload") && player.hasPermission("staff.staff"));
             if (!hasPerm) {
+                if (plugin.getPluginConfig().isVelocityForwardToBackend() && player.getCurrentServer().isPresent()) {
+                    String fullCommand = "/" + invocation.alias() + (args.length > 0 ? " " + String.join(" ", args) : "");
+                    player.spoofChatInput(fullCommand);
+                    return;
+                }
                 source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getNoPermission()));
                 return;
             }
@@ -133,7 +146,7 @@ public class VelocityPunishCommand implements SimpleCommand {
         UUID senderUuid = source instanceof Player p ? p.getUniqueId() : null;
         String senderName = source instanceof Player p ? p.getUsername() : "Console";
 
-        db.getPlayerUuidByName(targetName).thenAccept(targetUuid -> {
+        resolveTargetUuid(targetName, db).thenAccept(targetUuid -> {
             if (targetUuid == null) {
                 source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", targetName)));
                 return;
@@ -173,7 +186,7 @@ public class VelocityPunishCommand implements SimpleCommand {
         String senderName = source instanceof Player p ? p.getUsername() : "Console";
         String timeStr = durationMs == -1 ? "Permanent" : DurationUtils.formatDuration(durationMs);
 
-        db.getPlayerUuidByName(targetName).thenAccept(targetUuid -> {
+        resolveTargetUuid(targetName, db).thenAccept(targetUuid -> {
             if (targetUuid == null) {
                 source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", targetName)));
                 return;
@@ -199,7 +212,7 @@ public class VelocityPunishCommand implements SimpleCommand {
         }
         String targetName = args[0];
         String senderName = source instanceof Player p ? p.getUsername() : "Console";
-        db.getPlayerUuidByName(targetName).thenAccept(targetUuid -> {
+        resolveTargetUuid(targetName, db).thenAccept(targetUuid -> {
             if (targetUuid == null) {
                 source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", targetName)));
                 return;
@@ -225,7 +238,7 @@ public class VelocityPunishCommand implements SimpleCommand {
         UUID senderUuid = source instanceof Player p ? p.getUniqueId() : null;
         String senderName = source instanceof Player p ? p.getUsername() : "Console";
 
-        db.getPlayerUuidByName(targetName).thenCompose(db::getPlayerRecord).thenAccept(record -> {
+        resolveTargetUuid(targetName, db).thenCompose(db::getPlayerRecord).thenAccept(record -> {
             if (record == null) {
                 source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", targetName)));
                 return;
@@ -258,7 +271,7 @@ public class VelocityPunishCommand implements SimpleCommand {
         String senderName = source instanceof Player p ? p.getUsername() : "Console";
         String timeStr = durationMs == -1 ? "Permanent" : DurationUtils.formatDuration(durationMs);
 
-        db.getPlayerUuidByName(targetName).thenCompose(db::getPlayerRecord).thenAccept(record -> {
+        resolveTargetUuid(targetName, db).thenCompose(db::getPlayerRecord).thenAccept(record -> {
             if (record == null) {
                 source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", targetName)));
                 return;
@@ -300,7 +313,7 @@ public class VelocityPunishCommand implements SimpleCommand {
         UUID senderUuid = source instanceof Player p ? p.getUniqueId() : null;
         String senderName = source instanceof Player p ? p.getUsername() : "Console";
 
-        db.getPlayerUuidByName(targetName).thenAccept(targetUuid -> {
+        resolveTargetUuid(targetName, db).thenAccept(targetUuid -> {
             if (targetUuid == null) {
                 source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", targetName)));
                 return;
@@ -332,7 +345,7 @@ public class VelocityPunishCommand implements SimpleCommand {
         String senderName = source instanceof Player p ? p.getUsername() : "Console";
         String timeStr = durationMs == -1 ? "Permanent" : DurationUtils.formatDuration(durationMs);
 
-        db.getPlayerUuidByName(targetName).thenAccept(targetUuid -> {
+        resolveTargetUuid(targetName, db).thenAccept(targetUuid -> {
             if (targetUuid == null) {
                 source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", targetName)));
                 return;
@@ -356,7 +369,7 @@ public class VelocityPunishCommand implements SimpleCommand {
         }
         String targetName = args[0];
         String senderName = source instanceof Player p ? p.getUsername() : "Console";
-        db.getPlayerUuidByName(targetName).thenAccept(targetUuid -> {
+        resolveTargetUuid(targetName, db).thenAccept(targetUuid -> {
             if (targetUuid == null) {
                 source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", targetName)));
                 return;
@@ -382,7 +395,7 @@ public class VelocityPunishCommand implements SimpleCommand {
         UUID senderUuid = source instanceof Player p ? p.getUniqueId() : null;
         String senderName = source instanceof Player p ? p.getUsername() : "Console";
 
-        db.getPlayerUuidByName(targetName).thenAccept(targetUuid -> {
+        resolveTargetUuid(targetName, db).thenAccept(targetUuid -> {
             if (targetUuid == null) {
                 source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", targetName)));
                 return;
@@ -411,7 +424,7 @@ public class VelocityPunishCommand implements SimpleCommand {
         String targetName = args[0];
         boolean clear = args.length > 1 && args[1].equalsIgnoreCase("clear");
 
-        db.getPlayerUuidByName(targetName).thenAccept(targetUuid -> {
+        resolveTargetUuid(targetName, db).thenAccept(targetUuid -> {
             if (targetUuid == null) {
                 source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", targetName)));
                 return;
@@ -443,7 +456,7 @@ public class VelocityPunishCommand implements SimpleCommand {
             source.sendMessage(parse("<color:#E20000>Usage: /history <player>"));
             return;
         }
-        db.getPlayerUuidByName(args[0]).thenAccept(targetUuid -> {
+        resolveTargetUuid(args[0], db).thenAccept(targetUuid -> {
             if (targetUuid == null) {
                 source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", args[0])));
                 return;
@@ -511,7 +524,7 @@ public class VelocityPunishCommand implements SimpleCommand {
         boolean remove = args.length > 1 && args[1].equalsIgnoreCase("remove");
         String senderName = source instanceof Player p ? p.getUsername() : "Console";
 
-        db.getPlayerUuidByName(targetName).thenAccept(targetUuid -> {
+        resolveTargetUuid(targetName, db).thenAccept(targetUuid -> {
             if (targetUuid == null) {
                 source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", targetName)));
                 return;
@@ -680,6 +693,14 @@ public class VelocityPunishCommand implements SimpleCommand {
         }
     }
 
+    private CompletableFuture<UUID> resolveTargetUuid(String targetName, DatabaseManager db) {
+        Optional<Player> onlineOpt = plugin.getServer().getPlayer(targetName);
+        if (onlineOpt.isPresent()) {
+            return CompletableFuture.completedFuture(onlineOpt.get().getUniqueId());
+        }
+        return db.getPlayerUuidByName(targetName);
+    }
+
     private void kickPlayer(UUID uuid, String reason) {
         plugin.getServer().getPlayer(uuid).ifPresent(player ->
             player.disconnect(parse(reason))
@@ -740,7 +761,7 @@ public class VelocityPunishCommand implements SimpleCommand {
         String targetName = args[0];
         String senderName = source instanceof Player p ? p.getUsername() : "Console";
 
-        db.getPlayerUuidByName(targetName).thenAccept(targetUuid -> {
+        resolveTargetUuid(targetName, db).thenAccept(targetUuid -> {
             if (targetUuid == null) {
                 source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", targetName)));
                 return;
@@ -809,7 +830,7 @@ public class VelocityPunishCommand implements SimpleCommand {
                 displayCheckban(source, input, p, true, db);
             });
         } else {
-            db.getPlayerUuidByName(input).thenAccept(uuid -> {
+            resolveTargetUuid(input, db).thenAccept(uuid -> {
                 if (uuid == null) {
                     source.sendMessage(parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", input)));
                     return;

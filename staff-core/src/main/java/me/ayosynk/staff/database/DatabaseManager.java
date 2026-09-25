@@ -205,10 +205,10 @@ public class DatabaseManager {
             String query;
             if (isMysql) {
                 query = "INSERT INTO staff_players (uuid, username, ip_address, last_seen, weight) VALUES (?, ?, ?, ?, ?) " +
-                        "ON DUPLICATE KEY UPDATE username = VALUES(username), ip_address = VALUES(ip_address), last_seen = VALUES(last_seen), weight = VALUES(weight)";
+                        "ON DUPLICATE KEY UPDATE username = VALUES(username), ip_address = VALUES(ip_address), last_seen = VALUES(last_seen), weight = CASE WHEN VALUES(weight) > 0 THEN VALUES(weight) ELSE weight END";
             } else {
                 query = "INSERT INTO staff_players (uuid, username, ip_address, last_seen, weight) VALUES (?, ?, ?, ?, ?) " +
-                        "ON CONFLICT(uuid) DO UPDATE SET username = excluded.username, ip_address = excluded.ip_address, last_seen = excluded.last_seen, weight = excluded.weight";
+                        "ON CONFLICT(uuid) DO UPDATE SET username = excluded.username, ip_address = excluded.ip_address, last_seen = excluded.last_seen, weight = CASE WHEN excluded.weight > 0 THEN excluded.weight ELSE weight END";
             }
 
             try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {

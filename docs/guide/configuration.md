@@ -56,6 +56,11 @@ update-checker-notify-admins: true
 
 # Staff Ban Leaderboard settings
 bans-leaderboard-enabled: true
+
+# Velocity Proxy Settings (Velocity only)
+velocity-proxy-commands: true
+velocity-forward-to-backend: true
+velocity-disconnect-on-kick: true
 ```
 
 ### Config Mappings Explained
@@ -94,6 +99,11 @@ These settings are **only used on the Paper edition**. They are safely ignored i
 
 #### Staff Ban Leaderboard
 * **`bans-leaderboard-enabled`**: Toggle access to the `/bansleaderboard` command for staff activity metrics.
+
+#### Velocity Proxy Settings (Velocity only)
+* **`velocity-proxy-commands`**: Toggle whether Velocity registers punishment and moderation commands directly on the proxy (default: `true`). Set to `false` if you want backend Paper servers to handle all commands exclusively while Velocity focuses purely on gateway enforcement.
+* **`velocity-forward-to-backend`**: When enabled (default: `true`), if a player runs a command on Velocity without proxy permissions (e.g. staff permissions and OPs are managed on Paper backend servers), Velocity transparently forwards the command to their connected Paper server via `spoofChatInput` instead of blocking them with "no permission".
+* **`velocity-disconnect-on-kick`**: When enabled (default: `true`), moderation kicks and active ban kicks disconnect players from the proxy network entirely rather than routing them to fallback/limbo servers.
 
 ---
 

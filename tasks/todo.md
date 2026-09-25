@@ -263,3 +263,14 @@
 - Bumped version to `1.2.2` across Gradle, Paper, Velocity, npm package definitions, and updated all documentation.
 - Successfully compiled shaded JARs (`StaffPlus-Paper-1.2.2.jar` and `StaffPlus-Velocity-1.2.2.jar`) with zero errors.
 
+### 14. Phase 27: Velocity Permission Forwarding, Limbo Kick Prevention & Async EventTask Fixes
+- Added `velocity-forward-to-backend` in `PluginConfig` and implemented backend command forwarding (`player.spoofChatInput`) in `VelocityPunishCommand` when staff lack proxy permissions.
+- Added `velocity-proxy-commands` in `PluginConfig` and wrapped command registration in `StaffVelocityPlugin`.
+- Added `velocity-disconnect-on-kick` in `PluginConfig` and subscribed to `KickedFromServerEvent` in `VelocityListeners`, disconnecting players with `DisconnectPlayer.create(reason)` instead of routing to Limbo.
+- Refactored `onLogin` and `onPlayerChat` in `VelocityListeners` to return `EventTask` with continuation to resolve async race condition where events completed before database checks finished.
+- Updated `DatabaseManager.savePlayer` upsert query to conditionally preserve existing hierarchy weights when incoming weight is 0.
+- Implemented `resolveTargetUuid` in `VelocityPunishCommand` with instant online player resolution and offline database fallback across all punishment commands.
+- Registered all command aliases with Velocity `CommandManager` (`ipban`, `banip`, `tempipban`, `tempbanip`, `unipban`, `unbanip`, `banleaderboard`, `staffleaderboard`, `bancheck`, `staff+`, `punishhistory`).
+- Added unit tests for weight preservation and Velocity configuration defaults in `DatabaseManagerTest`.
+- Updated configuration and FAQ documentation with new Velocity proxy settings and explanation.
+

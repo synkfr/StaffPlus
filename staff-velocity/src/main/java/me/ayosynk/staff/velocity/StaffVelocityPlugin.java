@@ -131,15 +131,29 @@ public class StaffVelocityPlugin implements StaffPlatform {
     }
 
     private void registerCommands() {
+        if (!pluginConfig.isVelocityProxyCommands()) {
+            return;
+        }
+
         CommandManager cm = server.getCommandManager();
         VelocityPunishCommand punishCommand = new VelocityPunishCommand(this);
 
-        // Register all punishment commands
-        String[] punishCommands = {"ban", "tempban", "unban", "ip-ban", "tempip-ban", "unip-ban",
-                "mute", "tempmute", "unmute", "warn", "warns",
-                "history", "staffhistory", "staffrollback", "staffallow", "staffimport",
-                "bans", "banhistory", "banlist", "bansleaderboard",
-                "kick", "unwarn", "checkban", "bancheck", "staff", "staffplus"};
+        String[] punishCommands = {
+                "ban", "tempban", "unban",
+                "ip-ban", "ipban", "banip",
+                "tempip-ban", "tempipban", "tempbanip",
+                "unip-ban", "unipban", "unbanip",
+                "mute", "tempmute", "unmute",
+                "warn", "warns",
+                "history", "punishhistory", "historylog",
+                "staffhistory", "staffrollback", "rollbackstaff", "rollback",
+                "staffallow", "allowip", "allow",
+                "staffimport", "migrate", "staffmigrate",
+                "bans", "banhistory", "banlist",
+                "bansleaderboard", "banleaderboard", "staffleaderboard",
+                "kick", "unwarn", "checkban", "bancheck",
+                "staff", "staffplus", "staff+"
+        };
 
         for (String cmd : punishCommands) {
             var meta = cm.metaBuilder(cmd).plugin(this).build();

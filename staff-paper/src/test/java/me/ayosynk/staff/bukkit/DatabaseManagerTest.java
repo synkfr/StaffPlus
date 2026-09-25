@@ -51,6 +51,33 @@ public class DatabaseManagerTest {
     }
 
     @Test
+    public void testSavePlayerWeightPreservation() {
+        PluginConfig config = new PluginConfig();
+        StaffPlatform platform = createPlatform(tempDir.toFile(), config);
+
+        db = new DatabaseManager(platform);
+        db.init();
+
+        UUID staffUuid = UUID.randomUUID();
+        db.savePlayer(staffUuid, "StaffAdmin", "127.0.0.1", 100).join();
+        assertEquals(100, db.getPlayerWeight(staffUuid).join());
+
+        db.savePlayer(staffUuid, "StaffAdmin", "127.0.0.1", 0).join();
+        assertEquals(100, db.getPlayerWeight(staffUuid).join());
+
+        db.savePlayer(staffUuid, "StaffAdmin", "127.0.0.1", 150).join();
+        assertEquals(150, db.getPlayerWeight(staffUuid).join());
+    }
+
+    @Test
+    public void testVelocityPluginConfigDefaults() {
+        PluginConfig config = new PluginConfig();
+        assertTrue(config.isVelocityProxyCommands());
+        assertTrue(config.isVelocityForwardToBackend());
+        assertTrue(config.isVelocityDisconnectOnKick());
+    }
+
+    @Test
     public void testRemoteDatabaseFallbackToSqlite() {
         PluginConfig config = new PluginConfig();
         try {

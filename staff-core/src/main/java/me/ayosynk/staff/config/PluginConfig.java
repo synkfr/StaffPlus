@@ -52,6 +52,10 @@ public class PluginConfig extends OkaeriConfig {
     private boolean updateCheckerNotifyAdmins = true;
     private boolean bansLeaderboardEnabled = true;
 
+    private boolean velocityProxyCommands = true;
+    private boolean velocityForwardToBackend = true;
+    private boolean velocityDisconnectOnKick = true;
+
     public String getStorageType() {
         return storageType;
     }
@@ -150,5 +154,17 @@ public class PluginConfig extends OkaeriConfig {
 
     public boolean isBansLeaderboardEnabled() {
         return bansLeaderboardEnabled;
+    }
+
+    public boolean isVelocityProxyCommands() {
+        return velocityProxyCommands;
+    }
+
+    public boolean isVelocityForwardToBackend() {
+        return velocityForwardToBackend;
+    }
+
+    public boolean isVelocityDisconnectOnKick() {
+        return velocityDisconnectOnKick;
     }
 }
