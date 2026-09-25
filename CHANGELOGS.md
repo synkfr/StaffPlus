@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.3] - 2026-09-25
+
+### Added
+* **Velocity Backend Command Forwarding**:
+  * Implemented automatic transparent command forwarding (`velocity-forward-to-backend: true`). If a staff member executes a moderation command (`/tempban`, `/ban`, `/mute`, etc.) on Velocity and lacks proxy-level permissions (e.g. LuckPerms and OPs are configured exclusively on backend Paper servers), Velocity automatically forwards the command down to their connected Paper server via `player.spoofChatInput(...)` instead of dropping it with a "no permission" error.
+  * Added `velocity-proxy-commands` (default: `true`) in `config.yml`, allowing server administrators to optionally disable proxy command registration so backend Paper servers handle all moderation commands directly while Velocity focuses purely on gateway enforcement.
+* **Limbo Kick Prevention via `KickedFromServerEvent`**:
+  * Subscribed to Velocity's `KickedFromServerEvent`. When a player is explicitly kicked (`/kick`) or banned by staff on a backend server, Velocity intercepts the event and executes `DisconnectPlayer.create(reason)`.
+  * Completely eliminates the issue where kicked or banned players bounced into fallback or Limbo servers instead of being disconnected from the proxy network.
+  * Preserved normal server restart and shutdown routing ("Server closed"), which continues sending players to the lobby.
+  * Added `velocity-disconnect-on-kick` (default: `true`) in `config.yml`.
+* **Complete Alias Registration on Velocity**:
+  * Registered all moderation command aliases with Velocity's `CommandManager`: `/ipban`, `/banip`, `/tempipban`, `/tempbanip`, `/unipban`, `/unbanip`, `/banleaderboard`, `/staffleaderboard`, `/bancheck`, `/staff+`, `/punishhistory`, and `/historylog`.
+
+### Fixed
+* **Velocity Asynchronous Event Race Condition**:
+  * Refactored `onLogin` and `onPlayerChat` listeners in `VelocityListeners` to return `EventTask` with continuations. Velocity now properly pauses event dispatch until database ban and mute queries complete, ensuring rulebreakers are reliably rejected at the gateway and muted players are blocked from chatting.
+* **Database Staff Hierarchy Weight Preservation**:
+  * Updated `DatabaseManager.savePlayer` SQL upsert logic to preserve existing hierarchy weights when incoming weight is 0 (`weight = CASE WHEN VALUES(weight) > 0 THEN VALUES(weight) ELSE weight END`).
+  * Fixes an issue where staff logging in through the Velocity proxy had their hierarchy weight reset to 0 in the shared database.
+* **Instant Online Target Resolution on Velocity**:
+  * Added `resolveTargetUuid` across all punishment handlers in `VelocityPunishCommand`, immediately resolving online players via `plugin.getServer().getPlayer(...)` before falling back to database lookups.
+* **Unit Testing**:
+  * Added unit test cases for hierarchy weight preservation and Velocity configuration defaults in `DatabaseManagerTest`.
+
+### Changed
+* Bumped project version to `1.2.3` across all subprojects, build scripts, plugin descriptors, and documentation.
+
+---
+
 ## [1.2.2] - 2026-09-17
 
 ### Fixed

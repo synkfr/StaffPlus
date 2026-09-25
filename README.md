@@ -45,6 +45,8 @@ Both editions share the same database, configs, and migration system — deploy 
 | bStats Metrics | ✅ | ✅ |
 | Folia Scheduler Safety | ✅ | N/A |
 | Proxy-Level Ban Enforcement | ❌ | ✅ |
+| Limbo Kick Prevention | ❌ | ✅ |
+| Transparent Backend Command Forwarding | ❌ | ✅ |
 
 ---
 
@@ -177,21 +179,20 @@ Both editions share the same database, configs, and migration system — deploy 
 
 ### Paper Edition (Paper / Purpur / Folia)
 
-1. Download `StaffPlus-Paper-1.2.2.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
+1. Download `StaffPlus-Paper-1.2.3.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
 2. Place the JAR in your server's `plugins/` folder.
 3. Restart your server.
 4. Edit `plugins/Staff/config.yml` and `plugins/Staff/messages.yml` to your liking.
 
 ### Velocity Edition (Proxy)
 
-1. Download `StaffPlus-Velocity-1.2.2.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
+1. Download `StaffPlus-Velocity-1.2.3.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
 2. Place the JAR in your Velocity proxy's `plugins/` folder.
 3. Restart your proxy.
 4. Edit `plugins/staffplus/config.yml` and `plugins/staffplus/messages.yml` to your liking.
-5. **Permissions on Velocity**: Grant proxy permissions to staff via LuckPerms on Velocity:
-   ```bash
-   /lpv user <your_username> permission set staff.admin true
-   ```
+5. **Permissions & Backend Forwarding**:
+   - If you use LuckPerms on Velocity, grant staff `staff.admin` (`/lpv user <name> permission set staff.admin true`).
+   - If you manage permissions and OPs exclusively on your backend Paper servers, Staff+ automatically forwards commands executed on Velocity down to the player's connected Paper server (`velocity-forward-to-backend: true`), allowing Paper to evaluate LuckPerms and OP status seamlessly!
 
 ### Shared Database (Network Mode)
 
@@ -261,6 +262,11 @@ update-checker-notify-admins: true
 
 # Staff Ban Leaderboard settings
 bans-leaderboard-enabled: true
+
+# Velocity Proxy Settings (Velocity only)
+velocity-proxy-commands: true
+velocity-forward-to-backend: true
+velocity-disconnect-on-kick: true
 ```
 
 ### `messages.yml`

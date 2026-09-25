@@ -28,18 +28,18 @@ Both editions share the same database, config format, and migration system.
 
 ### Paper Edition (Paper / Folia)
 
-1. Download `StaffPlus-Paper-1.2.2.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
+1. Download `StaffPlus-Paper-1.2.3.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
 2. Place the jar in your server's `plugins/` directory.
 3. Start the server once to generate default configuration files in `plugins/StaffPlus/`.
 4. Configure database settings and permissions, then restart or run `/staff reload`.
 
 ### Velocity Proxy
 
-1. Download `StaffPlus-Velocity-1.2.2.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
+1. Download `StaffPlus-Velocity-1.2.3.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
 2. Place the JAR in your Velocity proxy's `plugins/` directory.
 3. Start the proxy to generate the default configuration files.
 4. Customize `plugins/staffplus/config.yml` and `plugins/staffplus/messages.yml`, then restart.
-5. Grant staff permissions via LuckPerms on Velocity (`/lpv user <name> permission set staff.admin true`).
+5. If you manage permissions via LuckPerms on Velocity, grant staff `staff.admin`. If you only manage permissions on backend Paper servers, Staff+ automatically forwards commands to Paper (`velocity-forward-to-backend: true`).
 
 ### Network Mode (Shared Database)
 
@@ -78,8 +78,8 @@ cd StaffPlus
 
 The compiled shaded plugins will be located at:
 ```
-staff-paper/build/libs/StaffPlus-Paper-1.2.2.jar     # Paper/Purpur/Folia servers
-staff-velocity/build/libs/StaffPlus-Velocity-1.2.2.jar  # Velocity proxies
+staff-paper/build/libs/StaffPlus-Paper-1.2.3.jar     # Paper/Purpur/Folia servers
+staff-velocity/build/libs/StaffPlus-Velocity-1.2.3.jar  # Velocity proxies
 ```
 
 ### Project Structure

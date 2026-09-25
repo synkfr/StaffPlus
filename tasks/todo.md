@@ -273,4 +273,6 @@
 - Registered all command aliases with Velocity `CommandManager` (`ipban`, `banip`, `tempipban`, `tempbanip`, `unipban`, `unbanip`, `banleaderboard`, `staffleaderboard`, `bancheck`, `staff+`, `punishhistory`).
 - Added unit tests for weight preservation and Velocity configuration defaults in `DatabaseManagerTest`.
 - Updated configuration and FAQ documentation with new Velocity proxy settings and explanation.
+- Bumped version to `1.2.3` across Gradle, Paper, Velocity, npm package definitions, README, and CHANGELOGS.
+- Successfully compiled shaded JARs (`StaffPlus-Paper-1.2.3.jar` and `StaffPlus-Velocity-1.2.3.jar`) with zero errors.
 
