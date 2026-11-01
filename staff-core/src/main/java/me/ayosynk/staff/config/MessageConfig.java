@@ -8,10 +8,17 @@ import eu.okaeri.configs.annotation.Names;
 @Names(strategy = NameStrategy.HYPHEN_CASE)
 public class MessageConfig extends OkaeriConfig {
 
-    @Comment("Prefix for all plugin messages")
+    @Comment({
+        "Staff+ Message Configuration",
+        "All messages support Adventure MiniMessage formatting, hex colors (<color:#00E262>), and gradients (<gradient:#FF5F6D:#FFC371>Text</gradient>).",
+        "Prefix for all plugin chat messages"
+    })
     private String prefix = "<color:#A0A0A0>[<color:#00E262>Staff+<color:#A0A0A0>] ";
 
-    // General messages
+    @Comment({
+        "General Plugin Messages",
+        "Placeholders: {player}, {sender}, {staff}"
+    })
     private String noPermission = "<color:#E20000>You do not have permission to execute this command.";
     private String playerOnly = "<color:#E20000>This command can only be executed by a player.";
     private String cannotOverwritePunishment = "<color:#E20000>You cannot override a punishment placed by a higher-ranking staff member ({staff}).";
@@ -22,27 +29,39 @@ public class MessageConfig extends OkaeriConfig {
     private String playerNotFound = "<color:#E20000>Player '{player}' has not been found or registered.";
     private String invalidDuration = "<color:#E20000>Invalid duration format! Use e.g. 1d, 12h, 30m or perm.";
 
-    // Mute messages
+    @Comment({
+        "Mute Messages",
+        "Placeholders: {player}, {sender}, {time}, {reason}"
+    })
     private String playerMuted = "<color:#00E262>You have muted {player} for {time}. Reason: {reason}";
     private String playerMutedBroadcast = "<color:#E2B700>{player} has been muted by {sender} for {time}. Reason: {reason}";
     private String playerUnmuted = "<color:#00E262>You have unmuted {player}.";
     private String playerUnmutedBroadcast = "<color:#00E262>{player} has been unmuted by {sender}.";
     private String youAreMuted = "<color:#E20000>You are muted! Remaining time: {time}. Reason: {reason}";
 
-    // Ban messages
+    @Comment({
+        "Ban Messages",
+        "Placeholders: {player}, {sender}, {time}, {reason}"
+    })
     private String playerBanned = "<color:#00E262>You have banned {player} for {time}. Reason: {reason}";
     private String playerBannedBroadcast = "<color:#E20000>{player} has been banned by {sender} for {time}. Reason: {reason}";
     private String playerUnbanned = "<color:#00E262>You have unbanned {player}.";
     private String playerUnbannedBroadcast = "<color:#00E262>{player} has been unbanned by {sender}.";
     private String banKickMessage = "<color:#E20000>You have been banned from the server!\n\nReason: {reason}\nExpiry: {time}";
 
-    // IP Ban messages
+    @Comment({
+        "IP Ban Messages",
+        "Placeholders: {player}, {ip}, {sender}, {time}, {reason}"
+    })
     private String ipBanned = "<color:#00E262>You have IP-banned {player} ({ip}) for {time}. Reason: {reason}";
     private String ipBannedBroadcast = "<color:#E20000>{player} ({ip}) has been IP-banned by {sender} for {time}. Reason: {reason}";
     private String ipUnbanned = "<color:#00E262>You have unbanned IP/Player '{ip}'.";
     private String ipUnbannedBroadcast = "<color:#00E262>IP/Player '{ip}' has been IP-unbanned by {sender}.";
 
-    // Warn messages
+    @Comment({
+        "Warning Messages",
+        "Placeholders: {player}, {sender}, {reason}, {date}"
+    })
     private String playerWarned = "<color:#00E262>You have warned {player} for: {reason}";
     private String playerWarnedBroadcast = "<color:#E2B700>{player} has been warned by {sender} for: {reason}";
     private String youAreWarned = "<color:#E2B700>You have been warned! Reason: {reason}";
@@ -51,55 +70,95 @@ public class MessageConfig extends OkaeriConfig {
     private String warnListItem = "<color:#A0A0A0>- {reason} by {sender} ({date})";
     private String noWarns = "<color:#A0A0A0>No warnings found for {player}.";
 
-    // Vanish messages (Bukkit only)
+    @Comment({
+        "Vanish Messages (Paper only)"
+    })
     private String vanishEnabled = "<color:#00E262>You are now vanished.";
     private String vanishDisabled = "<color:#00E262>You are no longer vanished.";
     private String vanishActionBar = "<color:#00E262>★ YOU ARE VANISHED ★";
 
-    // Monitor messages (Bukkit only)
+    @Comment({
+        "Spectator Monitor Messages (Paper only)",
+        "Placeholders: {player}"
+    })
     private String monitorStarted = "<color:#00E262>Now monitoring {player} in spectator mode.";
     private String monitorLeft = "<color:#00E262>You left the monitor state and returned to your original location.";
     private String monitorNotActive = "<color:#E20000>You are not currently monitoring anyone.";
     private String monitorTargetOffline = "<color:#E20000>The monitored player has gone offline. Returning to original location.";
 
-    // Invsee messages (Bukkit only)
+    @Comment({
+        "Inventory Inspector Messages (Paper only)",
+        "Placeholders: {player}"
+    })
     private String invseeOpened = "<color:#00E262>Opening live inventory of {player}...";
 
+    @Comment({
+        "Update Notification Messages",
+        "Placeholders: {latest}, {current}, {url}"
+    })
     private String updateAvailable = "<color:#E2B700>A new version of Staff+ is available: <color:#00E262>v{latest}</color> (Current: <color:#A0A0A0>v{current}</color>)\n<color:#A0A0A0>Download: <click:open_url:'{url}'><color:#00E262><underlined>{url}</underlined></color></click>";
 
+    @Comment({
+        "Ban History List Messages",
+        "Placeholders: {page}, {pages}, {player}, {staff}, {reason}, {date}, {prev}, {next}"
+    })
     private String bansHeader = "<color:#E2B700>------------- [ Ban History (Page {page}/{pages}) ] -------------";
     private String bansItemActive = "<color:#E20000>[ACTIVE]</color> <color:#00E262>{player}</color> banned by <color:#00E262>{staff}</color>: {reason} <color:#A0A0A0>({date})</color>";
     private String bansItemExpired = "<color:#A0A0A0>[EXPIRED] <color:#00E262>{player}</color> banned by <color:#00E262>{staff}</color>: {reason} ({date})</color>";
     private String bansFooter = "<click:run_command:'/bans {prev}'><color:#00E262>[« Previous]</color></click> <color:#A0A0A0>| <click:run_command:'/bans {next}'><color:#00E262>[Next »]</color></click>";
     private String bansEmpty = "<color:#A0A0A0>No bans found in database.";
 
+    @Comment({
+        "Staff Ban Leaderboard Messages",
+        "Placeholders: {rank}, {staff}, {count}"
+    })
     private String bansLeaderboardDisabled = "<color:#E20000>Bans leaderboard is currently disabled.";
     private String bansLeaderboardHeader = "<color:#E2B700>------------- [ Staff Ban Leaderboard ] -------------";
     private String bansLeaderboardItem = "<color:#E2B700>#{rank}</color> <color:#00E262>{staff}</color> <color:#A0A0A0>- <color:#00E262>{count}</color> bans</color>";
     private String bansLeaderboardEmpty = "<color:#A0A0A0>No staff punishments recorded on this server.";
 
+    @Comment({
+        "Kick Messages",
+        "Placeholders: {player}, {staff}, {reason}"
+    })
     private String playerKicked = "<color:#00E262>You kicked {player} for: {reason}";
     private String playerKickedBroadcast = "<color:#E20000>{player} was kicked by {staff} for: {reason}";
     private String kickMessage = "<color:#E20000>You were kicked from the server.\n<color:#A0A0A0>Reason: <color:#FFFFFF>{reason}";
     private String cannotKickHigherRank = "<color:#E20000>You cannot kick a staff member with higher or equal hierarchy rank.";
 
+    @Comment({
+        "Unwarn Messages",
+        "Placeholders: {player}, {staff}"
+    })
     private String playerUnwarned = "<color:#00E262>Successfully removed warning for {player}.";
     private String playerUnwarnedBroadcast = "<color:#00E262>{staff} removed a warning from {player}.";
     private String noActiveWarnings = "<color:#E20000>{player} has no active warnings.";
     private String warningNotFound = "<color:#E20000>Warning with specified ID not found or is already inactive.";
     private String cannotUnwarnHigherRank = "<color:#E20000>You cannot remove a warning issued by a staff member with higher hierarchy rank.";
 
+    @Comment({
+        "Checkban Messages",
+        "Placeholders: {target}, {staff}, {reason}, {date}, {duration}, {ip}"
+    })
     private String checkbanHeader = "<color:#E2B700>------------- [ Ban Status: {target} ] -------------";
     private String checkbanActive = "<color:#E20000>[ACTIVE BAN]</color>\n<color:#A0A0A0>Target: <color:#FFFFFF>{target}</color>\n<color:#A0A0A0>Staff: <color:#00E262>{staff}</color>\n<color:#A0A0A0>Reason: <color:#FFFFFF>{reason}</color>\n<color:#A0A0A0>Issued: <color:#FFFFFF>{date}</color>\n<color:#A0A0A0>Expires: <color:#E2B700>{duration}</color>";
     private String checkbanActiveIp = "<color:#E20000>[ACTIVE IP-BAN]</color>\n<color:#A0A0A0>IP: <color:#FFFFFF>{ip}</color>\n<color:#A0A0A0>Staff: <color:#00E262>{staff}</color>\n<color:#A0A0A0>Reason: <color:#FFFFFF>{reason}</color>\n<color:#A0A0A0>Issued: <color:#FFFFFF>{date}</color>\n<color:#A0A0A0>Expires: <color:#E2B700>{duration}</color>";
     private String checkbanNotBanned = "<color:#00E262>{target} is not currently banned.";
 
+    @Comment({
+        "GUI Titles and Geyser Bedrock Form Titles"
+    })
     private String bansGuiTitle = "<color:#1F1F1F>Bans - Page {page}/{pages}";
     private String bansLeaderboardGuiTitle = "<color:#1F1F1F>Staff Ban Leaderboard";
     private String bansFormTitle = "Recent Bans (Page {page}/{pages})";
     private String bansFormContent = "Total bans recorded: {total}\nSelect a ban to inspect details:";
     private String bansLeaderboardFormTitle = "Staff Ban Leaderboard";
     private String bansLeaderboardFormContent = "Top 10 staff members by total bans issued:";
+
+    @Comment({
+        "Freeze & Screenshare Messages (Paper only)",
+        "Placeholders: {player}, {staff}, {reason}, {teamspeak}, {discord}"
+    })
     private String playerFrozen = "<color:#00E262>You have frozen <color:#FFFFFF>{player}</color>.";
     private String playerUnfrozen = "<color:#00E262>You have unfrozen <color:#FFFFFF>{player}</color>.";
     private String playerFrozenBroadcast = "<color:#E2B700>{player} has been frozen by {staff}.";
@@ -108,7 +167,7 @@ public class MessageConfig extends OkaeriConfig {
             + "<color:#FFFFFF>You have been frozen by a staff member!</color>\n"
             + "<color:#A0A0A0>Join our TeamSpeak: <color:#00E262>{teamspeak}</color> or Discord: <color:#00E262>{discord}</color></color>\n"
             + "<color:#E20000><b>DO NOT LOG OUT</b></color> <color:#A0A0A0>or you will be automatically banned!</color>\n"
-            + "<color:#E20000><b-------------------------------</b></color>";
+            + "<color:#E20000><b>----------------------------</b></color>";
     private String frozenTitle = "<color:#E20000><b>YOU ARE FROZEN</b></color>";
     private String frozenSubtitle = "<color:#A0A0A0>Join TeamSpeak: <color:#00E262>{teamspeak}</color>";
     private String frozenActionBar = "<color:#E20000>⚠ YOU ARE FROZEN - JOIN {teamspeak} ⚠</color>";
@@ -118,6 +177,7 @@ public class MessageConfig extends OkaeriConfig {
     private String freezeNotFrozen = "<color:#E20000>{player} is not currently frozen.";
     private String cannotFreezeStaff = "<color:#E20000>You cannot freeze a staff member with equal or higher rank.";
 
+    @Comment("Message shown when /staff reload finishes successfully")
     private String configsReloaded = "<color:#00E262>Configurations and messages reloaded successfully.";
 
     public String getPrefix() { return prefix; }
