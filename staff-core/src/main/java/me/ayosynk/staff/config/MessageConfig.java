@@ -100,6 +100,23 @@ public class MessageConfig extends OkaeriConfig {
     private String bansFormContent = "Total bans recorded: {total}\nSelect a ban to inspect details:";
     private String bansLeaderboardFormTitle = "Staff Ban Leaderboard";
     private String bansLeaderboardFormContent = "Top 10 staff members by total bans issued:";
+    private String playerFrozen = "<color:#00E262>You have frozen <color:#FFFFFF>{player}</color>.";
+    private String playerUnfrozen = "<color:#00E262>You have unfrozen <color:#FFFFFF>{player}</color>.";
+    private String playerFrozenBroadcast = "<color:#E2B700>{player} has been frozen by {staff}.";
+    private String playerUnfrozenBroadcast = "<color:#00E262>{player} has been unfrozen by {staff}.";
+    private String frozenChatReminder = "<color:#E20000><b>---------------- [ YOU ARE FROZEN ] ----------------</b></color>\n"
+            + "<color:#FFFFFF>You have been frozen by a staff member!</color>\n"
+            + "<color:#A0A0A0>Join our TeamSpeak: <color:#00E262>{teamspeak}</color> or Discord: <color:#00E262>{discord}</color></color>\n"
+            + "<color:#E20000><b>DO NOT LOG OUT</b></color> <color:#A0A0A0>or you will be automatically banned!</color>\n"
+            + "<color:#E20000><b>---------------------------------------------------</b></color>";
+    private String frozenTitle = "<color:#E20000><b>YOU ARE FROZEN</b></color>";
+    private String frozenSubtitle = "<color:#A0A0A0>Join TeamSpeak: <color:#00E262>{teamspeak}</color>";
+    private String frozenActionBar = "<color:#E20000>⚠ YOU ARE FROZEN - JOIN {teamspeak} ⚠</color>";
+    private String frozenLogoutBroadcast = "<color:#E20000><b>[ALERT]</b> {player} disconnected while frozen by {staff}!";
+    private String frozenCannotExecuteCommand = "<color:#E20000>You cannot execute this command while frozen.";
+    private String freezeAlreadyFrozen = "<color:#E20000>{player} is already frozen.";
+    private String freezeNotFrozen = "<color:#E20000>{player} is not currently frozen.";
+    private String cannotFreezeStaff = "<color:#E20000>You cannot freeze a staff member with equal or higher rank.";
 
     private String configsReloaded = "<color:#00E262>Configurations and messages reloaded successfully.";
 
@@ -172,4 +189,17 @@ public class MessageConfig extends OkaeriConfig {
     public String getBansLeaderboardFormTitle() { return bansLeaderboardFormTitle; }
     public String getBansLeaderboardFormContent() { return bansLeaderboardFormContent; }
     public String getConfigsReloaded() { return configsReloaded; }
+    public String getPlayerFrozen() { return playerFrozen; }
+    public String getPlayerUnfrozen() { return playerUnfrozen; }
+    public String getPlayerFrozenBroadcast() { return playerFrozenBroadcast; }
+    public String getPlayerUnfrozenBroadcast() { return playerUnfrozenBroadcast; }
+    public String getFrozenChatReminder() { return frozenChatReminder; }
+    public String getFrozenTitle() { return frozenTitle; }
+    public String getFrozenSubtitle() { return frozenSubtitle; }
+    public String getFrozenActionBar() { return frozenActionBar; }
+    public String getFrozenLogoutBroadcast() { return frozenLogoutBroadcast; }
+    public String getFrozenCannotExecuteCommand() { return frozenCannotExecuteCommand; }
+    public String getFreezeAlreadyFrozen() { return freezeAlreadyFrozen; }
+    public String getFreezeNotFrozen() { return freezeNotFrozen; }
+    public String getCannotFreezeStaff() { return cannotFreezeStaff; }
 }

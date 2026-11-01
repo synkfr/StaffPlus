@@ -56,6 +56,14 @@ public class PluginConfig extends OkaeriConfig {
     private boolean velocityForwardToBackend = true;
     private boolean velocityDisconnectOnKick = true;
 
+    private boolean freezeEnabled = true;
+    private String teamspeakServer = "ts.example.com";
+    private String discordInvite = "discord.gg/example";
+    private int freezeReminderIntervalSeconds = 5;
+    private boolean freezeLogoutActionEnabled = true;
+    private String freezeLogoutAction = "ban {player} 30d Disconnecting while frozen [Auto-Ban]";
+    private java.util.List<String> freezeAllowedCommands = java.util.List.of("msg", "r", "reply", "tell");
+
     public String getStorageType() {
         return storageType;
     }
@@ -166,5 +174,33 @@ public class PluginConfig extends OkaeriConfig {
 
     public boolean isVelocityDisconnectOnKick() {
         return velocityDisconnectOnKick;
+    }
+
+    public boolean isFreezeEnabled() {
+        return freezeEnabled;
+    }
+
+    public String getTeamspeakServer() {
+        return teamspeakServer;
+    }
+
+    public String getDiscordInvite() {
+        return discordInvite;
+    }
+
+    public int getFreezeReminderIntervalSeconds() {
+        return freezeReminderIntervalSeconds;
+    }
+
+    public boolean isFreezeLogoutActionEnabled() {
+        return freezeLogoutActionEnabled;
+    }
+
+    public String getFreezeLogoutAction() {
+        return freezeLogoutAction;
+    }
+
+    public java.util.List<String> getFreezeAllowedCommands() {
+        return freezeAllowedCommands;
     }
 }
