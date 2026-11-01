@@ -116,7 +116,18 @@ public class InvseeCommand implements CommandExecutor, TabCompleter {
         }
         inv.setItem(50, echest);
 
-        // 6. Active Potion Effects (slot 51)
+        updateStatsOnly(inv, target);
+
+        ItemStack barrier = new ItemStack(Material.BARRIER);
+        ItemMeta barMeta = barrier.getItemMeta();
+        if (barMeta != null) {
+            barMeta.displayName(MiniMessageUtils.parse("<color:#E20000>Close Viewer"));
+            barrier.setItemMeta(barMeta);
+        }
+        inv.setItem(53, barrier);
+    }
+
+    public static void updateStatsOnly(Inventory inv, Player target) {
         ItemStack potion = new ItemStack(Material.POTION);
         ItemMeta potMeta = potion.getItemMeta();
         if (potMeta != null) {
@@ -137,7 +148,6 @@ public class InvseeCommand implements CommandExecutor, TabCompleter {
         }
         inv.setItem(51, potion);
 
-        // 7. Health & Food stats (slot 52)
         ItemStack apple = new ItemStack(Material.GOLDEN_APPLE);
         ItemMeta appMeta = apple.getItemMeta();
         if (appMeta != null) {
@@ -150,15 +160,6 @@ public class InvseeCommand implements CommandExecutor, TabCompleter {
             apple.setItemMeta(appMeta);
         }
         inv.setItem(52, apple);
-
-        // 8. Close status slot (slot 53)
-        ItemStack barrier = new ItemStack(Material.BARRIER);
-        ItemMeta barMeta = barrier.getItemMeta();
-        if (barMeta != null) {
-            barMeta.displayName(MiniMessageUtils.parse("<color:#E20000>Close Viewer"));
-            barrier.setItemMeta(barMeta);
-        }
-        inv.setItem(53, barrier);
     }
 
     @Override

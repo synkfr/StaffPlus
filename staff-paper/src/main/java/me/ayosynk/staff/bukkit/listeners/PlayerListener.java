@@ -324,35 +324,41 @@ public class PlayerListener implements Listener {
             return;
         }
 
-        if (slot == 53) { // Close button
+        if (slot == 53) {
             event.setCancelled(true);
             SchedulerUtils.runEntity(plugin, staff, staff::closeInventory);
             return;
         }
 
-        // 2. Allow item movement inside normal inventory and armor, then sync to target on the next tick
-        SchedulerUtils.runEntity(plugin, target, () -> {
-            // Copy contents from custom inventory to target player
-            Inventory customInv = event.getInventory();
+        if (event.isShiftClick() && event.getClickedInventory() == event.getView().getBottomInventory()) {
+            event.setCancelled(true);
+            return;
+        }
 
-            // Sync main inventory (slots 0 - 35)
+        if (slot >= 54) {
+            return;
+        }
+
+        StaffBukkitPlugin.InvseeSession clickSession = plugin.getInvseeSessions().get(staff.getUniqueId());
+        if (clickSession != null) {
+            clickSession.setLastEditMillis(System.currentTimeMillis());
+        }
+
+        SchedulerUtils.runEntity(plugin, target, () -> {
+            Inventory customInv = event.getInventory();
             for (int i = 0; i < 36; i++) {
                 target.getInventory().setItem(i, customInv.getItem(i));
             }
-
-            // Sync armor (slots 45 - 48)
             target.getInventory().setHelmet(customInv.getItem(45));
             target.getInventory().setChestplate(customInv.getItem(46));
             target.getInventory().setLeggings(customInv.getItem(47));
             target.getInventory().setBoots(customInv.getItem(48));
-
-            // Sync off-hand (slot 49)
             target.getInventory().setItemInOffHand(customInv.getItem(49));
+            target.updateInventory();
         });
 
-        // Trigger GUI refresh to update read-only stats
         SchedulerUtils.runEntity(plugin, staff, () -> {
-            InvseeCommand.updateInvseeContents(event.getInventory(), target);
+            InvseeCommand.updateStatsOnly(event.getInventory(), target);
         });
     }
 
@@ -366,7 +372,6 @@ public class PlayerListener implements Listener {
         Player target = holder.getTarget();
         Player staff = (Player) event.getWhoClicked();
 
-        // If drag impacts any visual separators or stat slots, cancel it
         for (int rawSlot : event.getRawSlots()) {
             if (rawSlot >= 36 && rawSlot <= 44 || rawSlot >= 50 && rawSlot <= 53) {
                 event.setCancelled(true);
@@ -374,7 +379,11 @@ public class PlayerListener implements Listener {
             }
         }
 
-        // Sync main inventory/armor on next tick
+        StaffBukkitPlugin.InvseeSession dragSession = plugin.getInvseeSessions().get(staff.getUniqueId());
+        if (dragSession != null) {
+            dragSession.setLastEditMillis(System.currentTimeMillis());
+        }
+
         SchedulerUtils.runEntity(plugin, target, () -> {
             Inventory customInv = event.getInventory();
             for (int i = 0; i < 36; i++) {
@@ -385,20 +394,21 @@ public class PlayerListener implements Listener {
             target.getInventory().setLeggings(customInv.getItem(47));
             target.getInventory().setBoots(customInv.getItem(48));
             target.getInventory().setItemInOffHand(customInv.getItem(49));
+            target.updateInventory();
         });
 
         SchedulerUtils.runEntity(plugin, staff, () -> {
-            InvseeCommand.updateInvseeContents(event.getInventory(), target);
+            InvseeCommand.updateStatsOnly(event.getInventory(), target);
         });
     }
 
-    /**
-     * Real-time sync: when target updates inventory, update all open invsee GUIs.
-     * Thread-safe under Folia: iterates over registered sessions instead of accessing other players' open inventories directly.
-     */
     private void refreshTargetViewers(Player target) {
+        long now = System.currentTimeMillis();
         for (StaffBukkitPlugin.InvseeSession session : plugin.getInvseeSessions().values()) {
             if (session.getTargetUuid().equals(target.getUniqueId())) {
+                if (now - session.getLastEditMillis() < 500) {
+                    continue;
+                }
                 Player staff = Bukkit.getPlayer(session.getStaffUuid());
                 if (staff != null && staff.isOnline()) {
                     SchedulerUtils.runEntity(plugin, staff, () -> {
