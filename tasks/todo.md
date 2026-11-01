@@ -276,3 +276,14 @@
 - Bumped version to `1.2.3` across Gradle, Paper, Velocity, npm package definitions, README, and CHANGELOGS.
 - Successfully compiled shaded JARs (`StaffPlus-Paper-1.2.3.jar` and `StaffPlus-Velocity-1.2.3.jar`) with zero errors.
 
+### 15. Phase 28: Invsee Bedrock Duplication Bugfix & Screenshare /freeze Feature
+- Fixed `/invsee` item duplication glitch: removed GUI slot overwriting via `updateInvseeContents` on click/drag, isolated stat refreshes to `updateStatsOnly`, dispatched authoritative `target.updateInventory()` on target scheduler for Bedrock and Java client sync, constrained bottom-inventory shift-clicks, and introduced a 500ms debounce protecting against Bedrock client interaction packet loops.
+- Implemented `/freeze <player> [reason]` and `/unfreeze <player>` (aliases: `/ss`, `/screenshare`) on Paper/Folia.
+- Added `FreezeManager` and `FreezeSession` maintaining thread-safe active freeze states and Folia-compliant async repeating reminder tasks.
+- Added `FreezeListener` blocking player translation (preserving pitch/yaw), block breaking, block placing, damage dealt/received, item drops, item pickups, container access, and non-whitelisted commands.
+- Added screenshare disconnect handling with staff broadcast alert and configurable automatic logout command (`freeze-logout-action`).
+- Added configurable TeamSpeak and Discord server settings in `PluginConfig` and MiniMessage placeholders (`{teamspeak}`, `{discord}`) in `MessageConfig`.
+- Added unit tests in `FreezeTest.java` verifying freeze session properties, configuration defaults, message templates, and debounce timestamps.
+- Updated documentation across `README.md`, `commands.md`, and `configuration.md`.
+- Verified compilation and test suite with `./gradlew clean build` producing shaded JARs with zero errors.
+

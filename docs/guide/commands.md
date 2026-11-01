@@ -43,6 +43,8 @@ These commands are available **only** on Paper/Purpur/Folia servers. They requir
 | :--- | :--- | :--- | :--- |
 | `/vanish` | Toggles complete invisibility. | `/vanish` | `staff.vanish` |
 | `/invsee` | Live inspects player inventories. | `/invsee <player>` | `staff.invsee` |
+| `/freeze` | Freezes a player for screensharing. | `/freeze <player> [reason]` | `staff.freeze` |
+| `/unfreeze` | Unfreezes a frozen player. | `/unfreeze <player>` | `staff.unfreeze` |
 | `/monitor` | Smoothly spectates and follows players. | `/monitor <player/leave>` | `staff.monitor` |
 | `/fly` | Toggles flight mode for players. | `/fly [player]` | `staff.fly` |
 | `/gmc` | Sets creative gamemode shortcut. | `/gmc [player]` | `staff.gmc` |
@@ -88,6 +90,7 @@ Many commands have shorthand aliases for convenience:
 | `/vanish` | `/v`, `/vmode` |
 | `/monitor` | `/spectate`, `/mon` |
 | `/invsee` | `/inspect`, `/inv` |
+| `/freeze` | `/ss`, `/screenshare` |
 | `/fly` | `/flight` |
 | `/history` | `/punishhistory`, `/historylog` |
 | `/staffrollback` | `/rollbackstaff`, `/rollback` |

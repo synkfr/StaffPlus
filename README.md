@@ -32,6 +32,7 @@ Both editions share the same database, configs, and migration system — deploy 
 | Vanish System | ✅ | ❌ |
 | Spectator Monitor/Follow | ✅ | ❌ |
 | Inventory Inspector (`/invsee`) | ✅ | ❌ |
+| Freeze / Screenshare (`/freeze`) | ✅ | ❌ |
 | Gamemode Shortcuts | ✅ | ❌ |
 | Flight Toggle (`/fly`) | ✅ | ❌ |
 | Global Ban History (`/bans`) | ✅ | ✅ |

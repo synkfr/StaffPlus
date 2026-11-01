@@ -61,6 +61,19 @@ bans-leaderboard-enabled: true
 velocity-proxy-commands: true
 velocity-forward-to-backend: true
 velocity-disconnect-on-kick: true
+
+# Freeze & Screenshare settings (Paper only)
+freeze-enabled: true
+teamspeak-server: "ts.example.com"
+discord-invite: "discord.gg/example"
+freeze-reminder-interval-seconds: 5
+freeze-logout-action-enabled: true
+freeze-logout-action: "ban {player} 30d Disconnecting while frozen [Auto-Ban]"
+freeze-allowed-commands:
+  - msg
+  - r
+  - reply
+  - tell
 ```
 
 ### Config Mappings Explained
@@ -152,6 +165,8 @@ vanish-action-bar: "<color:#00E262>★ YOU ARE VANISHED ★"
 | `{staff}` | Senior staff who placed original punishment | Hierarchy overwrite denial |
 | `{ip}` | IP address | IP ban messages |
 | `{date}` | Timestamp date string | Warning list items |
+| `{teamspeak}` | Configured TeamSpeak server address | Freeze messages, titles, and reminders |
+| `{discord}` | Configured Discord invite link | Freeze messages and reminders |
 
 ---
 
