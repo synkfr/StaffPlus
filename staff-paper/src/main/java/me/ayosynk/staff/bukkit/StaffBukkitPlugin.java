@@ -36,6 +36,7 @@ public final class StaffBukkitPlugin extends JavaPlugin implements StaffPlatform
     private me.ayosynk.staff.migration.MigrationManager migrationManager;
     private me.ayosynk.staff.bukkit.config.MenuManager menuManager;
     private me.ayosynk.staff.utils.UpdateChecker updateChecker;
+    private me.ayosynk.staff.bukkit.freeze.FreezeManager freezeManager;
 
     // Cache of all players ever seen (for tab completion)
     private final Set<String> registeredNames = ConcurrentHashMap.newKeySet();
@@ -130,11 +131,17 @@ public final class StaffBukkitPlugin extends JavaPlugin implements StaffPlatform
         this.updateChecker = new me.ayosynk.staff.utils.UpdateChecker(this);
         this.updateChecker.checkForUpdates();
 
+        this.freezeManager = new me.ayosynk.staff.bukkit.freeze.FreezeManager(this);
+
         getLogger().info("Staff+ Bukkit Plugin has been successfully enabled on Folia/Paper!");
     }
 
     @Override
     public void onDisable() {
+        if (freezeManager != null) {
+            freezeManager.cleanup();
+        }
+
         // Restore all monitored players before shutdown
         for (UUID uuid : monitorStates.keySet()) {
             Player staff = Bukkit.getPlayer(uuid);
@@ -190,6 +197,7 @@ public final class StaffBukkitPlugin extends JavaPlugin implements StaffPlatform
     private void registerListeners() {
         getServer().getPluginManager().registerEvents(new me.ayosynk.staff.bukkit.listeners.PlayerListener(this), this);
         getServer().getPluginManager().registerEvents(new me.ayosynk.staff.bukkit.listeners.VanishListener(this), this);
+        getServer().getPluginManager().registerEvents(new me.ayosynk.staff.bukkit.listeners.FreezeListener(this), this);
     }
 
     private void registerCommands() {
@@ -219,6 +227,10 @@ public final class StaffBukkitPlugin extends JavaPlugin implements StaffPlatform
 
         me.ayosynk.staff.bukkit.commands.InvseeCommand invseeCommand = new me.ayosynk.staff.bukkit.commands.InvseeCommand(this);
         registerDynamic(commandMap, "invsee", "Inspect a player's inventory live.", "/invsee <player>", Arrays.asList("inspect", "inv"), invseeCommand, invseeCommand);
+
+        me.ayosynk.staff.bukkit.commands.FreezeCommand freezeCommand = new me.ayosynk.staff.bukkit.commands.FreezeCommand(this);
+        registerDynamic(commandMap, "freeze", "Freeze a player for screensharing.", "/freeze <player> [reason]", Arrays.asList("ss", "screenshare"), freezeCommand, freezeCommand);
+        registerDynamic(commandMap, "unfreeze", "Unfreeze a player.", "/unfreeze <player>", Collections.emptyList(), freezeCommand, freezeCommand);
 
         // Gamemode shortcuts and Fly commands
         me.ayosynk.staff.bukkit.commands.GamemodeCommand gmCommand = new me.ayosynk.staff.bukkit.commands.GamemodeCommand(this);
@@ -276,6 +288,27 @@ public final class StaffBukkitPlugin extends JavaPlugin implements StaffPlatform
     public me.ayosynk.staff.migration.MigrationManager getMigrationManager() { return migrationManager; }
     public me.ayosynk.staff.bukkit.config.MenuManager getMenuManager() { return menuManager; }
     public me.ayosynk.staff.utils.UpdateChecker getUpdateChecker() { return updateChecker; }
+    public me.ayosynk.staff.bukkit.freeze.FreezeManager getFreezeManager() { return freezeManager; }
+
+    public int getHierarchyWeight(org.bukkit.command.CommandSender sender) {
+        if (!(sender instanceof Player)) {
+            return Integer.MAX_VALUE;
+        }
+        Player player = (Player) sender;
+        int maxWeight = 0;
+        for (org.bukkit.permissions.PermissionAttachmentInfo info : player.getEffectivePermissions()) {
+            String perm = info.getPermission().toLowerCase();
+            if (perm.startsWith("staff.hierarchy.weight.")) {
+                try {
+                    int weight = Integer.parseInt(perm.substring("staff.hierarchy.weight.".length()));
+                    if (weight > maxWeight) {
+                        maxWeight = weight;
+                    }
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        return maxWeight;
+    }
 
     // Cache operations
     public Set<String> getRegisteredNames() { return registeredNames; }
@@ -318,16 +351,20 @@ public final class StaffBukkitPlugin extends JavaPlugin implements StaffPlatform
         private final UUID staffUuid;
         private final UUID targetUuid;
         private final org.bukkit.inventory.Inventory inventory;
+        private volatile long lastEditMillis;
 
         public InvseeSession(UUID staffUuid, UUID targetUuid, org.bukkit.inventory.Inventory inventory) {
             this.staffUuid = staffUuid;
             this.targetUuid = targetUuid;
             this.inventory = inventory;
+            this.lastEditMillis = 0L;
         }
 
         public UUID getStaffUuid() { return staffUuid; }
         public UUID getTargetUuid() { return targetUuid; }
         public org.bukkit.inventory.Inventory getInventory() { return inventory; }
+        public long getLastEditMillis() { return lastEditMillis; }
+        public void setLastEditMillis(long lastEditMillis) { this.lastEditMillis = lastEditMillis; }
     }
 
     public static class SpectatorState {

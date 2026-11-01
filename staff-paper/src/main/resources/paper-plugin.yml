@@ -23,6 +23,8 @@ permissions:
       staff.warn: true
       staff.warns: true
       staff.invsee: true
+      staff.freeze: true
+      staff.unfreeze: true
       staff.vanish: true
       staff.vanish.see: true
       staff.monitor: true
@@ -75,6 +77,12 @@ permissions:
     default: op
   staff.invsee:
     description: Inspect a player's inventory live.
+    default: op
+  staff.freeze:
+    description: Freeze a player for screensharing.
+    default: op
+  staff.unfreeze:
+    description: Unfreeze a player.
     default: op
   staff.vanish:
     description: Toggle vanish mode.
