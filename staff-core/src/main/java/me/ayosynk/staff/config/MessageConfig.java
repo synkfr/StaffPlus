@@ -104,11 +104,11 @@ public class MessageConfig extends OkaeriConfig {
     private String playerUnfrozen = "<color:#00E262>You have unfrozen <color:#FFFFFF>{player}</color>.";
     private String playerFrozenBroadcast = "<color:#E2B700>{player} has been frozen by {staff}.";
     private String playerUnfrozenBroadcast = "<color:#00E262>{player} has been unfrozen by {staff}.";
-    private String frozenChatReminder = "<color:#E20000><b>---------------- [ YOU ARE FROZEN ] ----------------</b></color>\n"
+    private String frozenChatReminder = "<color:#E20000><b>------- [ YOU ARE FROZEN ] -------</b></color>\n"
             + "<color:#FFFFFF>You have been frozen by a staff member!</color>\n"
             + "<color:#A0A0A0>Join our TeamSpeak: <color:#00E262>{teamspeak}</color> or Discord: <color:#00E262>{discord}</color></color>\n"
             + "<color:#E20000><b>DO NOT LOG OUT</b></color> <color:#A0A0A0>or you will be automatically banned!</color>\n"
-            + "<color:#E20000><b>---------------------------------------------------</b></color>";
+            + "<color:#E20000><b-------------------------------</b></color>";
     private String frozenTitle = "<color:#E20000><b>YOU ARE FROZEN</b></color>";
     private String frozenSubtitle = "<color:#A0A0A0>Join TeamSpeak: <color:#00E262>{teamspeak}</color>";
     private String frozenActionBar = "<color:#E20000>⚠ YOU ARE FROZEN - JOIN {teamspeak} ⚠</color>";

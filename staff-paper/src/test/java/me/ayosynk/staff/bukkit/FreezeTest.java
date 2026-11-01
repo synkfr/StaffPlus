@@ -28,6 +28,40 @@ public class FreezeTest {
         assertEquals("Suspected Killaura", session.getReason());
         assertEquals(loc, session.getFreezeLocation());
         assertTrue(session.getFrozenAt() <= System.currentTimeMillis());
+        assertEquals("CHAT", session.getMessageMode());
+        assertTrue(session.isChatEnabled());
+        assertFalse(session.isTitleEnabled());
+        assertFalse(session.isActionBarEnabled());
+    }
+
+    @Test
+    public void testFreezeMessageModes() {
+        Location loc = new Location(null, 0, 0, 0);
+
+        FreezeSession chat = new FreezeSession(UUID.randomUUID(), null, "Console", "SS", loc, "CHAT");
+        assertTrue(chat.isChatEnabled());
+        assertFalse(chat.isTitleEnabled());
+        assertFalse(chat.isActionBarEnabled());
+
+        FreezeSession title = new FreezeSession(UUID.randomUUID(), null, "Console", "SS", loc, "TITLE");
+        assertFalse(title.isChatEnabled());
+        assertTrue(title.isTitleEnabled());
+        assertFalse(title.isActionBarEnabled());
+
+        FreezeSession actionBar = new FreezeSession(UUID.randomUUID(), null, "Console", "SS", loc, "ACTION_BAR");
+        assertFalse(actionBar.isChatEnabled());
+        assertFalse(actionBar.isTitleEnabled());
+        assertTrue(actionBar.isActionBarEnabled());
+
+        FreezeSession all = new FreezeSession(UUID.randomUUID(), null, "Console", "SS", loc, "ALL");
+        assertTrue(all.isChatEnabled());
+        assertTrue(all.isTitleEnabled());
+        assertTrue(all.isActionBarEnabled());
+
+        FreezeSession multi = new FreezeSession(UUID.randomUUID(), null, "Console", "SS", loc, "CHAT, TITLE");
+        assertTrue(multi.isChatEnabled());
+        assertTrue(multi.isTitleEnabled());
+        assertFalse(multi.isActionBarEnabled());
     }
 
     @Test
@@ -35,6 +69,7 @@ public class FreezeTest {
         PluginConfig config = new PluginConfig();
 
         assertTrue(config.isFreezeEnabled());
+        assertEquals("CHAT", config.getFreezeMessageMode());
         assertEquals("ts.example.com", config.getTeamspeakServer());
         assertEquals("discord.gg/example", config.getDiscordInvite());
         assertEquals(5, config.getFreezeReminderIntervalSeconds());

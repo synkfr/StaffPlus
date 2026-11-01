@@ -34,7 +34,7 @@ public class FreezeCommand implements CommandExecutor, TabCompleter {
         boolean isUnfreeze = label.equalsIgnoreCase("unfreeze");
 
         if (args.length < 1) {
-            String usage = isUnfreeze ? "<color:#E20000>Usage: /unfreeze <player>" : "<color:#E20000>Usage: /freeze <player> [reason]";
+            String usage = isUnfreeze ? "<color:#E20000>Usage: /unfreeze <player>" : "<color:#E20000>Usage: /freeze <player> [reason] [--chat|--title|--actionbar|--all]";
             sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + usage));
             return true;
         }
@@ -75,12 +75,28 @@ public class FreezeCommand implements CommandExecutor, TabCompleter {
             }
         }
 
-        String reason = "Screenshare";
+        String messageMode = plugin.getPluginConfig().getFreezeMessageMode();
+        List<String> reasonParts = new java.util.ArrayList<>();
         if (args.length > 1) {
-            reason = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+            for (int i = 1; i < args.length; i++) {
+                String arg = args[i];
+                if (arg.equalsIgnoreCase("--chat")) {
+                    messageMode = "CHAT";
+                } else if (arg.equalsIgnoreCase("--title")) {
+                    messageMode = "TITLE";
+                } else if (arg.equalsIgnoreCase("--actionbar") || arg.equalsIgnoreCase("--action-bar") || arg.equalsIgnoreCase("--action_bar")) {
+                    messageMode = "ACTION_BAR";
+                } else if (arg.equalsIgnoreCase("--all")) {
+                    messageMode = "ALL";
+                } else {
+                    reasonParts.add(arg);
+                }
+            }
         }
 
-        plugin.getFreezeManager().freeze(target, sender, reason);
+        String reason = reasonParts.isEmpty() ? "Screenshare" : String.join(" ", reasonParts);
+
+        plugin.getFreezeManager().freeze(target, sender, reason, messageMode);
         return true;
     }
 
@@ -93,9 +109,13 @@ public class FreezeCommand implements CommandExecutor, TabCompleter {
                     .filter(name -> name.toLowerCase().startsWith(input))
                     .collect(Collectors.toList());
         }
-        if (args.length == 2 && !alias.equalsIgnoreCase("unfreeze")) {
-            String input = args[1].toLowerCase();
-            return List.of("Screenshare", "Suspected Cheating", "Hacking Investigation").stream()
+        if (args.length >= 2 && !alias.equalsIgnoreCase("unfreeze")) {
+            String input = args[args.length - 1].toLowerCase();
+            List<String> suggestions = new java.util.ArrayList<>(List.of("--chat", "--title", "--actionbar", "--all"));
+            if (args.length == 2) {
+                suggestions.addAll(List.of("Screenshare", "Suspected Cheating", "Hacking Investigation"));
+            }
+            return suggestions.stream()
                     .filter(r -> r.toLowerCase().startsWith(input))
                     .collect(Collectors.toList());
         }

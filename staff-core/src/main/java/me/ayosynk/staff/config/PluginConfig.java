@@ -57,6 +57,7 @@ public class PluginConfig extends OkaeriConfig {
     private boolean velocityDisconnectOnKick = true;
 
     private boolean freezeEnabled = true;
+    private String freezeMessageMode = "CHAT";
     private String teamspeakServer = "ts.example.com";
     private String discordInvite = "discord.gg/example";
     private int freezeReminderIntervalSeconds = 5;
@@ -202,5 +203,9 @@ public class PluginConfig extends OkaeriConfig {
 
     public java.util.List<String> getFreezeAllowedCommands() {
         return freezeAllowedCommands;
+    }
+
+    public String getFreezeMessageMode() {
+        return freezeMessageMode;
     }
 }

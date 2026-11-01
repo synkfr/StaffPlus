@@ -38,10 +38,14 @@ public class FreezeManager {
     }
 
     public void freeze(@NotNull Player target, @NotNull CommandSender staff, @NotNull String reason) {
+        freeze(target, staff, reason, plugin.getPluginConfig().getFreezeMessageMode());
+    }
+
+    public void freeze(@NotNull Player target, @NotNull CommandSender staff, @NotNull String reason, @NotNull String messageMode) {
         UUID staffUuid = (staff instanceof Player) ? ((Player) staff).getUniqueId() : null;
         String staffName = (staff instanceof Player) ? staff.getName() : "Console";
 
-        FreezeSession session = new FreezeSession(target.getUniqueId(), staffUuid, staffName, reason, target.getLocation());
+        FreezeSession session = new FreezeSession(target.getUniqueId(), staffUuid, staffName, reason, target.getLocation(), messageMode);
         frozenPlayers.put(target.getUniqueId(), session);
 
         String freezeStaffMsg = plugin.getMessageConfig().getPlayerFrozen()
@@ -71,6 +75,7 @@ public class FreezeManager {
 
         String staffName = (staff instanceof Player) ? staff.getName() : "Console";
         target.clearTitle();
+        target.sendActionBar(net.kyori.adventure.text.Component.empty());
 
         String unfrozenTargetMsg = plugin.getMessageConfig().getPlayerUnfrozen()
                 .replace("{player}", target.getName())
@@ -143,38 +148,45 @@ public class FreezeManager {
             for (UUID uuid : frozenPlayers.keySet()) {
                 Player player = Bukkit.getPlayer(uuid);
                 if (player != null && player.isOnline()) {
-                    String ab = plugin.getMessageConfig().getFrozenActionBar()
-                            .replace("{teamspeak}", plugin.getPluginConfig().getTeamspeakServer())
-                            .replace("{discord}", plugin.getPluginConfig().getDiscordInvite())
-                            .replace("{player}", player.getName());
-                    player.sendActionBar(MiniMessageUtils.parse(ab));
+                    FreezeSession session = frozenPlayers.get(uuid);
+                    if (session != null && session.isActionBarEnabled()) {
+                        String ab = plugin.getMessageConfig().getFrozenActionBar()
+                                .replace("{teamspeak}", plugin.getPluginConfig().getTeamspeakServer())
+                                .replace("{discord}", plugin.getPluginConfig().getDiscordInvite())
+                                .replace("{player}", player.getName());
+                        player.sendActionBar(MiniMessageUtils.parse(ab));
+                    }
                 }
             }
         }, 1, 1, TimeUnit.SECONDS);
     }
 
     private void sendReminder(Player player, FreezeSession session) {
-        String chatMsg = plugin.getMessageConfig().getFrozenChatReminder()
-                .replace("{teamspeak}", plugin.getPluginConfig().getTeamspeakServer())
-                .replace("{discord}", plugin.getPluginConfig().getDiscordInvite())
-                .replace("{staff}", session.getStaffName())
-                .replace("{reason}", session.getReason())
-                .replace("{player}", player.getName());
-        player.sendMessage(MiniMessageUtils.parse(chatMsg));
+        if (session.isChatEnabled()) {
+            String chatMsg = plugin.getMessageConfig().getFrozenChatReminder()
+                    .replace("{teamspeak}", plugin.getPluginConfig().getTeamspeakServer())
+                    .replace("{discord}", plugin.getPluginConfig().getDiscordInvite())
+                    .replace("{staff}", session.getStaffName())
+                    .replace("{reason}", session.getReason())
+                    .replace("{player}", player.getName());
+            player.sendMessage(MiniMessageUtils.parse(chatMsg));
+        }
 
-        String titleStr = plugin.getMessageConfig().getFrozenTitle()
-                .replace("{teamspeak}", plugin.getPluginConfig().getTeamspeakServer())
-                .replace("{discord}", plugin.getPluginConfig().getDiscordInvite())
-                .replace("{staff}", session.getStaffName())
-                .replace("{reason}", session.getReason())
-                .replace("{player}", player.getName());
-        String subStr = plugin.getMessageConfig().getFrozenSubtitle()
-                .replace("{teamspeak}", plugin.getPluginConfig().getTeamspeakServer())
-                .replace("{discord}", plugin.getPluginConfig().getDiscordInvite())
-                .replace("{staff}", session.getStaffName())
-                .replace("{reason}", session.getReason())
-                .replace("{player}", player.getName());
+        if (session.isTitleEnabled()) {
+            String titleStr = plugin.getMessageConfig().getFrozenTitle()
+                    .replace("{teamspeak}", plugin.getPluginConfig().getTeamspeakServer())
+                    .replace("{discord}", plugin.getPluginConfig().getDiscordInvite())
+                    .replace("{staff}", session.getStaffName())
+                    .replace("{reason}", session.getReason())
+                    .replace("{player}", player.getName());
+            String subStr = plugin.getMessageConfig().getFrozenSubtitle()
+                    .replace("{teamspeak}", plugin.getPluginConfig().getTeamspeakServer())
+                    .replace("{discord}", plugin.getPluginConfig().getDiscordInvite())
+                    .replace("{staff}", session.getStaffName())
+                    .replace("{reason}", session.getReason())
+                    .replace("{player}", player.getName());
 
-        player.showTitle(Title.title(MiniMessageUtils.parse(titleStr), MiniMessageUtils.parse(subStr)));
+            player.showTitle(Title.title(MiniMessageUtils.parse(titleStr), MiniMessageUtils.parse(subStr)));
+        }
     }
 }
