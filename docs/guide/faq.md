@@ -90,3 +90,18 @@ In Staff+:
 
 ### Q: Do I need GeyserMC on both the proxy and the backend servers?
 Staff+ features multi-classloader Geyser detection. If Geyser is present on the server where the command is executed (whether Velocity or Paper), Bedrock players receive an interactive GUI form. If Geyser is only on the proxy and you run backend commands (or vice versa), Staff+ safely falls back to standard text/chat pagination with zero console errors.
+
+---
+
+## ❄️ Freeze & Screenshare
+
+### Q: How do I change the TeamSpeak or Discord message in /freeze?
+In `config.yml`, set your voice communication addresses:
+```yaml
+teamspeak-server: "ts.yourserver.com"
+discord-invite: "discord.gg/yourserver"
+```
+The `{teamspeak}` and `{discord}` placeholders are dynamically mapped into all freeze chat reminders, on-screen titles, subtitles, and the action bar indicator configured in `messages.yml`.
+
+### Q: What happens if a player disconnects while frozen?
+Staff+ immediately broadcasts an alert to all online staff. If `freeze-logout-action-enabled: true`, Staff+ executes the configured console command (by default, `ban {player} 30d Disconnecting while frozen [Auto-Ban]`).

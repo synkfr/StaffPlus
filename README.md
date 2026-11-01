@@ -121,6 +121,16 @@ Both editions share the same database, configs, and migration system — deploy 
   * **Potion Bottle**: Shows a live list of active potion effects and durations.
   * **Ender Chest**: Quick-access shortcut item to inspect their Ender Chest directly.
 * **Unparalleled Folia Safety**: Completely avoids asynchronous block-state reads (which crash under Folia when querying `.getOpenInventory().getTopInventory().getHolder()` on block-based inventories in other regions). Instead, it implements a thread-safe custom session registry that cleanly tracks active inspect views and propagates updates regionally.
+* **Geyser/Bedrock Sync**: Automatic debouncing and authoritative server inventory synchronization prevents item duplication and desyncs when Java staff inspect Bedrock players.
+
+### Freeze & Screenshare (Paper Only)
+
+* **Immobilization & Interaction Lock**: Completely locks the target player's position, rotation, jump, damage, item drop/pickup, block placement/breaking, and inventory interactions.
+* **Command Whitelisting**: Blocks all commands during freeze investigations except for configurable messaging commands (e.g. `/msg`, `/r`, `/reply`, `/tell`).
+* **Multi-Channel Prompts**: Broadcasts customizable chat warnings, title/subtitle alerts, and persistent action bar notices directing the player to join TeamSpeak or Discord.
+* **Configurable Placeholders**: Full `{teamspeak}` and `{discord}` placeholder substitution across all freeze messages and titles.
+* **Periodic Screen Reminders**: Non-blocking repeating task reminds the frozen player at configurable intervals (e.g. every 5 seconds) to ensure instructions are never missed.
+* **Auto-Punishment on Disconnect**: Automatically executes console commands (such as a 30-day ban) if a player logs out while frozen to evade screensharing.
 
 ### Shortcuts (Paper Only)
 
@@ -164,6 +174,8 @@ Both editions share the same database, configs, and migration system — deploy 
 | :--- | :--- | :--- | :--- |
 | `/vanish` | Toggle complete invisibility. | `/vanish` | `staff.vanish` |
 | `/invsee` | Inspect a player's inventory live. | `/invsee <player>` | `staff.invsee` |
+| `/freeze` | Freeze a player for screensharing/investigation. | `/freeze <player> [reason]` | `staff.freeze` |
+| `/unfreeze` | Unfreeze a player after investigation. | `/unfreeze <player>` | `staff.unfreeze` |
 | `/monitor` | Spectate and smoothly follow a player. | `/monitor <player/leave>` | `staff.monitor` |
 | `/fly` | Toggle player flight. | `/fly [player]` | `staff.fly` |
 | `/gmc` | Switch to creative mode. | `/gmc [player]` | `staff.gmc` |
@@ -180,14 +192,14 @@ Both editions share the same database, configs, and migration system — deploy 
 
 ### Paper Edition (Paper / Purpur / Folia)
 
-1. Download `StaffPlus-Paper-1.2.3.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
+1. Download `StaffPlus-Paper-1.3.0.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
 2. Place the JAR in your server's `plugins/` folder.
 3. Restart your server.
 4. Edit `plugins/Staff/config.yml` and `plugins/Staff/messages.yml` to your liking.
 
 ### Velocity Edition (Proxy)
 
-1. Download `StaffPlus-Velocity-1.2.3.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
+1. Download `StaffPlus-Velocity-1.3.0.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
 2. Place the JAR in your Velocity proxy's `plugins/` folder.
 3. Restart your proxy.
 4. Edit `plugins/staffplus/config.yml` and `plugins/staffplus/messages.yml` to your liking.
@@ -268,6 +280,19 @@ bans-leaderboard-enabled: true
 velocity-proxy-commands: true
 velocity-forward-to-backend: true
 velocity-disconnect-on-kick: true
+
+# Freeze & Screenshare settings (Paper only)
+freeze-enabled: true
+teamspeak-server: "ts.example.com"
+discord-invite: "discord.gg/example"
+freeze-reminder-interval-seconds: 5
+freeze-logout-action-enabled: true
+freeze-logout-action: "ban {player} 30d Disconnecting while frozen [Auto-Ban]"
+freeze-allowed-commands:
+  - msg
+  - r
+  - reply
+  - tell
 ```
 
 ### `messages.yml`
@@ -302,6 +327,14 @@ ban-kick-message: "<color:#E20000>You have been banned from the server!\n\nReaso
 vanish-enabled: "<color:#00E262>You are now vanished."
 vanish-disabled: "<color:#00E262>You are no longer vanished."
 vanish-action-bar: "<color:#00E262>★ YOU ARE VANISHED ★"
+
+# Freeze & Screenshare (Paper only)
+player-frozen: "<color:#E20000>You have frozen {player}. Reason: {reason}"
+player-unfrozen: "<color:#00E262>You have unfrozen {player}."
+you-are-frozen: "<color:#E20000><bold>YOU HAVE BEEN FROZEN BY STAFF!</bold>\n<color:#E2B700>Join TeamSpeak: <color:#FFFFFF>{teamspeak}\n<color:#E2B700>Or Discord: <color:#FFFFFF>{discord}\n<color:#E20000>Disconnecting will result in a permanent ban!"
+freeze-title: "<color:#E20000><bold>YOU ARE FROZEN</bold>"
+freeze-subtitle: "<color:#FFFF55>Join TeamSpeak: <color:#FFFFFF>{teamspeak}"
+freeze-action-bar: "<color:#E20000>⚠ FROZEN ⚠ <color:#FFFFFF>Join TS: {teamspeak} | DC = BAN"
 ```
 
 ---
@@ -326,8 +359,8 @@ Compile and build both platform JARs:
 The compiled plugins will be located at:
 
 ```
-staff-paper/build/libs/StaffPlus-Paper-1.0.0.jar    # Paper/Purpur/Folia servers
-staff-velocity/build/libs/StaffPlus-Velocity-1.0.0.jar  # Velocity proxies
+staff-paper/build/libs/StaffPlus-Paper-1.3.0.jar    # Paper/Purpur/Folia servers
+staff-velocity/build/libs/StaffPlus-Velocity-1.3.0.jar  # Velocity proxies
 ```
 
 ### Project Structure
@@ -337,7 +370,7 @@ StaffPlus/
 ├── staff-core/          # Shared platform-agnostic library
 │   └── src/main/java/   # Database, Punishment model, Configs, Migration, Utils
 ├── staff-paper/         # Paper/Folia backend plugin
-│   └── src/main/java/   # Paper commands, listeners, vanish, monitor, invsee
+│   └── src/main/java/   # Paper commands, listeners, vanish, freeze, monitor, invsee
 ├── staff-velocity/       # Velocity proxy plugin
 │   └── src/main/java/   # Velocity commands, login/chat listeners
 ├── build.gradle          # Root configuration

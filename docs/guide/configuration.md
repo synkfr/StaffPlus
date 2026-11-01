@@ -118,6 +118,15 @@ These settings are **only used on the Paper edition**. They are safely ignored i
 * **`velocity-forward-to-backend`**: When enabled (default: `true`), if a player runs a command on Velocity without proxy permissions (e.g. staff permissions and OPs are managed on Paper backend servers), Velocity transparently forwards the command to their connected Paper server via `spoofChatInput` instead of blocking them with "no permission".
 * **`velocity-disconnect-on-kick`**: When enabled (default: `true`), moderation kicks and active ban kicks disconnect players from the proxy network entirely rather than routing them to fallback/limbo servers.
 
+#### Freeze & Screenshare Settings (Paper Only)
+* **`freeze-enabled`**: Enable or disable the screenshare `/freeze` and `/unfreeze` system.
+* **`teamspeak-server`**: Your community's TeamSpeak 3 address (injected into `{teamspeak}` placeholders).
+* **`discord-invite`**: Your community's Discord invite link (injected into `{discord}` placeholders).
+* **`freeze-reminder-interval-seconds`**: Interval in seconds between periodic title, chat, and action bar screenshare reminders sent to frozen players.
+* **`freeze-logout-action-enabled`**: Whether to automatically execute an action if a frozen player disconnects while under screenshare investigation.
+* **`freeze-logout-action`**: Command executed via console if a player leaves while frozen (supports `{player}` placeholder).
+* **`freeze-allowed-commands`**: Whitelisted commands that frozen players are permitted to run (e.g., messaging commands such as `/msg`, `/r`).
+
 ---
 
 ## Message Configuration (`messages.yml`)

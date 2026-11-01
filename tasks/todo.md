@@ -283,7 +283,7 @@
 - Added `FreezeListener` blocking player translation (preserving pitch/yaw), block breaking, block placing, damage dealt/received, item drops, item pickups, container access, and non-whitelisted commands.
 - Added screenshare disconnect handling with staff broadcast alert and configurable automatic logout command (`freeze-logout-action`).
 - Added configurable TeamSpeak and Discord server settings in `PluginConfig` and MiniMessage placeholders (`{teamspeak}`, `{discord}`) in `MessageConfig`.
-- Added unit tests in `FreezeTest.java` verifying freeze session properties, configuration defaults, message templates, and debounce timestamps.
-- Updated documentation across `README.md`, `commands.md`, and `configuration.md`.
-- Verified compilation and test suite with `./gradlew clean build` producing shaded JARs with zero errors.
+- Updated documentation across `README.md`, `commands.md`, `configuration.md`, `getting-started.md`, `faq.md`, `index.md`, and `CHANGELOGS.md`.
+- Bumped version to `1.3.0` across Gradle (`build.gradle`), Paper (`paper-plugin.yml`, `plugin.yml`), Velocity (`StaffVelocityPlugin.java`), npm package definitions (`package.json`, `package-lock.json`), tests, README, and documentation.
+- Successfully compiled shaded JARs (`StaffPlus-Paper-1.3.0.jar` and `StaffPlus-Velocity-1.3.0.jar`) with zero errors.
 

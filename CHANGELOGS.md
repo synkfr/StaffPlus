@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] - 2026-11-02
+
+### Added
+* **Screenshare Freeze System (`/freeze` & `/unfreeze`)**:
+  * Implemented `/freeze <player> [reason]` and `/unfreeze <player>` commands (with aliases `/ss` and `/screenshare`) for Paper/Purpur/Folia servers.
+  * Complete target immobilization: restricts movement, rotation, jumping, damage taking/dealing, item drops/pickups, block placing/breaking, and inventory interactions.
+  * Whitelisted command filter (`freeze-allowed-commands`): blocks all commands while under screenshare investigation except configured messaging commands (`/msg`, `/r`, `/reply`, `/tell`).
+  * Multi-channel screenshare notifications: customizable MiniMessage chat banners, on-screen titles, subtitles, and persistent action bar HUDs.
+  * TeamSpeak & Discord placeholders: dynamic substitution of `{teamspeak}` and `{discord}` across all freeze messages and screen alerts based on `config.yml`.
+  * Configurable repeating reminder scheduler (`freeze-reminder-interval-seconds`) that periodically displays alerts and chat messages to the suspect.
+  * Evasion prevention (`freeze-logout-action`): automatically executes configurable console commands (e.g. 30-day ban) if a frozen player disconnects during screensharing.
+  * Administrative hierarchy enforcement: lower-ranking staff members cannot freeze higher or equal-ranking staff members.
+  * Unit test suite (`FreezeTest`) validating freeze sessions, movement boundaries, command whitelists, placeholder injection, and config parsing.
+
+### Fixed
+* **Java to Bedrock (Geyser) `/invsee` Item Duplication**:
+  * Isolated stats updates into `updateStatsOnly` in `InvseeCommand`, ensuring slot interactions in slots 0–49 do not overwrite or reset GUI contents with un-cleared target inventory reads while items are held on the cursor.
+  * Dispatched authoritative `target.updateInventory()` on the target entity's scheduler after inventory modifications, eliminating packet prediction desyncs and item duplication on Bedrock/Geyser clients.
+  * Added bottom-inventory shift-click boundary guard to block shift-clicking from target slots into viewer control slots.
+  * Added 500ms debounce filter to `refreshTargetViewers` to prevent rapid burst inventory updates from hammering viewers and causing race conditions.
+
+### Changed
+* Bumped project version to `1.3.0` across all subprojects, build scripts, plugin descriptors, and documentation.
+
+---
+
 ## [1.2.3] - 2026-09-25
 
 ### Added

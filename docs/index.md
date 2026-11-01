@@ -38,6 +38,9 @@ features:
   - icon: 🎒
     title: Live Inventory Inspector (Paper)
     details: View and change any player's inventory, armor, and active effects in real-time through an interactive menu.
+  - icon: ❄️
+    title: Freeze & Screenshare (Paper)
+    details: Instantly freeze suspected cheaters in place with custom TeamSpeak/Discord voice instructions, on-screen titles, and auto-ban on logout.
   - icon: 👁️
     title: Smooth Spectate Follow (Paper)
     details: Watch and automatically follow players smoothly in spectator mode without visual jitter.
