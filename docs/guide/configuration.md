@@ -64,6 +64,7 @@ velocity-disconnect-on-kick: true
 
 # Freeze & Screenshare settings (Paper only)
 freeze-enabled: true
+freeze-message-mode: "chat" # Options: CHAT, TITLE, ACTION_BAR, or ALL
 teamspeak-server: "ts.example.com"
 discord-invite: "discord.gg/example"
 freeze-reminder-interval-seconds: 5
@@ -120,6 +121,7 @@ These settings are **only used on the Paper edition**. They are safely ignored i
 
 #### Freeze & Screenshare Settings (Paper Only)
 * **`freeze-enabled`**: Enable or disable the screenshare `/freeze` and `/unfreeze` system.
+* **`freeze-message-mode`**: Select how screenshare instructions are delivered to frozen players. Options: `CHAT` (clean chat notification banner), `TITLE` (on-screen title and subtitle), `ACTION_BAR` (persistent action bar text), or `ALL` (shows all three). Can also be overridden per-freeze using `--chat`, `--title`, `--actionbar`, or `--all` flags.
 * **`teamspeak-server`**: Your community's TeamSpeak 3 address (injected into `{teamspeak}` placeholders).
 * **`discord-invite`**: Your community's Discord invite link (injected into `{discord}` placeholders).
 * **`freeze-reminder-interval-seconds`**: Interval in seconds between periodic title, chat, and action bar screenshare reminders sent to frozen players.

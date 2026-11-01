@@ -126,6 +126,7 @@ Both editions share the same database, configs, and migration system — deploy 
 ### Freeze & Screenshare (Paper Only)
 
 * **Immobilization & Interaction Lock**: Completely locks the target player's position, rotation, jump, damage, item drop/pickup, block placement/breaking, and inventory interactions.
+* **Selectable Message Modes**: Choose how screenshare instructions are delivered (`CHAT`, `TITLE`, `ACTION_BAR`, or `ALL`) via `config.yml` or on-the-fly using command flags (`--chat`, `--title`, `--actionbar`, `--all`), preventing cluttered screens.
 * **Command Whitelisting**: Blocks all commands during freeze investigations except for configurable messaging commands (e.g. `/msg`, `/r`, `/reply`, `/tell`).
 * **Multi-Channel Prompts**: Broadcasts customizable chat warnings, title/subtitle alerts, and persistent action bar notices directing the player to join TeamSpeak or Discord.
 * **Configurable Placeholders**: Full `{teamspeak}` and `{discord}` placeholder substitution across all freeze messages and titles.
@@ -174,7 +175,7 @@ Both editions share the same database, configs, and migration system — deploy 
 | :--- | :--- | :--- | :--- |
 | `/vanish` | Toggle complete invisibility. | `/vanish` | `staff.vanish` |
 | `/invsee` | Inspect a player's inventory live. | `/invsee <player>` | `staff.invsee` |
-| `/freeze` | Freeze a player for screensharing/investigation. | `/freeze <player> [reason]` | `staff.freeze` |
+| `/freeze` | Freeze a player for screensharing/investigation. | `/freeze <player> [reason] [--chat\|--title\|--actionbar\|--all]` | `staff.freeze` |
 | `/unfreeze` | Unfreeze a player after investigation. | `/unfreeze <player>` | `staff.unfreeze` |
 | `/monitor` | Spectate and smoothly follow a player. | `/monitor <player/leave>` | `staff.monitor` |
 | `/fly` | Toggle player flight. | `/fly [player]` | `staff.fly` |
@@ -283,6 +284,7 @@ velocity-disconnect-on-kick: true
 
 # Freeze & Screenshare settings (Paper only)
 freeze-enabled: true
+freeze-message-mode: "chat" # Options: CHAT, TITLE, ACTION_BAR, or ALL
 teamspeak-server: "ts.example.com"
 discord-invite: "discord.gg/example"
 freeze-reminder-interval-seconds: 5

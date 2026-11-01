@@ -105,3 +105,14 @@ The `{teamspeak}` and `{discord}` placeholders are dynamically mapped into all f
 
 ### Q: What happens if a player disconnects while frozen?
 Staff+ immediately broadcasts an alert to all online staff. If `freeze-logout-action-enabled: true`, Staff+ executes the configured console command (by default, `ban {player} 30d Disconnecting while frozen [Auto-Ban]`).
+
+### Q: Can I choose between Chat, Title, and Action Bar instead of showing everything at once?
+Yes! Set `freeze-message-mode` in `config.yml`:
+```yaml
+freeze-message-mode: "chat" # CHAT, TITLE, ACTION_BAR, or ALL
+```
+You can also override this per-command by specifying a flag:
+* `/freeze <player> [reason] --chat`
+* `/freeze <player> [reason] --title`
+* `/freeze <player> [reason] --actionbar`
+* `/freeze <player> [reason] --all`

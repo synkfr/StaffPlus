@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * Complete target immobilization: restricts movement, rotation, jumping, damage taking/dealing, item drops/pickups, block placing/breaking, and inventory interactions.
   * Whitelisted command filter (`freeze-allowed-commands`): blocks all commands while under screenshare investigation except configured messaging commands (`/msg`, `/r`, `/reply`, `/tell`).
   * Multi-channel screenshare notifications: customizable MiniMessage chat banners, on-screen titles, subtitles, and persistent action bar HUDs.
+  * Selectable message delivery modes: configure `freeze-message-mode` in `config.yml` (`CHAT`, `TITLE`, `ACTION_BAR`, or `ALL`) or use on-the-fly command flags (`--chat`, `--title`, `--actionbar`, `--all`) to prevent displaying all notifications simultaneously.
   * TeamSpeak & Discord placeholders: dynamic substitution of `{teamspeak}` and `{discord}` across all freeze messages and screen alerts based on `config.yml`.
   * Configurable repeating reminder scheduler (`freeze-reminder-interval-seconds`) that periodically displays alerts and chat messages to the suspect.
   * Evasion prevention (`freeze-logout-action`): automatically executes configurable console commands (e.g. 30-day ban) if a frozen player disconnects during screensharing.

@@ -43,7 +43,7 @@ These commands are available **only** on Paper/Purpur/Folia servers. They requir
 | :--- | :--- | :--- | :--- |
 | `/vanish` | Toggles complete invisibility. | `/vanish` | `staff.vanish` |
 | `/invsee` | Live inspects player inventories. | `/invsee <player>` | `staff.invsee` |
-| `/freeze` | Freezes a player for screensharing. | `/freeze <player> [reason]` | `staff.freeze` |
+| `/freeze` | Freezes a player for screensharing. | `/freeze <player> [reason] [--chat\|--title\|--actionbar\|--all]` | `staff.freeze` |
 | `/unfreeze` | Unfreezes a frozen player. | `/unfreeze <player>` | `staff.unfreeze` |
 | `/monitor` | Smoothly spectates and follows players. | `/monitor <player/leave>` | `staff.monitor` |
 | `/fly` | Toggles flight mode for players. | `/fly [player]` | `staff.fly` |
