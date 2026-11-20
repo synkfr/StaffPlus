@@ -50,7 +50,12 @@ public class InvseeCommand implements CommandExecutor, TabCompleter {
         Player target = Bukkit.getPlayer(targetName);
 
         if (target == null || !target.isOnline() || !plugin.canSee(staff, target)) {
-            staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", targetName)));
+            org.bukkit.OfflinePlayer offline = Bukkit.getOfflinePlayer(targetName);
+            if (offline.hasPlayedBefore()) {
+                staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + "<color:#E20000>" + targetName + "</color> is currently offline. <color:#A0A0A0>/invsee provides real-time live inspection and requires the player to be online.</color>"));
+            } else {
+                staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getPlayerNotFound().replace("{player}", targetName)));
+            }
             return true;
         }
 

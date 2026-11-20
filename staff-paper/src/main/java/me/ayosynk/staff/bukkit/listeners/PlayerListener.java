@@ -17,7 +17,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.entity.EntityPotionEffectEvent;
+import org.bukkit.event.entity.EntityRegainHealthEvent;
+import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -297,6 +302,9 @@ public class PlayerListener implements Listener {
         }
 
         if (!(event.getInventory().getHolder() instanceof InvseeHolder)) {
+            if (event.getWhoClicked() instanceof Player player) {
+                checkAndRefreshInvseeTarget(player);
+            }
             return;
         }
 
@@ -304,6 +312,13 @@ public class PlayerListener implements Listener {
         Player target = holder.getTarget();
         Player staff = (Player) event.getWhoClicked();
         int slot = event.getRawSlot();
+
+        if (!target.isOnline() || !target.isValid()) {
+            event.setCancelled(true);
+            staff.closeInventory();
+            staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + "<color:#E20000>Target player has disconnected."));
+            return;
+        }
 
         StaffBukkitPlugin.InvseeSession clickSession = plugin.getInvseeSessions().get(staff.getUniqueId());
         if (clickSession != null) {
@@ -344,6 +359,7 @@ public class PlayerListener implements Listener {
                 target.getInventory().setBoots(null);
                 target.getInventory().setItemInOffHand(null);
                 target.updateInventory();
+                refreshTargetViewers(target);
             });
             InvseeCommand.updateStatsOnly(event.getInventory(), target);
             staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + "<color:#00E262>Removed armor and off-hand from <color:#FFFFFF>" + target.getName() + "</color>."));
@@ -380,6 +396,7 @@ public class PlayerListener implements Listener {
                         case 49 -> target.getInventory().setItemInOffHand(toEquip);
                     }
                     target.updateInventory();
+                    refreshTargetViewers(target);
                 });
             } else if (clicked != null && !clicked.getType().isAir()) {
                 if (event.isShiftClick()) {
@@ -398,6 +415,7 @@ public class PlayerListener implements Listener {
                             case 49 -> target.getInventory().setItemInOffHand(null);
                         }
                         target.updateInventory();
+                        refreshTargetViewers(target);
                     });
                 } else if (cursor == null || cursor.getType().isAir()) {
                     ItemStack removed = clicked.clone();
@@ -412,6 +430,7 @@ public class PlayerListener implements Listener {
                             case 49 -> target.getInventory().setItemInOffHand(null);
                         }
                         target.updateInventory();
+                        refreshTargetViewers(target);
                     });
                 } else {
                     ItemStack oldEquip = clicked.clone();
@@ -438,6 +457,7 @@ public class PlayerListener implements Listener {
                             case 49 -> target.getInventory().setItemInOffHand(toEquip);
                         }
                         target.updateInventory();
+                        refreshTargetViewers(target);
                     });
                 }
             }
@@ -490,26 +510,49 @@ public class PlayerListener implements Listener {
                 targetItems[i - 27] = it != null ? it.clone() : null;
             }
 
+            if (!target.isOnline() || !target.isValid()) {
+                return;
+            }
+
             SchedulerUtils.runEntity(plugin, target, () -> {
                 for (int i = 0; i < 36; i++) {
                     target.getInventory().setItem(i, targetItems[i]);
                 }
                 target.updateInventory();
+                refreshTargetViewers(target);
             });
 
             InvseeCommand.updateStatsOnly(customInv, target);
         }, null, 1L);
+
+        // Schedule verification re-sync 600ms later when clicking settles
+        SchedulerUtils.runEntityLater(plugin, staff, () -> {
+            if (clickSession != null && System.currentTimeMillis() - clickSession.getLastEditMillis() >= 500) {
+                if (target.isOnline() && target.isValid()) {
+                    SchedulerUtils.runEntity(plugin, target, () -> refreshTargetViewers(target));
+                }
+            }
+        }, null, 12L);
     }
 
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent event) {
         if (!(event.getInventory().getHolder() instanceof InvseeHolder)) {
+            if (event.getWhoClicked() instanceof Player player) {
+                checkAndRefreshInvseeTarget(player);
+            }
             return;
         }
 
         InvseeHolder holder = (InvseeHolder) event.getInventory().getHolder();
         Player target = holder.getTarget();
         Player staff = (Player) event.getWhoClicked();
+
+        if (!target.isOnline() || !target.isValid()) {
+            event.setCancelled(true);
+            staff.closeInventory();
+            return;
+        }
 
         for (int rawSlot : event.getRawSlots()) {
             if (rawSlot >= 36) {
@@ -535,18 +578,34 @@ public class PlayerListener implements Listener {
                 targetItems[i - 27] = it != null ? it.clone() : null;
             }
 
+            if (!target.isOnline() || !target.isValid()) {
+                return;
+            }
+
             SchedulerUtils.runEntity(plugin, target, () -> {
                 for (int i = 0; i < 36; i++) {
                     target.getInventory().setItem(i, targetItems[i]);
                 }
                 target.updateInventory();
+                refreshTargetViewers(target);
             });
 
             InvseeCommand.updateStatsOnly(customInv, target);
         }, null, 1L);
+
+        SchedulerUtils.runEntityLater(plugin, staff, () -> {
+            if (dragSession != null && System.currentTimeMillis() - dragSession.getLastEditMillis() >= 500) {
+                if (target.isOnline() && target.isValid()) {
+                    SchedulerUtils.runEntity(plugin, target, () -> refreshTargetViewers(target));
+                }
+            }
+        }, null, 12L);
     }
 
     private void refreshTargetViewers(Player target) {
+        if (!target.isOnline() || !target.isValid()) {
+            return;
+        }
         long now = System.currentTimeMillis();
         InvseeCommand.InvSnapshot snapshot = null;
         for (StaffBukkitPlugin.InvseeSession session : plugin.getInvseeSessions().values()) {
@@ -554,12 +613,15 @@ public class PlayerListener implements Listener {
                 if (now - session.getLastEditMillis() < 500) {
                     continue;
                 }
-                if (snapshot == null) {
-                    snapshot = InvseeCommand.takeSnapshot(target);
-                }
-                final InvseeCommand.InvSnapshot finalSnapshot = snapshot;
                 Player staff = Bukkit.getPlayer(session.getStaffUuid());
                 if (staff != null && staff.isOnline()) {
+                    if (staff.getItemOnCursor() != null && !staff.getItemOnCursor().getType().isAir()) {
+                        continue;
+                    }
+                    if (snapshot == null) {
+                        snapshot = InvseeCommand.takeSnapshot(target);
+                    }
+                    final InvseeCommand.InvSnapshot finalSnapshot = snapshot;
                     SchedulerUtils.runEntity(plugin, staff, () -> {
                         InvseeCommand.applySnapshot(session.getInventory(), finalSnapshot);
                     });
@@ -574,10 +636,82 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
         if (!(event.getPlayer() instanceof Player)) return;
-        Player staff = (Player) event.getPlayer();
+        Player player = (Player) event.getPlayer();
         
         // Remove active invsee session when staff closes the inventory
-        plugin.getInvseeSessions().remove(staff.getUniqueId());
+        plugin.getInvseeSessions().remove(player.getUniqueId());
+
+        // If target closed their inventory or a container, refresh any staff viewing them
+        checkAndRefreshInvseeTarget(player);
+    }
+
+    private void checkAndRefreshInvseeTarget(Player player) {
+        for (StaffBukkitPlugin.InvseeSession session : plugin.getInvseeSessions().values()) {
+            if (session.getTargetUuid().equals(player.getUniqueId())) {
+                SchedulerUtils.runEntityLater(plugin, player, () -> refreshTargetViewers(player), null, 1L);
+                break;
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        Player player = event.getPlayer();
+        UUID uuid = player.getUniqueId();
+
+        for (StaffBukkitPlugin.InvseeSession session : plugin.getInvseeSessions().values()) {
+            if (session.getTargetUuid().equals(uuid)) {
+                Player staff = Bukkit.getPlayer(session.getStaffUuid());
+                if (staff != null && staff.isOnline()) {
+                    SchedulerUtils.runEntity(plugin, staff, () -> {
+                        staff.closeInventory();
+                        staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + "<color:#E20000>Closed inventory: <color:#FFFFFF>" + player.getName() + "</color> has died."));
+                    });
+                }
+                plugin.getInvseeSessions().remove(session.getStaffUuid());
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onTargetDamage(EntityDamageEvent event) {
+        if (event.getEntity() instanceof Player player) {
+            updateViewerStats(player);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onTargetHeal(EntityRegainHealthEvent event) {
+        if (event.getEntity() instanceof Player player) {
+            updateViewerStats(player);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onTargetFood(FoodLevelChangeEvent event) {
+        if (event.getEntity() instanceof Player player) {
+            updateViewerStats(player);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onTargetPotion(EntityPotionEffectEvent event) {
+        if (event.getEntity() instanceof Player player) {
+            updateViewerStats(player);
+        }
+    }
+
+    private void updateViewerStats(Player target) {
+        for (StaffBukkitPlugin.InvseeSession session : plugin.getInvseeSessions().values()) {
+            if (session.getTargetUuid().equals(target.getUniqueId())) {
+                Player staff = Bukkit.getPlayer(session.getStaffUuid());
+                if (staff != null && staff.isOnline()) {
+                    SchedulerUtils.runEntity(plugin, staff, () -> {
+                        InvseeCommand.updateStatsOnly(session.getInventory(), target);
+                    });
+                }
+            }
+        }
     }
 
     @EventHandler
