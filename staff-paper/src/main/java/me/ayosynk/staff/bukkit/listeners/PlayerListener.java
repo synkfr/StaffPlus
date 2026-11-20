@@ -34,6 +34,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.UUID;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import me.ayosynk.staff.database.DatabaseManager;
 
@@ -48,7 +49,7 @@ public class PlayerListener implements Listener {
     /**
      * Enforce active bans and IP-bans asynchronously during pre-login.
      */
-    private static final java.text.SimpleDateFormat DATE_FORMAT = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final java.time.format.DateTimeFormatter DATE_FORMAT = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(java.time.ZoneId.systemDefault());
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPreLogin(AsyncPlayerPreLoginEvent event) {
@@ -77,7 +78,7 @@ public class PlayerListener implements Listener {
                             staffName = queryName;
                         }
                     }
-                    String dateStr = DATE_FORMAT.format(ipBan.getStartTime());
+                    String dateStr = DATE_FORMAT.format(ipBan.getStartTime().toInstant());
 
                     event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, MiniMessageUtils.parse(plugin.getMessageConfig().getBanKickMessage()
                             .replace("{reason}", "IP Ban: " + ipBan.getReason())
@@ -104,7 +105,7 @@ public class PlayerListener implements Listener {
                         staffName = queryName;
                     }
                 }
-                String dateStr = DATE_FORMAT.format(ban.getStartTime());
+                String dateStr = DATE_FORMAT.format(ban.getStartTime().toInstant());
 
                 event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, MiniMessageUtils.parse(plugin.getMessageConfig().getBanKickMessage()
                         .replace("{reason}", ban.getReason())
@@ -152,7 +153,7 @@ public class PlayerListener implements Listener {
             // Asynchronously scan for alt accounts registered on this IP
             plugin.getDatabaseManager().getAltsByIp(ip).thenAccept(alts -> {
                 if (alts.size() > 1) {
-                    List<String> altNames = new ArrayList<>();
+                    List<String> altNames = java.util.Collections.synchronizedList(new ArrayList<>());
                     List<CompletableFuture<Void>> futures = new ArrayList<>();
 
                     for (DatabaseManager.PlayerRecord alt : alts) {
@@ -191,7 +192,7 @@ public class PlayerListener implements Listener {
                 if (!warns.isEmpty()) {
                     player.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + "<color:#E2B700>Welcome back! You have active warnings:</color>"));
                     for (Punishment w : warns) {
-                        String dateStr = DATE_FORMAT.format(w.getStartTime());
+                        String dateStr = DATE_FORMAT.format(w.getStartTime().toInstant());
                         plugin.getDatabaseManager().getPlayerNameByUuid(w.getPunisherUuid()).thenAccept(staffName -> {
                             String punisher = staffName != null ? staffName : "Console";
                             player.sendMessage(MiniMessageUtils.parse("<color:#A0A0A0>- " + w.getReason() + " by " + punisher + " (" + dateStr + ")</color>"));
@@ -304,12 +305,148 @@ public class PlayerListener implements Listener {
         Player staff = (Player) event.getWhoClicked();
         int slot = event.getRawSlot();
 
-        // 1. Read-only and button slots
-        if (slot >= 36 && slot <= 44) {
+        StaffBukkitPlugin.InvseeSession clickSession = plugin.getInvseeSessions().get(staff.getUniqueId());
+        if (clickSession != null) {
+            clickSession.setLastEditMillis(System.currentTimeMillis());
+        }
+
+        // 1. Separator slots (36-43)
+        if (slot >= 36 && slot <= 43) {
             event.setCancelled(true);
             return;
         }
 
+        // 2. Strip all armor shortcut (slot 44)
+        if (slot == 44) {
+            event.setCancelled(true);
+            List<ItemStack> removedItems = new ArrayList<>();
+            for (int eqSlot = 45; eqSlot <= 49; eqSlot++) {
+                ItemStack item = event.getInventory().getItem(eqSlot);
+                if (item != null && !InvseeCommand.isPlaceholder(item)) {
+                    removedItems.add(item.clone());
+                    event.getInventory().setItem(eqSlot, InvseeCommand.createEquipmentPlaceholder(eqSlot));
+                }
+            }
+            if (removedItems.isEmpty()) {
+                staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + "<color:#A0A0A0>Target has no armor or off-hand equipped."));
+                return;
+            }
+            for (ItemStack removed : removedItems) {
+                Map<Integer, ItemStack> leftover = staff.getInventory().addItem(removed);
+                for (ItemStack drop : leftover.values()) {
+                    staff.getWorld().dropItemNaturally(staff.getLocation(), drop);
+                }
+            }
+            SchedulerUtils.runEntity(plugin, target, () -> {
+                target.getInventory().setHelmet(null);
+                target.getInventory().setChestplate(null);
+                target.getInventory().setLeggings(null);
+                target.getInventory().setBoots(null);
+                target.getInventory().setItemInOffHand(null);
+                target.updateInventory();
+            });
+            InvseeCommand.updateStatsOnly(event.getInventory(), target);
+            staff.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + "<color:#00E262>Removed armor and off-hand from <color:#FFFFFF>" + target.getName() + "</color>."));
+            return;
+        }
+
+        // 3. Equipment slots (45-49)
+        if (slot >= 45 && slot <= 49) {
+            event.setCancelled(true);
+            ItemStack clicked = event.getCurrentItem();
+            ItemStack cursor = event.getCursor();
+            boolean isPlaceholder = InvseeCommand.isPlaceholder(clicked);
+
+            if (isPlaceholder) {
+                if (cursor == null || cursor.getType().isAir()) {
+                    return;
+                }
+                ItemStack toEquip = cursor.clone();
+                toEquip.setAmount(1);
+                ItemStack newCursor = cursor.clone();
+                newCursor.setAmount(newCursor.getAmount() - 1);
+                if (newCursor.getAmount() <= 0) {
+                    newCursor = null;
+                }
+                event.getView().setCursor(newCursor);
+                event.getInventory().setItem(slot, toEquip);
+
+                SchedulerUtils.runEntity(plugin, target, () -> {
+                    switch (slot) {
+                        case 45 -> target.getInventory().setHelmet(toEquip);
+                        case 46 -> target.getInventory().setChestplate(toEquip);
+                        case 47 -> target.getInventory().setLeggings(toEquip);
+                        case 48 -> target.getInventory().setBoots(toEquip);
+                        case 49 -> target.getInventory().setItemInOffHand(toEquip);
+                    }
+                    target.updateInventory();
+                });
+            } else if (clicked != null && !clicked.getType().isAir()) {
+                if (event.isShiftClick()) {
+                    ItemStack removed = clicked.clone();
+                    event.getInventory().setItem(slot, InvseeCommand.createEquipmentPlaceholder(slot));
+                    Map<Integer, ItemStack> leftover = staff.getInventory().addItem(removed);
+                    for (ItemStack drop : leftover.values()) {
+                        staff.getWorld().dropItemNaturally(staff.getLocation(), drop);
+                    }
+                    SchedulerUtils.runEntity(plugin, target, () -> {
+                        switch (slot) {
+                            case 45 -> target.getInventory().setHelmet(null);
+                            case 46 -> target.getInventory().setChestplate(null);
+                            case 47 -> target.getInventory().setLeggings(null);
+                            case 48 -> target.getInventory().setBoots(null);
+                            case 49 -> target.getInventory().setItemInOffHand(null);
+                        }
+                        target.updateInventory();
+                    });
+                } else if (cursor == null || cursor.getType().isAir()) {
+                    ItemStack removed = clicked.clone();
+                    event.getView().setCursor(removed);
+                    event.getInventory().setItem(slot, InvseeCommand.createEquipmentPlaceholder(slot));
+                    SchedulerUtils.runEntity(plugin, target, () -> {
+                        switch (slot) {
+                            case 45 -> target.getInventory().setHelmet(null);
+                            case 46 -> target.getInventory().setChestplate(null);
+                            case 47 -> target.getInventory().setLeggings(null);
+                            case 48 -> target.getInventory().setBoots(null);
+                            case 49 -> target.getInventory().setItemInOffHand(null);
+                        }
+                        target.updateInventory();
+                    });
+                } else {
+                    ItemStack oldEquip = clicked.clone();
+                    ItemStack toEquip = cursor.clone();
+                    toEquip.setAmount(1);
+                    ItemStack newCursor = cursor.clone();
+                    newCursor.setAmount(newCursor.getAmount() - 1);
+                    if (newCursor.getAmount() <= 0) {
+                        newCursor = oldEquip;
+                    } else {
+                        Map<Integer, ItemStack> leftover = staff.getInventory().addItem(oldEquip);
+                        for (ItemStack drop : leftover.values()) {
+                            staff.getWorld().dropItemNaturally(staff.getLocation(), drop);
+                        }
+                    }
+                    event.getView().setCursor(newCursor);
+                    event.getInventory().setItem(slot, toEquip);
+                    SchedulerUtils.runEntity(plugin, target, () -> {
+                        switch (slot) {
+                            case 45 -> target.getInventory().setHelmet(toEquip);
+                            case 46 -> target.getInventory().setChestplate(toEquip);
+                            case 47 -> target.getInventory().setLeggings(toEquip);
+                            case 48 -> target.getInventory().setBoots(toEquip);
+                            case 49 -> target.getInventory().setItemInOffHand(toEquip);
+                        }
+                        target.updateInventory();
+                    });
+                }
+            }
+
+            InvseeCommand.updateStatsOnly(event.getInventory(), target);
+            return;
+        }
+
+        // 4. Utility shortcuts (slots 50-53)
         if (slot == 50) { // Ender Chest shortcut
             event.setCancelled(true);
             SchedulerUtils.runEntity(plugin, staff, () -> {
@@ -330,6 +467,7 @@ public class PlayerListener implements Listener {
             return;
         }
 
+        // 5. Prevent shift-clicking from bottom inventory into top inventory
         if (event.isShiftClick() && event.getClickedInventory() == event.getView().getBottomInventory()) {
             event.setCancelled(true);
             return;
@@ -339,27 +477,28 @@ public class PlayerListener implements Listener {
             return;
         }
 
-        StaffBukkitPlugin.InvseeSession clickSession = plugin.getInvseeSessions().get(staff.getUniqueId());
-        if (clickSession != null) {
-            clickSession.setLastEditMillis(System.currentTimeMillis());
-        }
-
-        SchedulerUtils.runEntity(plugin, target, () -> {
-            Inventory customInv = event.getInventory();
-            for (int i = 0; i < 36; i++) {
-                target.getInventory().setItem(i, customInv.getItem(i));
+        // 6. Main storage (slots 0-26 -> target 9-35) and hotbar (slots 27-35 -> target 0-8)
+        Inventory customInv = event.getInventory();
+        SchedulerUtils.runEntityLater(plugin, staff, () -> {
+            ItemStack[] targetItems = new ItemStack[36];
+            for (int i = 0; i <= 26; i++) {
+                ItemStack it = customInv.getItem(i);
+                targetItems[i + 9] = it != null ? it.clone() : null;
             }
-            target.getInventory().setHelmet(customInv.getItem(45));
-            target.getInventory().setChestplate(customInv.getItem(46));
-            target.getInventory().setLeggings(customInv.getItem(47));
-            target.getInventory().setBoots(customInv.getItem(48));
-            target.getInventory().setItemInOffHand(customInv.getItem(49));
-            target.updateInventory();
-        });
+            for (int i = 27; i <= 35; i++) {
+                ItemStack it = customInv.getItem(i);
+                targetItems[i - 27] = it != null ? it.clone() : null;
+            }
 
-        SchedulerUtils.runEntity(plugin, staff, () -> {
-            InvseeCommand.updateStatsOnly(event.getInventory(), target);
-        });
+            SchedulerUtils.runEntity(plugin, target, () -> {
+                for (int i = 0; i < 36; i++) {
+                    target.getInventory().setItem(i, targetItems[i]);
+                }
+                target.updateInventory();
+            });
+
+            InvseeCommand.updateStatsOnly(customInv, target);
+        }, null, 1L);
     }
 
     @EventHandler
@@ -373,7 +512,7 @@ public class PlayerListener implements Listener {
         Player staff = (Player) event.getWhoClicked();
 
         for (int rawSlot : event.getRawSlots()) {
-            if (rawSlot >= 36 && rawSlot <= 44 || rawSlot >= 50 && rawSlot <= 53) {
+            if (rawSlot >= 36) {
                 event.setCancelled(true);
                 return;
             }
@@ -384,35 +523,45 @@ public class PlayerListener implements Listener {
             dragSession.setLastEditMillis(System.currentTimeMillis());
         }
 
-        SchedulerUtils.runEntity(plugin, target, () -> {
-            Inventory customInv = event.getInventory();
-            for (int i = 0; i < 36; i++) {
-                target.getInventory().setItem(i, customInv.getItem(i));
+        Inventory customInv = event.getInventory();
+        SchedulerUtils.runEntityLater(plugin, staff, () -> {
+            ItemStack[] targetItems = new ItemStack[36];
+            for (int i = 0; i <= 26; i++) {
+                ItemStack it = customInv.getItem(i);
+                targetItems[i + 9] = it != null ? it.clone() : null;
             }
-            target.getInventory().setHelmet(customInv.getItem(45));
-            target.getInventory().setChestplate(customInv.getItem(46));
-            target.getInventory().setLeggings(customInv.getItem(47));
-            target.getInventory().setBoots(customInv.getItem(48));
-            target.getInventory().setItemInOffHand(customInv.getItem(49));
-            target.updateInventory();
-        });
+            for (int i = 27; i <= 35; i++) {
+                ItemStack it = customInv.getItem(i);
+                targetItems[i - 27] = it != null ? it.clone() : null;
+            }
 
-        SchedulerUtils.runEntity(plugin, staff, () -> {
-            InvseeCommand.updateStatsOnly(event.getInventory(), target);
-        });
+            SchedulerUtils.runEntity(plugin, target, () -> {
+                for (int i = 0; i < 36; i++) {
+                    target.getInventory().setItem(i, targetItems[i]);
+                }
+                target.updateInventory();
+            });
+
+            InvseeCommand.updateStatsOnly(customInv, target);
+        }, null, 1L);
     }
 
     private void refreshTargetViewers(Player target) {
         long now = System.currentTimeMillis();
+        InvseeCommand.InvSnapshot snapshot = null;
         for (StaffBukkitPlugin.InvseeSession session : plugin.getInvseeSessions().values()) {
             if (session.getTargetUuid().equals(target.getUniqueId())) {
                 if (now - session.getLastEditMillis() < 500) {
                     continue;
                 }
+                if (snapshot == null) {
+                    snapshot = InvseeCommand.takeSnapshot(target);
+                }
+                final InvseeCommand.InvSnapshot finalSnapshot = snapshot;
                 Player staff = Bukkit.getPlayer(session.getStaffUuid());
                 if (staff != null && staff.isOnline()) {
                     SchedulerUtils.runEntity(plugin, staff, () -> {
-                        InvseeCommand.updateInvseeContents(session.getInventory(), target);
+                        InvseeCommand.applySnapshot(session.getInventory(), finalSnapshot);
                     });
                 }
             }

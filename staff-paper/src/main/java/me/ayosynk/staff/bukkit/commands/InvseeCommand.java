@@ -5,6 +5,7 @@ import me.ayosynk.staff.bukkit.utils.MiniMessageUtils;
 import me.ayosynk.staff.bukkit.utils.SchedulerUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -13,6 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -79,32 +81,195 @@ public class InvseeCommand implements CommandExecutor, TabCompleter {
      * Refreshes the custom invsee inventory layout and syncing with the target player's stats/items.
      */
     public static void updateInvseeContents(Inventory inv, Player target) {
-        // 1. Copy main inventory slots (0 - 35)
+        applySnapshot(inv, takeSnapshot(target));
+    }
+
+    public static class InvSnapshot {
+        public final ItemStack[] items = new ItemStack[36];
+        public ItemStack helmet;
+        public ItemStack chestplate;
+        public ItemStack leggings;
+        public ItemStack boots;
+        public ItemStack offhand;
+        public ItemStack potionItem;
+        public ItemStack appleItem;
+    }
+
+    public static InvSnapshot takeSnapshot(Player target) {
+        InvSnapshot s = new InvSnapshot();
         for (int i = 0; i < 36; i++) {
-            inv.setItem(i, target.getInventory().getItem(i));
+            ItemStack it = target.getInventory().getItem(i);
+            s.items[i] = it != null ? it.clone() : null;
+        }
+        ItemStack h = target.getInventory().getHelmet();
+        s.helmet = h != null ? h.clone() : null;
+        ItemStack c = target.getInventory().getChestplate();
+        s.chestplate = c != null ? c.clone() : null;
+        ItemStack l = target.getInventory().getLeggings();
+        s.leggings = l != null ? l.clone() : null;
+        ItemStack b = target.getInventory().getBoots();
+        s.boots = b != null ? b.clone() : null;
+        ItemStack off = target.getInventory().getItemInOffHand();
+        s.offhand = off != null ? off.clone() : null;
+
+        ItemStack potion = new ItemStack(Material.POTION);
+        ItemMeta potMeta = potion.getItemMeta();
+        if (potMeta != null) {
+            potMeta.displayName(MiniMessageUtils.parse("<color:#E2B700>Potion Effects"));
+            List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
+            if (target.getActivePotionEffects().isEmpty()) {
+                lore.add(MiniMessageUtils.parse("<color:#A0A0A0>No active potion effects."));
+            } else {
+                for (PotionEffect effect : target.getActivePotionEffects()) {
+                    String effName = effect.getType().getName().replace("_", " ").toLowerCase();
+                    int amp = effect.getAmplifier() + 1;
+                    long durationSec = effect.getDuration() / 20;
+                    lore.add(MiniMessageUtils.parse("<color:#A0A0A0>- " + effName + " " + amp + " (" + durationSec + "s)"));
+                }
+            }
+            potMeta.lore(lore);
+            potion.setItemMeta(potMeta);
+        }
+        s.potionItem = potion;
+
+        ItemStack apple = new ItemStack(Material.GOLDEN_APPLE);
+        ItemMeta appMeta = apple.getItemMeta();
+        if (appMeta != null) {
+            appMeta.displayName(MiniMessageUtils.parse("<color:#E20000>Target Health & Hunger"));
+            List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
+            double maxHealth = target.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH) != null 
+                    ? target.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH).getValue() 
+                    : target.getMaxHealth();
+            lore.add(MiniMessageUtils.parse("<color:#A0A0A0>Health: <color:#E20000>" + String.format("%.1f", target.getHealth()) + " / " + maxHealth));
+            lore.add(MiniMessageUtils.parse("<color:#A0A0A0>Food Level: <color:#E2B700>" + target.getFoodLevel() + " / 20"));
+            lore.add(MiniMessageUtils.parse("<color:#A0A0A0>XP Level: <color:#00E262>" + target.getLevel()));
+            appMeta.lore(lore);
+            apple.setItemMeta(appMeta);
+        }
+        s.appleItem = apple;
+
+        return s;
+    }
+
+    public static void applySnapshot(Inventory inv, InvSnapshot s) {
+        // 1. Copy main inventory rows 0-2 (target slots 9-35 -> GUI 0-26)
+        for (int i = 0; i <= 26; i++) {
+            inv.setItem(i, s.items[i + 9]);
         }
 
-        // 2. Add visual separators (slots 36 - 44)
-        ItemStack separator = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta sepMeta = separator.getItemMeta();
-        if (sepMeta != null) {
-            sepMeta.displayName(MiniMessageUtils.parse(" "));
-            separator.setItemMeta(sepMeta);
+        // 2. Copy hotbar row 3 (target slots 0-8 -> GUI 27-35)
+        for (int i = 27; i <= 35; i++) {
+            inv.setItem(i, s.items[i - 27]);
         }
+
+        // 3. Separator row (slots 36-44)
         for (int i = 36; i <= 44; i++) {
-            inv.setItem(i, separator);
+            inv.setItem(i, createSeparatorItem(i));
         }
 
-        // 3. Add armor slots (slots 45 - 48)
-        inv.setItem(45, target.getInventory().getHelmet());
-        inv.setItem(46, target.getInventory().getChestplate());
-        inv.setItem(47, target.getInventory().getLeggings());
-        inv.setItem(48, target.getInventory().getBoots());
+        // 4. Equipment row (slots 45-49)
+        inv.setItem(45, s.helmet != null ? s.helmet : createEquipmentPlaceholder(45));
+        inv.setItem(46, s.chestplate != null ? s.chestplate : createEquipmentPlaceholder(46));
+        inv.setItem(47, s.leggings != null ? s.leggings : createEquipmentPlaceholder(47));
+        inv.setItem(48, s.boots != null ? s.boots : createEquipmentPlaceholder(48));
+        inv.setItem(49, s.offhand != null ? s.offhand : createEquipmentPlaceholder(49));
 
-        // 4. Add off-hand slot (slot 49)
-        inv.setItem(49, target.getInventory().getItemInOffHand());
+        // 5. Utility shortcuts (slots 50-53)
+        inv.setItem(50, createEnderChestItem());
+        inv.setItem(51, s.potionItem);
+        inv.setItem(52, s.appleItem);
+        inv.setItem(53, createCloseItem());
+    }
 
-        // 5. Ender Chest shortcut (slot 50)
+    public static ItemStack createSeparatorItem(int slot) {
+        if (slot == 44) {
+            ItemStack shears = new ItemStack(Material.SHEARS);
+            ItemMeta meta = shears.getItemMeta();
+            if (meta != null) {
+                meta.displayName(MiniMessageUtils.parse("<color:#E20000>Strip All Armor</color>"));
+                List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
+                lore.add(MiniMessageUtils.parse("<color:#A0A0A0>Click to remove all armor and off-hand.</color>"));
+                lore.add(MiniMessageUtils.parse("<color:#707070>Items will be added to your inventory.</color>"));
+                meta.lore(lore);
+                shears.setItemMeta(meta);
+            }
+            return shears;
+        }
+
+        ItemStack separator = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta meta = separator.getItemMeta();
+        if (meta != null) {
+            if (slot == 40) {
+                meta.displayName(MiniMessageUtils.parse("<color:#A0A0A0>▲ Hotbar | Equipment ▼</color>"));
+                List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
+                lore.add(MiniMessageUtils.parse("<color:#707070>Hotbar above, equipment and stats below.</color>"));
+                meta.lore(lore);
+            } else {
+                meta.displayName(MiniMessageUtils.parse("<color:#555555>─────────</color>"));
+            }
+            separator.setItemMeta(meta);
+        }
+        return separator;
+    }
+
+    public static final NamespacedKey PLACEHOLDER_KEY = new NamespacedKey("staff", "invsee_placeholder");
+
+    public static ItemStack createEquipmentPlaceholder(int slot) {
+        ItemStack item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.getPersistentDataContainer().set(PLACEHOLDER_KEY, PersistentDataType.BYTE, (byte) 1);
+            switch (slot) {
+                case 45 -> {
+                    meta.displayName(MiniMessageUtils.parse("<color:#E2B700>Helmet Slot</color> <color:#707070>(Empty)</color>"));
+                    meta.lore(List.of(
+                            MiniMessageUtils.parse("<color:#A0A0A0>Target has no helmet equipped.</color>"),
+                            MiniMessageUtils.parse("<color:#707070>Click with armor to equip.</color>")
+                    ));
+                }
+                case 46 -> {
+                    meta.displayName(MiniMessageUtils.parse("<color:#E2B700>Chestplate Slot</color> <color:#707070>(Empty)</color>"));
+                    meta.lore(List.of(
+                            MiniMessageUtils.parse("<color:#A0A0A0>Target has no chestplate equipped.</color>"),
+                            MiniMessageUtils.parse("<color:#707070>Click with armor to equip.</color>")
+                    ));
+                }
+                case 47 -> {
+                    meta.displayName(MiniMessageUtils.parse("<color:#E2B700>Leggings Slot</color> <color:#707070>(Empty)</color>"));
+                    meta.lore(List.of(
+                            MiniMessageUtils.parse("<color:#A0A0A0>Target has no leggings equipped.</color>"),
+                            MiniMessageUtils.parse("<color:#707070>Click with armor to equip.</color>")
+                    ));
+                }
+                case 48 -> {
+                    meta.displayName(MiniMessageUtils.parse("<color:#E2B700>Boots Slot</color> <color:#707070>(Empty)</color>"));
+                    meta.lore(List.of(
+                            MiniMessageUtils.parse("<color:#A0A0A0>Target has no boots equipped.</color>"),
+                            MiniMessageUtils.parse("<color:#707070>Click with armor to equip.</color>")
+                    ));
+                }
+                case 49 -> {
+                    meta.displayName(MiniMessageUtils.parse("<color:#00E262>Off-Hand Slot</color> <color:#707070>(Empty)</color>"));
+                    meta.lore(List.of(
+                            MiniMessageUtils.parse("<color:#A0A0A0>Target has no off-hand item equipped.</color>"),
+                            MiniMessageUtils.parse("<color:#707070>Click with an item to equip.</color>")
+                    ));
+                }
+            }
+            item.setItemMeta(meta);
+        }
+        return item;
+    }
+
+    public static boolean isPlaceholder(ItemStack item) {
+        if (item == null || item.getType() != Material.GRAY_STAINED_GLASS_PANE || !item.hasItemMeta()) {
+            return false;
+        }
+        ItemMeta meta = item.getItemMeta();
+        return meta != null && meta.getPersistentDataContainer().has(PLACEHOLDER_KEY, PersistentDataType.BYTE);
+    }
+
+    public static ItemStack createEnderChestItem() {
         ItemStack echest = new ItemStack(Material.ENDER_CHEST);
         ItemMeta ecMeta = echest.getItemMeta();
         if (ecMeta != null) {
@@ -114,17 +279,37 @@ public class InvseeCommand implements CommandExecutor, TabCompleter {
             ecMeta.lore(lore);
             echest.setItemMeta(ecMeta);
         }
-        inv.setItem(50, echest);
+        return echest;
+    }
 
-        updateStatsOnly(inv, target);
-
+    public static ItemStack createCloseItem() {
         ItemStack barrier = new ItemStack(Material.BARRIER);
         ItemMeta barMeta = barrier.getItemMeta();
         if (barMeta != null) {
             barMeta.displayName(MiniMessageUtils.parse("<color:#E20000>Close Viewer"));
             barrier.setItemMeta(barMeta);
         }
-        inv.setItem(53, barrier);
+        return barrier;
+    }
+
+    public static int guiSlotToTargetSlot(int guiSlot) {
+        if (guiSlot >= 0 && guiSlot <= 26) {
+            return guiSlot + 9;
+        }
+        if (guiSlot >= 27 && guiSlot <= 35) {
+            return guiSlot - 27;
+        }
+        return -1;
+    }
+
+    public static int targetSlotToGuiSlot(int targetSlot) {
+        if (targetSlot >= 9 && targetSlot <= 35) {
+            return targetSlot - 9;
+        }
+        if (targetSlot >= 0 && targetSlot <= 8) {
+            return targetSlot + 27;
+        }
+        return -1;
     }
 
     public static void updateStatsOnly(Inventory inv, Player target) {
@@ -153,7 +338,9 @@ public class InvseeCommand implements CommandExecutor, TabCompleter {
         if (appMeta != null) {
             appMeta.displayName(MiniMessageUtils.parse("<color:#E20000>Target Health & Hunger"));
             List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
-            lore.add(MiniMessageUtils.parse("<color:#A0A0A0>Health: <color:#E20000>" + String.format("%.1f", target.getHealth()) + " / " + target.getMaxHealth()));
+            org.bukkit.attribute.AttributeInstance maxHealthAttr = target.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH);
+            double maxHealth = maxHealthAttr != null ? maxHealthAttr.getValue() : 20.0;
+            lore.add(MiniMessageUtils.parse("<color:#A0A0A0>Health: <color:#E20000>" + String.format("%.1f", target.getHealth()) + " / " + maxHealth));
             lore.add(MiniMessageUtils.parse("<color:#A0A0A0>Food Level: <color:#E2B700>" + target.getFoodLevel() + " / 20"));
             lore.add(MiniMessageUtils.parse("<color:#A0A0A0>XP Level: <color:#00E262>" + target.getLevel()));
             appMeta.lore(lore);
