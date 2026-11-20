@@ -27,9 +27,12 @@ When you vanish, your character is hidden from other players by sending packets.
 ---
 
 ## 3. Real-time Inventory Inspector (/invsee)
-Inspecting player inventories on Folia usually crashes the server if the players are located in different regions or worlds, as the plugin tries to read block containers (like chests) from the wrong thread.
+Inspecting player inventories on Folia usually crashes the server if players are located in different regions or worlds, as traditional plugins read foreign player inventory and container states directly from arbitrary threads.
 
-`Staff+` uses a custom **Session Registry** to solve this. Instead of reading blocks from the world continually, we track active inspect sessions in memory and sync updates safely, preventing crashes completely.
+`Staff+` implements **Regional Snapshot Isolation**:
+* **Session Registry**: Active inspect sessions are tracked in an in-memory concurrent registry without accessing block-based container states cross-region.
+* **1-Tick Deferred Capture**: When a staff member moves items in the GUI, snapshot reads execute safely on the staff viewer's regional scheduler after container clicks resolve.
+* **Target Scheduler Synchronization**: The captured snapshot array is dispatched to the target entity's scheduler, ensuring armor, hotbar, and off-hand modifications are thread-confined and fully synchronized with client packet handlers.
 
 ---
 

@@ -115,12 +115,16 @@ Both editions share the same database, configs, and migration system — deploy 
 
 ### Inventory Inspector (Paper Only)
 
-* **54-Slot Live GUI**: View and edit target players' main inventories (0-35), armor slots (helmet, chestplate, leggings, boots), off-hand items, and stats.
+* **54-Slot Live GUI**: View and edit target players' main inventories, armor slots (helmet, chestplate, leggings, boots), off-hand items, and stats.
+* **Vanilla-Aligned Layout**: Main storage (slots 9–35) is positioned across rows 0–2, while the hotbar (slots 0–8) is displayed directly below at row 3, matching standard vanilla inventory hierarchy.
+* **Equipment Placeholders**: Empty armor and off-hand slots display clear PDC-tagged placeholder items (`staff:invsee_placeholder`), eliminating blank slot confusion.
+* **Armor Removal & Swapping**: Staff can remove equipped armor pieces to their cursor (left/right-click) or inventory (shift-click), equip new pieces, or swap existing gear directly.
+* **Strip All Armor Shortcut**: Clicking slot 44 (shears icon) instantly removes all equipped armor and off-hand items from the target and transfers them to the staff member.
 * **Live Stats & Shortcuts**:
   * **Golden Apple**: Displays health, food levels, and experience dynamically.
   * **Potion Bottle**: Shows a live list of active potion effects and durations.
   * **Ender Chest**: Quick-access shortcut item to inspect their Ender Chest directly.
-* **Unparalleled Folia Safety**: Completely avoids asynchronous block-state reads (which crash under Folia when querying `.getOpenInventory().getTopInventory().getHolder()` on block-based inventories in other regions). Instead, it implements a thread-safe custom session registry that cleanly tracks active inspect views and propagates updates regionally.
+* **Folia Regional Safety**: Avoids cross-region block-state reads. Scheduled 1-tick viewer-scheduler capture ensures modifications are resolved before dispatching updates to the target's regional thread.
 * **Geyser/Bedrock Sync**: Automatic debouncing and authoritative server inventory synchronization prevents item duplication and desyncs when Java staff inspect Bedrock players.
 
 ### Freeze & Screenshare (Paper Only)
@@ -193,14 +197,14 @@ Both editions share the same database, configs, and migration system — deploy 
 
 ### Paper Edition (Paper / Purpur / Folia)
 
-1. Download `StaffPlus-Paper-1.3.0.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
+1. Download `StaffPlus-Paper-1.4.0.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
 2. Place the JAR in your server's `plugins/` folder.
 3. Restart your server.
 4. Edit `plugins/Staff/config.yml` and `plugins/Staff/messages.yml` to your liking.
 
 ### Velocity Edition (Proxy)
 
-1. Download `StaffPlus-Velocity-1.3.0.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
+1. Download `StaffPlus-Velocity-1.4.0.jar` from [Modrinth](https://modrinth.com/plugin/staff%2B/versions) or [GitHub Releases](https://github.com/synkfr/StaffPlus/releases).
 2. Place the JAR in your Velocity proxy's `plugins/` folder.
 3. Restart your proxy.
 4. Edit `plugins/staffplus/config.yml` and `plugins/staffplus/messages.yml` to your liking.
@@ -408,8 +412,8 @@ Compile and build both platform JARs:
 The compiled plugins will be located at:
 
 ```
-staff-paper/build/libs/StaffPlus-Paper-1.3.0.jar    # Paper/Purpur/Folia servers
-staff-velocity/build/libs/StaffPlus-Velocity-1.3.0.jar  # Velocity proxies
+staff-paper/build/libs/StaffPlus-Paper-1.4.0.jar    # Paper/Purpur/Folia servers
+staff-velocity/build/libs/StaffPlus-Velocity-1.4.0.jar  # Velocity proxies
 ```
 
 ### Project Structure

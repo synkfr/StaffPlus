@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.0] - 2026-11-21
+
+### Added
+* **Inventory inspector (/invsee) layout overhaul**:
+  * Restructured the 54-slot chest interface to mirror standard vanilla inventory hierarchy:
+    * Rows 0–2 (slots 0–26): Target main storage inventory (slots 9–35).
+    * Row 3 (slots 27–35): Target hotbar (slots 0–8), placed directly beneath storage.
+    * Row 4 (slots 36–44): Visual section separator with centered status pane (`▲ Hotbar | Equipment ▼`).
+    * Row 5 (slots 45–53): Equipment row (Helmet 45, Chestplate 46, Leggings 47, Boots 48, Off-Hand 49), Ender Chest shortcut (50), Potion effects (51), Health & Food stats (52), and Close viewer (53).
+  * Added persistent PDC-tagged (`staff:invsee_placeholder`) empty equipment placeholders for Helmet, Chestplate, Leggings, Boots, and Off-Hand with clear names and lore.
+  * Added "Strip All Armor" utility shortcut in slot 44 (shears icon), transferring all equipped armor and off-hand items to the staff member in a single click.
+  * Added unit test suite (`InvseeTest`) validating bidirectional slot mappings and snapshot capacity.
+
+### Fixed
+* **Armor interaction and removal in /invsee**:
+  * Resolved click timing desynchronization where clicking armor pieces previously failed to remove them from the target or reverted on subsequent inventory updates.
+  * Supported left-click and right-click to pick up equipped armor pieces directly to the cursor.
+  * Supported shift-click to transfer equipped armor pieces straight into the staff member's inventory.
+  * Supported equipping and swapping armor and off-hand items by clicking onto empty placeholders or equipped pieces with cursor items.
+  * Isolated inventory reading to the staff viewer's regional scheduler with a 1-tick deferral before updating the target player's inventory, eliminating Folia cross-region container access and race conditions.
+* **Concurrency and thread safety**:
+  * Migrated from non-thread-safe `SimpleDateFormat` to immutable, thread-safe `DateTimeFormatter` across Paper and Velocity listeners and commands.
+  * Synchronized alt-account scan results in `PlayerListener` to prevent concurrent modification exceptions during concurrent logins.
+  * Preserved database chronological order on asynchronous punishment history outputs using pre-indexed arrays.
+  * Prevented recursive container open loops in `VanishListener`.
+  * Modernized Paper server list ping player sample handling via `paperEvent.getListedPlayers()` to comply with Paper 1.21 API requirements.
+
+### Changed
+* Bumped project version to `1.4.0` across all subprojects, build scripts, plugin descriptors, and documentation.
+
+---
+
 ## [1.3.0] - 2026-11-02
 
 ### Added

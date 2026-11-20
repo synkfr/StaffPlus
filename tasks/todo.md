@@ -287,3 +287,20 @@
 - Bumped version to `1.3.0` across Gradle (`build.gradle`), Paper (`paper-plugin.yml`, `plugin.yml`), Velocity (`StaffVelocityPlugin.java`), npm package definitions (`package.json`, `package-lock.json`), tests, README, and documentation.
 - Successfully compiled shaded JARs (`StaffPlus-Paper-1.3.0.jar` and `StaffPlus-Velocity-1.3.0.jar`) with zero errors.
 
+### 16. Phase 29: Invsee GUI Redesign, Armor Removal & Folia Thread-Safe Sync
+- Redesigned 54-slot `/invsee` chest layout:
+  - Rows 0–2 (slots 0–26): Main inventory (target slots 9–35).
+  - Row 3 (slots 27–35): Hotbar (target slots 0–8), placed directly beneath storage matching vanilla inventory layout.
+  - Row 4 (slots 36–44): Visual separator line with center section indicator (`▲ Hotbar | Equipment ▼`) and "Strip All Armor" utility shortcut in slot 44.
+  - Row 5 (slots 45–53): Equipment row (Helmet 45, Chestplate 46, Leggings 47, Boots 48, Off-Hand 49), Ender Chest shortcut (50), Potion effects (51), Health/Food stats (52), Close viewer (53).
+- Added persistent PDC-backed placeholder items (`staff:invsee_placeholder`) for empty equipment slots with clear names and lore.
+- Fixed armor removal and equipping in `PlayerListener`:
+  - Allowed left-click, right-click, and shift-click to remove armor pieces directly to cursor or staff inventory.
+  - Allowed equipping or swapping items from cursor onto target equipment slots.
+  - Added "Strip All Armor" button in slot 44 allowing staff to disarm target completely in one click.
+  - Scheduled inventory sync 1 tick later on staff scheduler before dispatching to target scheduler, eliminating cross-region Folia inventory reads and pre-click race conditions.
+- Added `InvseeTest` unit test suite covering bidirectional slot mappings and snapshot capacity.
+- Bumped version to `1.4.0` across Gradle (`build.gradle`), Paper (`paper-plugin.yml`, `plugin.yml`), Velocity (`StaffVelocityPlugin.java`), npm package definitions (`package.json`, `package-lock.json`), tests, README, CHANGELOGS, and documentation.
+- Verified build and tests with Gradle on JDK 25.
+
+

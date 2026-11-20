@@ -42,7 +42,7 @@ These commands are available **only** on Paper/Purpur/Folia servers. They requir
 | Command | Description | Default Usage | Permission Node |
 | :--- | :--- | :--- | :--- |
 | `/vanish` | Toggles complete invisibility. | `/vanish` | `staff.vanish` |
-| `/invsee` | Live inspects player inventories. | `/invsee <player>` | `staff.invsee` |
+| `/invsee` | Inspects player inventories live with hotbar, armor removal, and off-hand management. | `/invsee <player>` | `staff.invsee` |
 | `/freeze` | Freezes a player for screensharing. | `/freeze <player> [reason] [--chat\|--title\|--actionbar\|--all]` | `staff.freeze` |
 | `/unfreeze` | Unfreezes a frozen player. | `/unfreeze <player>` | `staff.unfreeze` |
 | `/monitor` | Smoothly spectates and follows players. | `/monitor <player/leave>` | `staff.monitor` |
