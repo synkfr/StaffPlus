@@ -372,9 +372,14 @@ public class PlayerListener implements Listener {
             ItemStack clicked = event.getCurrentItem();
             ItemStack cursor = event.getCursor();
             boolean isPlaceholder = InvseeCommand.isPlaceholder(clicked);
+            boolean isEmptySlot = isPlaceholder || clicked == null || clicked.getType().isAir();
 
-            if (isPlaceholder) {
+            if (isEmptySlot) {
                 if (cursor == null || cursor.getType().isAir()) {
+                    if (clicked == null || clicked.getType().isAir()) {
+                        event.getInventory().setItem(slot, InvseeCommand.createEquipmentPlaceholder(slot));
+                        staff.updateInventory();
+                    }
                     return;
                 }
                 ItemStack toEquip = cursor.clone();
@@ -386,6 +391,7 @@ public class PlayerListener implements Listener {
                 }
                 event.getView().setCursor(newCursor);
                 event.getInventory().setItem(slot, toEquip);
+                staff.updateInventory();
 
                 SchedulerUtils.runEntity(plugin, target, () -> {
                     switch (slot) {
@@ -402,6 +408,7 @@ public class PlayerListener implements Listener {
                 if (event.isShiftClick()) {
                     ItemStack removed = clicked.clone();
                     event.getInventory().setItem(slot, InvseeCommand.createEquipmentPlaceholder(slot));
+                    staff.updateInventory();
                     Map<Integer, ItemStack> leftover = staff.getInventory().addItem(removed);
                     for (ItemStack drop : leftover.values()) {
                         staff.getWorld().dropItemNaturally(staff.getLocation(), drop);
@@ -421,6 +428,7 @@ public class PlayerListener implements Listener {
                     ItemStack removed = clicked.clone();
                     event.getView().setCursor(removed);
                     event.getInventory().setItem(slot, InvseeCommand.createEquipmentPlaceholder(slot));
+                    staff.updateInventory();
                     SchedulerUtils.runEntity(plugin, target, () -> {
                         switch (slot) {
                             case 45 -> target.getInventory().setHelmet(null);
@@ -448,6 +456,7 @@ public class PlayerListener implements Listener {
                     }
                     event.getView().setCursor(newCursor);
                     event.getInventory().setItem(slot, toEquip);
+                    staff.updateInventory();
                     SchedulerUtils.runEntity(plugin, target, () -> {
                         switch (slot) {
                             case 45 -> target.getInventory().setHelmet(toEquip);
@@ -503,11 +512,11 @@ public class PlayerListener implements Listener {
             ItemStack[] targetItems = new ItemStack[36];
             for (int i = 0; i <= 26; i++) {
                 ItemStack it = customInv.getItem(i);
-                targetItems[i + 9] = it != null ? it.clone() : null;
+                targetItems[i + 9] = (it != null && !it.getType().isAir()) ? it.clone() : null;
             }
             for (int i = 27; i <= 35; i++) {
                 ItemStack it = customInv.getItem(i);
-                targetItems[i - 27] = it != null ? it.clone() : null;
+                targetItems[i - 27] = (it != null && !it.getType().isAir()) ? it.clone() : null;
             }
 
             if (!target.isOnline() || !target.isValid()) {
@@ -571,11 +580,11 @@ public class PlayerListener implements Listener {
             ItemStack[] targetItems = new ItemStack[36];
             for (int i = 0; i <= 26; i++) {
                 ItemStack it = customInv.getItem(i);
-                targetItems[i + 9] = it != null ? it.clone() : null;
+                targetItems[i + 9] = (it != null && !it.getType().isAir()) ? it.clone() : null;
             }
             for (int i = 27; i <= 35; i++) {
                 ItemStack it = customInv.getItem(i);
-                targetItems[i - 27] = it != null ? it.clone() : null;
+                targetItems[i - 27] = (it != null && !it.getType().isAir()) ? it.clone() : null;
             }
 
             if (!target.isOnline() || !target.isValid()) {
@@ -624,6 +633,7 @@ public class PlayerListener implements Listener {
                     final InvseeCommand.InvSnapshot finalSnapshot = snapshot;
                     SchedulerUtils.runEntity(plugin, staff, () -> {
                         InvseeCommand.applySnapshot(session.getInventory(), finalSnapshot);
+                        staff.updateInventory();
                     });
                 }
             }

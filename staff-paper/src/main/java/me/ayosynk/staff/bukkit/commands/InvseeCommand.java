@@ -104,18 +104,18 @@ public class InvseeCommand implements CommandExecutor, TabCompleter {
         InvSnapshot s = new InvSnapshot();
         for (int i = 0; i < 36; i++) {
             ItemStack it = target.getInventory().getItem(i);
-            s.items[i] = it != null ? it.clone() : null;
+            s.items[i] = (it != null && !it.getType().isAir()) ? it.clone() : null;
         }
         ItemStack h = target.getInventory().getHelmet();
-        s.helmet = h != null ? h.clone() : null;
+        s.helmet = (h != null && !h.getType().isAir()) ? h.clone() : null;
         ItemStack c = target.getInventory().getChestplate();
-        s.chestplate = c != null ? c.clone() : null;
+        s.chestplate = (c != null && !c.getType().isAir()) ? c.clone() : null;
         ItemStack l = target.getInventory().getLeggings();
-        s.leggings = l != null ? l.clone() : null;
+        s.leggings = (l != null && !l.getType().isAir()) ? l.clone() : null;
         ItemStack b = target.getInventory().getBoots();
-        s.boots = b != null ? b.clone() : null;
+        s.boots = (b != null && !b.getType().isAir()) ? b.clone() : null;
         ItemStack off = target.getInventory().getItemInOffHand();
-        s.offhand = off != null ? off.clone() : null;
+        s.offhand = (off != null && !off.getType().isAir()) ? off.clone() : null;
 
         ItemStack potion = new ItemStack(Material.POTION);
         ItemMeta potMeta = potion.getItemMeta();
@@ -171,11 +171,11 @@ public class InvseeCommand implements CommandExecutor, TabCompleter {
         }
 
         // 4. Equipment row (slots 45-49)
-        inv.setItem(45, s.helmet != null ? s.helmet : createEquipmentPlaceholder(45));
-        inv.setItem(46, s.chestplate != null ? s.chestplate : createEquipmentPlaceholder(46));
-        inv.setItem(47, s.leggings != null ? s.leggings : createEquipmentPlaceholder(47));
-        inv.setItem(48, s.boots != null ? s.boots : createEquipmentPlaceholder(48));
-        inv.setItem(49, s.offhand != null ? s.offhand : createEquipmentPlaceholder(49));
+        inv.setItem(45, (s.helmet != null && !s.helmet.getType().isAir()) ? s.helmet : createEquipmentPlaceholder(45));
+        inv.setItem(46, (s.chestplate != null && !s.chestplate.getType().isAir()) ? s.chestplate : createEquipmentPlaceholder(46));
+        inv.setItem(47, (s.leggings != null && !s.leggings.getType().isAir()) ? s.leggings : createEquipmentPlaceholder(47));
+        inv.setItem(48, (s.boots != null && !s.boots.getType().isAir()) ? s.boots : createEquipmentPlaceholder(48));
+        inv.setItem(49, (s.offhand != null && !s.offhand.getType().isAir()) ? s.offhand : createEquipmentPlaceholder(49));
 
         // 5. Utility shortcuts (slots 50-53)
         inv.setItem(50, createEnderChestItem());
