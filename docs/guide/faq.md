@@ -116,3 +116,22 @@ You can also override this per-command by specifying a flag:
 * `/freeze <player> [reason] --title`
 * `/freeze <player> [reason] --actionbar`
 * `/freeze <player> [reason] --all`
+
+---
+
+## 🎒 Live Inventory Inspector (/invsee)
+
+### Q: Does `/invsee` work on offline players?
+**No, by design.** 
+
+Paper and Spigot do not provide an API to inspect or modify an offline player's inventory without directly parsing and overwriting `world/playerdata/<uuid>.dat` files on disk. Performing raw NBT disk modifications while the server is running introduces severe race conditions, file locks, data corruption, and inventory duplication if the player logs in while data is being manipulated.
+
+StaffPlus `/invsee` is strictly a live, real-time inventory inspector. If an inspected player has played on the server before but is offline, `/invsee` provides a clear explanatory message rather than a generic "player not found" error. For offline audits, use `/staff info <player>` to inspect moderation status, history, alts, and notes.
+
+### Q: What happens if a player moves items or drops items while an admin is inspecting them?
+StaffPlus uses bidirectional synchronization:
+1. **Target modifications**: Whenever the target drops an item, picks up an item, clicks in their inventory, drags items, or closes any container (chest, furnace, anvil), StaffPlus captures the new state and updates open viewer GUIs.
+2. **Admin modifications**: When an admin moves or swaps an item in the GUI, the change is scheduled directly on the target player's Folia regional thread.
+3. **Cursor protection**: If an inspecting admin is actively holding an item on their cursor, background updates skip modifying their view to avoid wiping cursor items mid-drag.
+4. **Target death protection**: If the target dies during inspection, all active invsee sessions close immediately with a notice. This prevents items from being duplicated between ground drops and the open GUI.
+5. **Multiple viewers**: If multiple administrators inspect the same player, any change made by one admin immediately replicates to all other active viewers.

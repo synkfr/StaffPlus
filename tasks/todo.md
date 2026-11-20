@@ -300,7 +300,15 @@
   - Added "Strip All Armor" button in slot 44 allowing staff to disarm target completely in one click.
   - Scheduled inventory sync 1 tick later on staff scheduler before dispatching to target scheduler, eliminating cross-region Folia inventory reads and pre-click race conditions.
 - Added `InvseeTest` unit test suite covering bidirectional slot mappings and snapshot capacity.
+- Fixed offline player handling and live invsee synchronization edge cases:
+  - Added dedicated offline player notice when `/invsee` targets a player who has joined before but is offline.
+  - Synced target container interactions and inventory events (`InventoryClickEvent`, `InventoryDragEvent`, `InventoryCloseEvent`) to active viewers.
+  - Prevented item duplication on target death (`PlayerDeathEvent`) by closing open sessions.
+  - Protected staff cursors (`staff.getItemOnCursor()`) from background update overwrites.
+  - Implemented multi-viewer real-time sync across all staff inspecting the same target.
+  - Added live HUD updates on entity damage, heal, food, and potion effect changes.
 - Bumped version to `1.4.0` across Gradle (`build.gradle`), Paper (`paper-plugin.yml`, `plugin.yml`), Velocity (`StaffVelocityPlugin.java`), npm package definitions (`package.json`, `package-lock.json`), tests, README, CHANGELOGS, and documentation.
+- Updated documentation (`README.md`, `CHANGELOGS.md`, `docs/guide/commands.md`, `docs/guide/faq.md`).
 - Verified build and tests with Gradle on JDK 25.
 
 

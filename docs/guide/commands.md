@@ -111,3 +111,24 @@ Many commands have shorthand aliases for convenience:
   * When executed by Java players on Paper, `/bans` and `/bansleaderboard` open 54-slot chest inventories featuring player heads, active status badges, podium ranking layouts, and page buttons.
 * **Console / Chat Fallback**:
   * Running with `--chat` (or `-c`), or executing from Console / Velocity, outputs paginated interactive chat text.
+
+---
+
+## Live Inventory Inspector (/invsee)
+
+`/invsee <player>` provides real-time bidirectional synchronization for inspecting and modifying online player inventories:
+
+* **Interface Layout**:
+  * **Rows 0–2 (Slots 0–26)**: Target main inventory storage (slots 9–35).
+  * **Row 3 (Slots 27–35)**: Target hotbar (slots 0–8), placed directly beneath storage to mirror standard inventory ordering.
+  * **Row 4 (Slots 36–44)**: Section separator with visual divider and the **Strip All Armor** button in slot 44 (shears icon).
+  * **Row 5 (Slots 45–53)**: Equipped gear (Helmet 45, Chestplate 46, Leggings 47, Boots 48, Off-Hand 49), Ender Chest shortcut (50), Potion effects (51), Health & Food stats (52), and Close (53).
+* **Armor Manipulation**:
+  * Click equipped armor to take it to the cursor (left/right-click) or shift-click to move it directly into your inventory.
+  * Equip new gear by clicking empty placeholders (PDC-tagged `staff:invsee_placeholder`) or swap existing gear directly.
+* **Synchronization & Safety**:
+  * Requires the target player to be online; shows a clear notice if the target is offline.
+  * Captures target item drops, pickups, inventory clicks, and container closes in real time.
+  * Multi-viewer sync updates all inspecting admins when changes occur.
+  * Protects items on staff cursors from being overwritten by concurrent target updates.
+  * Automatically closes sessions on target death to eliminate item duplication exploits.

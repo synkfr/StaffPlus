@@ -18,14 +18,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     * Row 5 (slots 45–53): Equipment row (Helmet 45, Chestplate 46, Leggings 47, Boots 48, Off-Hand 49), Ender Chest shortcut (50), Potion effects (51), Health & Food stats (52), and Close viewer (53).
   * Added persistent PDC-tagged (`staff:invsee_placeholder`) empty equipment placeholders for Helmet, Chestplate, Leggings, Boots, and Off-Hand with clear names and lore.
   * Added "Strip All Armor" utility shortcut in slot 44 (shears icon), transferring all equipped armor and off-hand items to the staff member in a single click.
+  * Added offline player detection in `/invsee`: clearly explains that `/invsee` provides live real-time inspection requiring the player to be online, rather than displaying a generic player not found error.
+  * Added real-time HUD stats updates: hooked `EntityDamageEvent`, `EntityRegainHealthEvent`, `FoodLevelChangeEvent`, and `EntityPotionEffectEvent` to update slots 51 and 52 instantly without disrupting item clicks.
   * Added unit test suite (`InvseeTest`) validating bidirectional slot mappings and snapshot capacity.
 
 ### Fixed
-* **Armor interaction and removal in /invsee**:
+* **Live /invsee synchronization and race conditions**:
   * Resolved click timing desynchronization where clicking armor pieces previously failed to remove them from the target or reverted on subsequent inventory updates.
   * Supported left-click and right-click to pick up equipped armor pieces directly to the cursor.
   * Supported shift-click to transfer equipped armor pieces straight into the staff member's inventory.
   * Supported equipping and swapping armor and off-hand items by clicking onto empty placeholders or equipped pieces with cursor items.
+  * Synchronized target container and inventory interactions: hooked `InventoryClickEvent`, `InventoryDragEvent`, and `InventoryCloseEvent` so target container transfers immediately reflect across active staff viewers.
+  * Prevented death duplication: hooked `PlayerDeathEvent` to automatically close all active invsee sessions, preventing item duplication between ground drops and the open GUI.
+  * Cursor conflict protection: skipped viewer pushes when staff members hold an item on their cursor (`staff.getItemOnCursor()`), preventing cursor items from being cleared by background updates.
+  * Multi-viewer live updates: dispatched updates to all active sessions viewing the same target player whenever any staff member makes modifications.
+  * Disconnected target safety: checked entity validity and online state (`!target.isOnline() || !target.isValid()`) before scheduling operations, preventing `IllegalStateException: Entity is retired` under Folia.
   * Isolated inventory reading to the staff viewer's regional scheduler with a 1-tick deferral before updating the target player's inventory, eliminating Folia cross-region container access and race conditions.
 * **Concurrency and thread safety**:
   * Migrated from non-thread-safe `SimpleDateFormat` to immutable, thread-safe `DateTimeFormatter` across Paper and Velocity listeners and commands.

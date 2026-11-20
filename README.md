@@ -115,15 +115,21 @@ Both editions share the same database, configs, and migration system — deploy 
 
 ### Inventory Inspector (Paper Only)
 
-* **54-Slot Live GUI**: View and edit target players' main inventories, armor slots (helmet, chestplate, leggings, boots), off-hand items, and stats.
+* **54-Slot Live GUI**: View and edit target players' main inventories, armor slots (helmet, chestplate, leggings, boots), off-hand items, and stats in real time.
 * **Vanilla-Aligned Layout**: Main storage (slots 9–35) is positioned across rows 0–2, while the hotbar (slots 0–8) is displayed directly below at row 3, matching standard vanilla inventory hierarchy.
 * **Equipment Placeholders**: Empty armor and off-hand slots display clear PDC-tagged placeholder items (`staff:invsee_placeholder`), eliminating blank slot confusion.
 * **Armor Removal & Swapping**: Staff can remove equipped armor pieces to their cursor (left/right-click) or inventory (shift-click), equip new pieces, or swap existing gear directly.
 * **Strip All Armor Shortcut**: Clicking slot 44 (shears icon) instantly removes all equipped armor and off-hand items from the target and transfers them to the staff member.
 * **Live Stats & Shortcuts**:
-  * **Golden Apple**: Displays health, food levels, and experience dynamically.
+  * **Golden Apple**: Displays health, food levels, and experience dynamically, updated live on damage, heal, and food events.
   * **Potion Bottle**: Shows a live list of active potion effects and durations.
   * **Ender Chest**: Quick-access shortcut item to inspect their Ender Chest directly.
+* **Bidirectional Live Synchronization**:
+  * Reflects target item drops, pickups, inventory movements, and container closes across all active viewers.
+  * Instantly broadcasts staff modifications to any other staff members inspecting the same player.
+  * Protects staff cursors from being overwritten by background updates when an item is being dragged.
+  * Auto-closes sessions on target death or disconnect to prevent duplicate item exploits.
+* **Offline Detection**: Clearly informs staff that `/invsee` provides live real-time sync and requires the player to be online, avoiding generic player-not-found ambiguity.
 * **Folia Regional Safety**: Avoids cross-region block-state reads. Scheduled 1-tick viewer-scheduler capture ensures modifications are resolved before dispatching updates to the target's regional thread.
 * **Geyser/Bedrock Sync**: Automatic debouncing and authoritative server inventory synchronization prevents item duplication and desyncs when Java staff inspect Bedrock players.
 
