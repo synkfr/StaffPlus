@@ -12,7 +12,8 @@ import org.bukkit.command.TabCompleter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,7 +22,7 @@ import java.util.concurrent.CompletableFuture;
 public class BansCommand implements CommandExecutor, TabCompleter {
 
     private final StaffBukkitPlugin plugin;
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.systemDefault());
     private static final int PAGE_SIZE = 8;
 
     public BansCommand(StaffBukkitPlugin plugin) {
@@ -97,9 +98,11 @@ public class BansCommand implements CommandExecutor, TabCompleter {
                 sender.sendMessage(MiniMessageUtils.parse(header));
 
                 List<CompletableFuture<Void>> futures = new ArrayList<>();
-                List<String> renderedLines = Collections.synchronizedList(new ArrayList<>());
+                String[] renderedLines = new String[bans.size()];
 
-                for (Punishment p : bans) {
+                for (int i = 0; i < bans.size(); i++) {
+                    final int idx = i;
+                    Punishment p = bans.get(i);
                     CompletableFuture<String> targetFuture = p.getUuid() != null
                             ? db.getPlayerNameByUuid(p.getUuid())
                             : CompletableFuture.completedFuture(p.getIpAddress() != null ? p.getIpAddress() : "Unknown");
@@ -111,7 +114,7 @@ public class BansCommand implements CommandExecutor, TabCompleter {
                     CompletableFuture<Void> lineFuture = targetFuture.thenCombine(punisherFuture, (targetName, staffName) -> {
                         String finalTarget = targetName != null ? targetName : (p.getIpAddress() != null ? p.getIpAddress() : "Unknown");
                         String finalStaff = staffName != null ? staffName : "Console";
-                        String dateStr = DATE_FORMAT.format(p.getStartTime());
+                        String dateStr = DATE_FORMAT.format(p.getStartTime().toInstant());
 
                         String template = p.isActive() && !p.isExpired()
                                 ? plugin.getMessageConfig().getBansItemActive()
@@ -122,14 +125,14 @@ public class BansCommand implements CommandExecutor, TabCompleter {
                                 .replace("{staff}", finalStaff)
                                 .replace("{reason}", p.getReason())
                                 .replace("{date}", dateStr);
-                    }).thenAccept(renderedLines::add);
+                    }).thenAccept(line -> renderedLines[idx] = line);
 
                     futures.add(lineFuture);
                 }
 
                 CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(() -> {
                     for (String line : renderedLines) {
-                        sender.sendMessage(MiniMessageUtils.parse(line));
+                        if (line != null) sender.sendMessage(MiniMessageUtils.parse(line));
                     }
 
                     int prevPage = Math.max(1, validPage - 1);

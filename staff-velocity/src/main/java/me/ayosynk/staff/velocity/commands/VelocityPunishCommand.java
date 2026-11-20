@@ -11,7 +11,8 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -30,6 +31,8 @@ public class VelocityPunishCommand implements SimpleCommand {
 
     private final StaffVelocityPlugin plugin;
     private final MiniMessage miniMessage = MiniMessage.miniMessage();
+    private static final DateTimeFormatter DATE_FORMAT_MINUTES = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.systemDefault());
+    private static final DateTimeFormatter DATE_FORMAT_SECONDS = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
 
     public VelocityPunishCommand(StaffVelocityPlugin plugin) {
         this.plugin = plugin;
@@ -580,7 +583,6 @@ public class VelocityPunishCommand implements SimpleCommand {
 
         final int targetPage = page;
         final int pageSize = 8;
-        final java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm");
 
         db.getTotalBanCount().thenAccept(totalBans -> {
             if (totalBans <= 0) {
@@ -605,9 +607,11 @@ public class VelocityPunishCommand implements SimpleCommand {
                 source.sendMessage(parse(header));
 
                 List<CompletableFuture<Void>> futures = new ArrayList<>();
-                List<String> renderedLines = Collections.synchronizedList(new ArrayList<>());
+                String[] renderedLines = new String[bans.size()];
 
-                for (Punishment p : bans) {
+                for (int i = 0; i < bans.size(); i++) {
+                    final int idx = i;
+                    Punishment p = bans.get(i);
                     CompletableFuture<String> targetFuture = p.getUuid() != null
                             ? db.getPlayerNameByUuid(p.getUuid())
                             : CompletableFuture.completedFuture(p.getIpAddress() != null ? p.getIpAddress() : "Unknown");
@@ -619,7 +623,7 @@ public class VelocityPunishCommand implements SimpleCommand {
                     CompletableFuture<Void> lineFuture = targetFuture.thenCombine(punisherFuture, (targetName, staffName) -> {
                         String finalTarget = targetName != null ? targetName : (p.getIpAddress() != null ? p.getIpAddress() : "Unknown");
                         String finalStaff = staffName != null ? staffName : "Console";
-                        String dateStr = dateFormat.format(p.getStartTime());
+                        String dateStr = DATE_FORMAT_MINUTES.format(p.getStartTime().toInstant());
 
                         String template = p.isActive() && !p.isExpired()
                                 ? plugin.getMessageConfig().getBansItemActive()
@@ -630,14 +634,14 @@ public class VelocityPunishCommand implements SimpleCommand {
                                 .replace("{staff}", finalStaff)
                                 .replace("{reason}", p.getReason())
                                 .replace("{date}", dateStr);
-                    }).thenAccept(renderedLines::add);
+                    }).thenAccept(line -> renderedLines[idx] = line);
 
                     futures.add(lineFuture);
                 }
 
                 CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(() -> {
                     for (String line : renderedLines) {
-                        source.sendMessage(parse(line));
+                        if (line != null) source.sendMessage(parse(line));
                     }
 
                     int prevPage = Math.max(1, validPage - 1);
@@ -860,8 +864,7 @@ public class VelocityPunishCommand implements SimpleCommand {
         staffFut.thenAccept(staffName -> {
             String finalStaff = staffName != null ? staffName : "Console";
             String duration = p.isPermanent() ? "Permanent" : DurationUtils.formatDuration(p.getDuration());
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String date = sdf.format(p.getStartTime());
+            String date = DATE_FORMAT_SECONDS.format(p.getStartTime().toInstant());
 
             source.sendMessage(parse(plugin.getMessageConfig().getCheckbanHeader().replace("{target}", targetDisplay)));
             String template = isIp ? plugin.getMessageConfig().getCheckbanActiveIp() : plugin.getMessageConfig().getCheckbanActive();

@@ -24,7 +24,8 @@ public class DiscordWebhookUtils {
 
         return CompletableFuture.runAsync(() -> {
             try {
-                int color = Integer.parseInt(colorHex, 16);
+                String cleanHex = colorHex.startsWith("#") ? colorHex.substring(1) : colorHex;
+                int color = Integer.parseInt(cleanHex, 16);
                 String timestamp = Instant.now().toString();
 
                 String json = "{\n" +

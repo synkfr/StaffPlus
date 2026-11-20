@@ -191,6 +191,13 @@ public class DatabaseManager {
                         ")";
             }
             stmt.execute(query);
+
+            try {
+                stmt.execute("CREATE INDEX IF NOT EXISTS idx_punish_uuid ON staff_punishments(uuid, type, active)");
+                stmt.execute("CREATE INDEX IF NOT EXISTS idx_punish_ip ON staff_punishments(ip_address, type, active)");
+                stmt.execute("CREATE INDEX IF NOT EXISTS idx_punish_punisher ON staff_punishments(punisher_uuid)");
+                stmt.execute("CREATE INDEX IF NOT EXISTS idx_players_user ON staff_players(username)");
+            } catch (SQLException ignored) {}
         } catch (SQLException e) {
             platform.getLogger().severe("Could not setup database tables: " + e.getMessage());
         }
@@ -339,6 +346,9 @@ public class DatabaseManager {
      * Queries a player's last recorded username by their UUID.
      */
     public CompletableFuture<String> getPlayerNameByUuid(UUID uuid) {
+        if (uuid == null) {
+            return CompletableFuture.completedFuture("Console");
+        }
         return CompletableFuture.supplyAsync(() -> {
             String query = "SELECT username FROM staff_players WHERE uuid = ? LIMIT 1";
             try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {

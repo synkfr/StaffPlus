@@ -101,18 +101,16 @@ public class VanishListener implements Listener {
         Player player = (Player) event.getPlayer();
 
         if (plugin.isVanished(player.getUniqueId()) && plugin.getPluginConfig().isVanishSilentContainerClicks()) {
+            if (event.getInventory().getHolder() == null) {
+                return;
+            }
             InventoryType type = event.getInventory().getType();
             if (type == InventoryType.CHEST || type == InventoryType.SHULKER_BOX || type == InventoryType.BARREL) {
-                // To display the inventory without chest opening animation, we can copy the contents into a custom virtual inventory!
-                // This is extremely professional and completely silent!
-                // Spigot does chest animation naturally when chest GUI opens. If we create a custom container inventory, it opens silently!
-                // Let's open a copy of chest or just let it open silently by bypassing the chest block sound (which is client side mostly, but virtual inventory suppresses serverside animation packet).
-                // Re-creating is easy:
                 String title = event.getView().getTitle();
                 Inventory silentInv = Bukkit.createInventory(null, event.getInventory().getSize(), MiniMessageUtils.parse("<color:#A0A0A0>[Silent] " + title));
                 silentInv.setContents(event.getInventory().getContents());
                 
-                event.setCancelled(true); // Cancel chest opening packet
+                event.setCancelled(true);
                 SchedulerUtils.runEntity(plugin, player, () -> {
                     player.openInventory(silentInv);
                 });
@@ -134,22 +132,14 @@ public class VanishListener implements Listener {
         }
         if (vanishedCount > 0) {
             int newSize = Math.max(0, event.getNumPlayers() - vanishedCount);
-            if (event instanceof com.destroystokyo.paper.event.server.PaperServerListPingEvent) {
-                ((com.destroystokyo.paper.event.server.PaperServerListPingEvent) event).setNumPlayers(newSize);
+            if (event instanceof com.destroystokyo.paper.event.server.PaperServerListPingEvent paperEvent) {
+                paperEvent.setNumPlayers(newSize);
             }
         }
 
-        // Exclude vanished players from the player sample hover list
-        try {
-            java.util.Iterator<Player> iterator = event.iterator();
-            while (iterator.hasNext()) {
-                Player player = iterator.next();
-                if (plugin.isVanished(player.getUniqueId())) {
-                    iterator.remove();
-                }
-            }
-        } catch (UnsupportedOperationException e) {
-            // Some server implementations might throw this if the list is immutable, we handle it gracefully
+        // Exclude vanished players from the player sample hover list using modern Paper API
+        if (event instanceof com.destroystokyo.paper.event.server.PaperServerListPingEvent paperEvent) {
+            paperEvent.getListedPlayers().removeIf(info -> info.id() != null && plugin.isVanished(info.id()));
         }
     }
 }

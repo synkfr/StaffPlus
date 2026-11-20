@@ -19,7 +19,8 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
@@ -29,7 +30,7 @@ public class StaffCommand implements CommandExecutor, TabCompleter {
 
     private final StaffBukkitPlugin plugin;
     private static final Pattern IP_PATTERN = Pattern.compile("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$");
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.systemDefault());
 
     public StaffCommand(StaffBukkitPlugin plugin) {
         this.plugin = plugin;
@@ -47,7 +48,7 @@ public class StaffCommand implements CommandExecutor, TabCompleter {
                 plugin.getMessageConfig().load(true);
                 plugin.getMenuManager().load();
                 plugin.getDatabaseManager().init();
-                sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + "<color:#00E262>Configurations and menus reloaded successfully."));
+                sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getConfigsReloaded()));
             } catch (Exception e) {
                 sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + "<color:#E20000>Error reloading configurations: " + e.getMessage()));
                 plugin.getLogger().severe("Error reloading configurations: " + e.getMessage());
@@ -168,7 +169,7 @@ public class StaffCommand implements CommandExecutor, TabCompleter {
                                 loreComponents.add(MiniMessageUtils.parse("<color:#A0A0A0>No active warnings logged."));
                             } else {
                                 for (Punishment w : warnings) {
-                                    loreComponents.add(MiniMessageUtils.parse("<color:#A0A0A0>- " + w.getReason() + " (" + DATE_FORMAT.format(w.getStartTime()) + ")"));
+                                    loreComponents.add(MiniMessageUtils.parse("<color:#A0A0A0>- " + w.getReason() + " (" + DATE_FORMAT.format(w.getStartTime().toInstant()) + ")"));
                                 }
                             }
                         } else {

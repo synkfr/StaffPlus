@@ -15,7 +15,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,7 +30,7 @@ public class PunishCommand implements CommandExecutor, TabCompleter {
 
     private final StaffBukkitPlugin plugin;
     private static final Pattern IP_PATTERN = Pattern.compile("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$");
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
 
     public PunishCommand(StaffBukkitPlugin plugin) {
         this.plugin = plugin;
@@ -514,16 +515,24 @@ public class PunishCommand implements CommandExecutor, TabCompleter {
                             }
 
                             sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getPrefix() + plugin.getMessageConfig().getWarnListHeader().replace("{player}", target.name)));
-                            for (Punishment warn : warns) {
-                                plugin.getDatabaseManager().getPlayerNameByUuid(warn.getPunisherUuid() == null ? UUID.randomUUID() : warn.getPunisherUuid()).thenAccept(pName -> {
-                                    String finalPName = warn.getPunisherUuid() == null ? "Console" : (pName != null ? pName : "Unknown");
-                                    String item = plugin.getMessageConfig().getWarnListItem()
+                            List<CompletableFuture<Void>> futures = new ArrayList<>();
+                            String[] lines = new String[warns.size()];
+                            for (int i = 0; i < warns.size(); i++) {
+                                final int idx = i;
+                                Punishment warn = warns.get(i);
+                                futures.add(plugin.getDatabaseManager().getPlayerNameByUuid(warn.getPunisherUuid()).thenAccept(pName -> {
+                                    String finalPName = pName != null ? pName : "Console";
+                                    lines[idx] = plugin.getMessageConfig().getWarnListItem()
                                             .replace("{reason}", warn.getReason())
                                             .replace("{sender}", finalPName)
-                                            .replace("{date}", DATE_FORMAT.format(warn.getStartTime()));
-                                    sender.sendMessage(MiniMessageUtils.parse(item));
-                                });
+                                            .replace("{date}", DATE_FORMAT.format(warn.getStartTime().toInstant()));
+                                }));
                             }
+                            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(() -> {
+                                for (String l : lines) {
+                                    if (l != null) sender.sendMessage(MiniMessageUtils.parse(l));
+                                }
+                            });
                         });
                     }
                 });
@@ -762,7 +771,7 @@ public class PunishCommand implements CommandExecutor, TabCompleter {
         punisherNameFut.thenAccept(staffName -> {
             String finalStaff = staffName != null ? staffName : "Console";
             String duration = p.isPermanent() ? "Permanent" : me.ayosynk.staff.utils.DurationUtils.formatDuration(p.getDuration());
-            String date = DATE_FORMAT.format(p.getStartTime());
+            String date = DATE_FORMAT.format(p.getStartTime().toInstant());
 
             sender.sendMessage(MiniMessageUtils.parse(plugin.getMessageConfig().getCheckbanHeader().replace("{target}", targetDisplay)));
             String template = isIp ? plugin.getMessageConfig().getCheckbanActiveIp() : plugin.getMessageConfig().getCheckbanActive();

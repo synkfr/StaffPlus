@@ -1,8 +1,10 @@
 package me.ayosynk.staff.bukkit.config;
 
 import me.ayosynk.staff.bukkit.StaffBukkitPlugin;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
@@ -16,7 +18,7 @@ import static org.mockito.ArgumentMatchers.contains;
 
 public class MenuManagerTest {
 
-    @TempDir
+    @TempDir(cleanup = CleanupMode.NEVER)
     File tempDir;
 
     private StaffBukkitPlugin mockPlugin;

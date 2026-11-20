@@ -13,7 +13,8 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
 public class HistoryCommand implements CommandExecutor, TabCompleter {
 
     private final StaffBukkitPlugin plugin;
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
 
     public HistoryCommand(StaffBukkitPlugin plugin) {
         this.plugin = plugin;
@@ -58,9 +59,7 @@ public class HistoryCommand implements CommandExecutor, TabCompleter {
                     }
 
                     sender.sendMessage(MiniMessageUtils.parse("<color:#E2B700>------------- [ History: <color:#00E262>" + target.name + " <color:#E2B700>] -------------"));
-                    for (Punishment p : punishments) {
-                        printPunishment(sender, p, true);
-                    }
+                    renderPunishments(sender, punishments, true);
                 });
             } else {
                 // staffhistory
@@ -71,34 +70,42 @@ public class HistoryCommand implements CommandExecutor, TabCompleter {
                     }
 
                     sender.sendMessage(MiniMessageUtils.parse("<color:#E2B700>------------- [ Staff History: <color:#00E262>" + target.name + " <color:#E2B700>] -------------"));
-                    for (Punishment p : punishments) {
-                        printPunishment(sender, p, false);
-                    }
+                    renderPunishments(sender, punishments, false);
                 });
             }
         });
     }
 
-    private void printPunishment(CommandSender sender, Punishment p, boolean showTarget) {
-        String activeStr = p.isActive() && !p.isExpired() ? "<color:#E20000>[ACTIVE]</color> " : "<color:#A0A0A0>[INACTIVE]</color> ";
-        String dateStr = DATE_FORMAT.format(p.getStartTime());
-        String typeStr = p.getType().name();
-        
-        CompletableFuture<String> subjectFuture = showTarget ? 
-                plugin.getDatabaseManager().getPlayerNameByUuid(p.getPunisherUuid()) :
-                plugin.getDatabaseManager().getPlayerNameByUuid(p.getUuid());
+    private void renderPunishments(CommandSender sender, List<Punishment> punishments, boolean showTarget) {
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        String[] lines = new String[punishments.size()];
+        for (int i = 0; i < punishments.size(); i++) {
+            final int idx = i;
+            Punishment p = punishments.get(i);
+            String activeStr = p.isActive() && !p.isExpired() ? "<color:#E20000>[ACTIVE]</color> " : "<color:#A0A0A0>[INACTIVE]</color> ";
+            String dateStr = DATE_FORMAT.format(p.getStartTime().toInstant());
+            String typeStr = p.getType().name();
 
-        subjectFuture.thenAccept(name -> {
-            String subject = name != null ? name : "Console";
-            String actionWord = showTarget ? "by" : "on";
-            
-            String mainMsg = activeStr + "<color:#00E262>" + typeStr + "</color> " + actionWord + " <color:#00E262>" + subject + "</color>: " + p.getReason() + " <color:#A0A0A0>(" + dateStr + ")</color>";
-            if (p.isActive() && !p.isExpired() && p.getEndTime() != null) {
-                String expiryStr = DATE_FORMAT.format(p.getEndTime());
-                mainMsg += " <color:#E2B700>[Expires: " + expiryStr + "]</color>";
+            CompletableFuture<String> subjectFuture = showTarget ? 
+                    plugin.getDatabaseManager().getPlayerNameByUuid(p.getPunisherUuid()) :
+                    plugin.getDatabaseManager().getPlayerNameByUuid(p.getUuid());
+
+            futures.add(subjectFuture.thenAccept(name -> {
+                String subject = name != null ? name : "Console";
+                String actionWord = showTarget ? "by" : "on";
+
+                String mainMsg = activeStr + "<color:#00E262>" + typeStr + "</color> " + actionWord + " <color:#00E262>" + subject + "</color>: " + p.getReason() + " <color:#A0A0A0>(" + dateStr + ")</color>";
+                if (p.isActive() && !p.isExpired() && p.getEndTime() != null) {
+                    mainMsg += " <color:#E2B700>[Expires: " + DATE_FORMAT.format(p.getEndTime().toInstant()) + "]</color>";
+                }
+                lines[idx] = mainMsg;
+            }));
+        }
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(() -> {
+            for (String line : lines) {
+                if (line != null) sender.sendMessage(MiniMessageUtils.parse(line));
             }
-            
-            sender.sendMessage(MiniMessageUtils.parse(mainMsg));
         });
     }
 

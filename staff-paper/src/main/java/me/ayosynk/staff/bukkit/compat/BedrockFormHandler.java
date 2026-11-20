@@ -4,6 +4,7 @@ import me.ayosynk.staff.bukkit.StaffBukkitPlugin;
 import me.ayosynk.staff.bukkit.utils.MiniMessageUtils;
 import me.ayosynk.staff.database.DatabaseManager;
 import me.ayosynk.staff.database.Punishment;
+import me.ayosynk.staff.utils.DurationUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.geysermc.cumulus.form.Form;
@@ -11,8 +12,10 @@ import org.geysermc.cumulus.form.SimpleForm;
 import org.geysermc.floodgate.api.FloodgateApi;
 import org.geysermc.geyser.api.GeyserApi;
 
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -20,7 +23,7 @@ import java.util.concurrent.CompletableFuture;
 
 class BedrockFormHandler {
 
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.systemDefault());
     private static final int PAGE_SIZE = 10;
 
     static boolean isBedrock(UUID uuid) {
@@ -78,9 +81,11 @@ class BedrockFormHandler {
                 }
 
                 List<CompletableFuture<Void>> futures = new ArrayList<>();
-                List<BanDisplayEntry> entries = Collections.synchronizedList(new ArrayList<>());
+                BanDisplayEntry[] entriesArray = new BanDisplayEntry[bans.size()];
 
-                for (Punishment p : bans) {
+                for (int i = 0; i < bans.size(); i++) {
+                    final int idx = i;
+                    Punishment p = bans.get(i);
                     CompletableFuture<String> targetFut = p.getUuid() != null
                             ? db.getPlayerNameByUuid(p.getUuid())
                             : CompletableFuture.completedFuture(p.getIpAddress() != null ? p.getIpAddress() : "Unknown");
@@ -92,15 +97,19 @@ class BedrockFormHandler {
                         BanDisplayEntry e = new BanDisplayEntry();
                         e.target = target != null ? target : (p.getIpAddress() != null ? p.getIpAddress() : "Unknown");
                         e.staff = staff != null ? staff : "Console";
-                        e.date = DATE_FORMAT.format(p.getStartTime());
+                        e.date = DATE_FORMAT.format(p.getStartTime().toInstant());
                         e.active = p.isActive() && !p.isExpired();
                         e.punishment = p;
-                        entries.add(e);
+                        entriesArray[idx] = e;
                         return null;
                     }));
                 }
 
                 CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(() -> {
+                    List<BanDisplayEntry> entries = new ArrayList<>();
+                    for (BanDisplayEntry e : entriesArray) {
+                        if (e != null) entries.add(e);
+                    }
                     String title = plugin.getMessageConfig().getBansFormTitle()
                             .replace("{page}", String.valueOf(validPage))
                             .replace("{pages}", String.valueOf(totalPages));
@@ -151,7 +160,7 @@ class BedrockFormHandler {
     }
 
     private static void openBanDetailForm(StaffBukkitPlugin plugin, Player player, BanDisplayEntry entry, int returnPage) {
-        String durationStr = entry.punishment.isPermanent() ? "Permanent" : (entry.punishment.getDuration() + "ms");
+        String durationStr = entry.punishment.isPermanent() ? "Permanent" : DurationUtils.formatDuration(entry.punishment.getDuration());
         String details = "Target: " + entry.target + "\n"
                 + "Staff: " + entry.staff + "\n"
                 + "Reason: " + entry.punishment.getReason() + "\n"

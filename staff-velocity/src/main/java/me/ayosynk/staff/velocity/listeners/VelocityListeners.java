@@ -21,9 +21,25 @@ public class VelocityListeners {
 
     private final StaffVelocityPlugin plugin;
     private final MiniMessage miniMessage = MiniMessage.miniMessage();
+    private static final java.time.format.DateTimeFormatter DATE_FORMAT = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(java.time.ZoneId.systemDefault());
 
     public VelocityListeners(StaffVelocityPlugin plugin) {
         this.plugin = plugin;
+    }
+
+    private CompletableFuture<String> formatKickMessage(Punishment p, String prefix) {
+        String timeRemaining = p.getEndTime() != null
+            ? DurationUtils.formatDuration(p.getEndTime().getTime() - System.currentTimeMillis())
+            : "Permanent";
+        String dateStr = DATE_FORMAT.format(p.getStartTime().toInstant());
+        return plugin.getDatabaseManager().getPlayerNameByUuid(p.getPunisherUuid()).thenApply(staffName -> {
+            String staff = staffName != null ? staffName : "Console";
+            return plugin.getMessageConfig().getBanKickMessage()
+                .replace("{reason}", prefix + p.getReason())
+                .replace("{time}", timeRemaining)
+                .replace("{staff}", staff)
+                .replace("{date}", dateStr);
+        });
     }
 
     @Subscribe
@@ -41,14 +57,9 @@ public class VelocityListeners {
             plugin.getDatabaseManager().getActivePunishment(player.getUniqueId(), finalIp, Punishment.Type.BAN)
                 .thenCompose(ban -> {
                     if (ban != null) {
-                        String timeRemaining = ban.getEndTime() != null
-                            ? DurationUtils.formatDuration(ban.getEndTime().getTime() - System.currentTimeMillis())
-                            : "Permanent";
-                        String kickMsg = plugin.getMessageConfig().getBanKickMessage()
-                            .replace("{reason}", ban.getReason())
-                            .replace("{time}", timeRemaining);
-                        event.setResult(ResultedEvent.ComponentResult.denied(miniMessage.deserialize(kickMsg)));
-                        return CompletableFuture.completedFuture(null);
+                        return formatKickMessage(ban, "").thenAccept(kickMsg -> {
+                            event.setResult(ResultedEvent.ComponentResult.denied(miniMessage.deserialize(kickMsg)));
+                        });
                     }
 
                     return plugin.getDatabaseManager().isAllowed(player.getUniqueId()).thenCompose(isAllowed -> {
@@ -57,16 +68,13 @@ public class VelocityListeners {
                         }
 
                         return plugin.getDatabaseManager().getActivePunishment(player.getUniqueId(), finalIp, Punishment.Type.IP_BAN)
-                            .thenAccept(ipBan -> {
+                            .thenCompose(ipBan -> {
                                 if (ipBan != null) {
-                                    String timeRemaining = ipBan.getEndTime() != null
-                                        ? DurationUtils.formatDuration(ipBan.getEndTime().getTime() - System.currentTimeMillis())
-                                        : "Permanent";
-                                    String kickMsg = plugin.getMessageConfig().getBanKickMessage()
-                                        .replace("{reason}", ipBan.getReason())
-                                        .replace("{time}", timeRemaining);
-                                    event.setResult(ResultedEvent.ComponentResult.denied(miniMessage.deserialize(kickMsg)));
+                                    return formatKickMessage(ipBan, "IP Ban: ").thenAccept(kickMsg -> {
+                                        event.setResult(ResultedEvent.ComponentResult.denied(miniMessage.deserialize(kickMsg)));
+                                    });
                                 }
+                                return CompletableFuture.completedFuture(null);
                             });
                     });
                 })
@@ -121,13 +129,20 @@ public class VelocityListeners {
             String finalIp = ip;
 
             plugin.getDatabaseManager().getActivePunishment(player.getUniqueId(), finalIp, Punishment.Type.BAN)
-                .thenAccept(ban -> {
-                    if (ban != null) {
-                        String timeRemaining = ban.getEndTime() != null
-                            ? DurationUtils.formatDuration(ban.getEndTime().getTime() - System.currentTimeMillis())
+                .thenCompose(ban -> {
+                    if (ban != null) return CompletableFuture.completedFuture(ban);
+                    return plugin.getDatabaseManager().isAllowed(player.getUniqueId()).thenCompose(allowed -> {
+                        if (allowed) return CompletableFuture.completedFuture(null);
+                        return plugin.getDatabaseManager().getActivePunishment(player.getUniqueId(), finalIp, Punishment.Type.IP_BAN);
+                    });
+                })
+                .thenAccept(punishment -> {
+                    if (punishment != null) {
+                        String timeRemaining = punishment.getEndTime() != null
+                            ? DurationUtils.formatDuration(punishment.getEndTime().getTime() - System.currentTimeMillis())
                             : "Permanent";
                         String kickMsg = plugin.getMessageConfig().getBanKickMessage()
-                            .replace("{reason}", ban.getReason())
+                            .replace("{reason}", punishment.getReason())
                             .replace("{time}", timeRemaining);
                         event.setResult(KickedFromServerEvent.DisconnectPlayer.create(miniMessage.deserialize(kickMsg)));
                         return;

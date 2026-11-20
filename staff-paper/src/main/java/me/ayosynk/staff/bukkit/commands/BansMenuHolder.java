@@ -16,7 +16,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.jetbrains.annotations.NotNull;
 
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class BansMenuHolder implements InventoryHolder {
 
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.systemDefault());
     private static final int PAGE_SIZE = 45;
 
     private final StaffBukkitPlugin plugin;
@@ -119,7 +120,7 @@ public class BansMenuHolder implements InventoryHolder {
                             List<Component> lore = Arrays.asList(
                                     MiniMessageUtils.parse("<gray>Staff: <white>" + finalStaff + "</white></gray>"),
                                     MiniMessageUtils.parse("<gray>Reason: <yellow>" + p.getReason() + "</yellow></gray>"),
-                                    MiniMessageUtils.parse("<gray>Date: <white>" + DATE_FORMAT.format(p.getStartTime()) + "</white></gray>"),
+                                    MiniMessageUtils.parse("<gray>Date: <white>" + DATE_FORMAT.format(p.getStartTime().toInstant()) + "</white></gray>"),
                                     MiniMessageUtils.parse("<gray>Status: " + (active ? "<red>Active</red>" : "<gray>Expired</gray>"))
                             );
                             meta.lore(lore);
