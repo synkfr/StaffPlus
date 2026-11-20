@@ -142,9 +142,7 @@ public class InvseeCommand implements CommandExecutor, TabCompleter {
         if (appMeta != null) {
             appMeta.displayName(MiniMessageUtils.parse("<color:#E20000>Target Health & Hunger"));
             List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
-            double maxHealth = target.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH) != null 
-                    ? target.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH).getValue() 
-                    : target.getMaxHealth();
+            double maxHealth = resolveMaxHealth(target);
             lore.add(MiniMessageUtils.parse("<color:#A0A0A0>Health: <color:#E20000>" + String.format("%.1f", target.getHealth()) + " / " + maxHealth));
             lore.add(MiniMessageUtils.parse("<color:#A0A0A0>Food Level: <color:#E2B700>" + target.getFoodLevel() + " / 20"));
             lore.add(MiniMessageUtils.parse("<color:#A0A0A0>XP Level: <color:#00E262>" + target.getLevel()));
@@ -343,8 +341,7 @@ public class InvseeCommand implements CommandExecutor, TabCompleter {
         if (appMeta != null) {
             appMeta.displayName(MiniMessageUtils.parse("<color:#E20000>Target Health & Hunger"));
             List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
-            org.bukkit.attribute.AttributeInstance maxHealthAttr = target.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH);
-            double maxHealth = maxHealthAttr != null ? maxHealthAttr.getValue() : 20.0;
+            double maxHealth = resolveMaxHealth(target);
             lore.add(MiniMessageUtils.parse("<color:#A0A0A0>Health: <color:#E20000>" + String.format("%.1f", target.getHealth()) + " / " + maxHealth));
             lore.add(MiniMessageUtils.parse("<color:#A0A0A0>Food Level: <color:#E2B700>" + target.getFoodLevel() + " / 20"));
             lore.add(MiniMessageUtils.parse("<color:#A0A0A0>XP Level: <color:#00E262>" + target.getLevel()));
@@ -352,6 +349,60 @@ public class InvseeCommand implements CommandExecutor, TabCompleter {
             apple.setItemMeta(appMeta);
         }
         inv.setItem(52, apple);
+    }
+
+    private static org.bukkit.attribute.Attribute cachedMaxHealthAttr;
+    private static boolean maxHealthAttrResolved = false;
+
+    /**
+     * Resolves max health cross-version without compile/runtime NoSuchFieldError.
+     * Paper 1.21.2+ renamed Attribute.GENERIC_MAX_HEALTH to Attribute.MAX_HEALTH.
+     */
+    public static double resolveMaxHealth(Player target) {
+        if (target == null) return 20.0;
+
+        if (!maxHealthAttrResolved) {
+            maxHealthAttrResolved = true;
+            try {
+                // Modern Paper 1.21.2+ (Attribute.MAX_HEALTH)
+                cachedMaxHealthAttr = org.bukkit.Registry.ATTRIBUTE.get(org.bukkit.NamespacedKey.minecraft("max_health"));
+            } catch (Throwable ignored) {}
+
+            if (cachedMaxHealthAttr == null) {
+                try {
+                    // Legacy Paper 1.20-1.21.1 (generic.max_health)
+                    cachedMaxHealthAttr = org.bukkit.Registry.ATTRIBUTE.get(org.bukkit.NamespacedKey.minecraft("generic.max_health"));
+                } catch (Throwable ignored) {}
+            }
+
+            if (cachedMaxHealthAttr == null) {
+                try {
+                    // Enum/field reflection fallback
+                    java.lang.reflect.Field field;
+                    try {
+                        field = org.bukkit.attribute.Attribute.class.getField("MAX_HEALTH");
+                    } catch (NoSuchFieldException e) {
+                        field = org.bukkit.attribute.Attribute.class.getField("GENERIC_MAX_HEALTH");
+                    }
+                    cachedMaxHealthAttr = (org.bukkit.attribute.Attribute) field.get(null);
+                } catch (Throwable ignored) {}
+            }
+        }
+
+        if (cachedMaxHealthAttr != null) {
+            try {
+                org.bukkit.attribute.AttributeInstance instance = target.getAttribute(cachedMaxHealthAttr);
+                if (instance != null) {
+                    return instance.getValue();
+                }
+            } catch (Throwable ignored) {}
+        }
+
+        try {
+            return target.getMaxHealth();
+        } catch (Throwable ignored) {
+            return 20.0;
+        }
     }
 
     @Override

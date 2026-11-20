@@ -42,4 +42,10 @@ public class InvseeTest {
         assertNull(snapshot.boots);
         assertNull(snapshot.offhand);
     }
+
+    @Test
+    public void testResolveMaxHealthNullSafe() {
+        // Null target should gracefully return default 20.0
+        assertEquals(20.0, InvseeCommand.resolveMaxHealth(null));
+    }
 }
