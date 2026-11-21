@@ -1,2 +1,13 @@
+pluginManagement {
+    repositories {
+        maven {
+            url = 'https://maven-central.storage-download.googleapis.com/maven2/'
+            name = 'GoogleMavenCentral'
+        }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
 rootProject.name = 'StaffPlus'
 include 'staff-core', 'staff-paper', 'staff-velocity'
